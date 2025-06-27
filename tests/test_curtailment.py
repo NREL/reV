@@ -7,15 +7,21 @@ Created on Fri Mar  1 15:24:13 2019
 """
 
 import os
+import json
+import shutil
+import tempfile
+import traceback
 from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 import pytest
+from rex import Resource
 from rex.utilities import safe_json_load
 from rex.utilities.solar_position import SolarPosition
 
 from reV import TESTDATADIR
+from reV.cli import main
 from reV.config.project_points import ProjectPoints
 from reV.generation.generation import Gen
 from reV.SAM.SAM import RevPySam
@@ -412,13 +418,13 @@ def test_multiple_spatial_curtailment():
     res_file = os.path.join(TESTDATADIR, "wtk/ri_100_wtk_2012.h5")
     sam_files = os.path.join(TESTDATADIR,
                              "SAM/wind_gen_standard_losses_0.json")
-    curtail_config = {"c1": os.path.join(TESTDATADIR, "config",
-                                         "curtailment.json"),
-                      "c2": os.path.join(TESTDATADIR, "config",
-                                         "curtailment_date_range.json")}
+    curtail_config = {"c 1": os.path.join(TESTDATADIR, "config",
+                                          "curtailment.json"),
+                      "c 2": os.path.join(TESTDATADIR, "config",
+                                          "curtailment_date_range.json")}
 
     points = pd.DataFrame({"gid": [0, 10, 25, 33, 49],
-                           "curtailment": ["c1", None, "c2", "c1", None]})
+                           "curtailment": ["c 1", None, "c 2", "c 1", None]})
     # run reV 2.0 generation
     gen = Gen("windpower", points, sam_files, res_file,
               output_request=("cf_profile", "windspeed"),
@@ -472,6 +478,78 @@ def test_default_curtailment(points):
     df = _compute_res_curtailment_df(2012, 0, curt_fn=curt_fn)
     assert not np.allclose(gen.out["windspeed"][:, 0], df["original_wind"])
     assert np.allclose(gen.out["windspeed"][:, 0], df["curtailed_wind"])
+
+
+def test_multiple_spatial_curtailment_cli(runner, clear_loggers):
+    """Test execution with multiple spatial curtailments from CLI"""
+
+    res_file = os.path.join(TESTDATADIR, "wtk/ri_100_wtk_2012.h5")
+    sam_files = os.path.join(TESTDATADIR,
+                             "SAM/wind_gen_standard_losses_0.json")
+    source_cc1 = os.path.join(TESTDATADIR, "config", "curtailment.json")
+    source_cc2 = os.path.join(TESTDATADIR, "config",
+                              "curtailment_date_range.json")
+    gen_config = os.path.join(TESTDATADIR, 'config', 'local_wind.json')
+    c1_key = "test config 1"
+    c2_key = "Test Config 2"
+
+    with tempfile.TemporaryDirectory() as td:
+        cc1 = os.path.join(td, "curtailment.json")
+        cc2 = os.path.join(td, "curtailment date range.json")
+        shutil.copy(source_cc1, cc1)
+        shutil.copy(source_cc2, cc2)
+
+        curtail_config = {c1_key: cc1, c2_key: cc2}
+
+        points_fp = os.path.join(td, "points.csv")
+        points = pd.DataFrame({"gid": [0, 10, 25, 33, 49],
+                               "curtailment": [c1_key, None, c2_key, c1_key,
+                                               None]})
+        points.to_csv(points_fp, index=False)
+
+        config = safe_json_load(gen_config)
+        config["execution_control"]["max_workers"] = 1
+        config["execution_control"]["sites_per_worker"] = 50
+        config['project_points'] = points_fp
+        config['resource_file'] = res_file
+        config['sam_files'] = sam_files
+        config['log_directory'] = os.path.join(td, 'logs')
+        config['output_request'] = ["cf_profile", "windspeed"]
+        config['curtailment'] = curtail_config
+
+        config_path = os.path.join(td, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, ['generation', '-c', config_path])
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
+
+        h5_files = [fn for fn in os.listdir(td)
+                    if "generation_2012" in fn and ".h5" in fn]
+        assert len(h5_files) == 1
+
+        out_file = os.path.join(td, h5_files[0])
+        with Resource(out_file) as res:
+            wind_speeds = res["windspeed"]
+
+        clear_loggers()
+
+    for (gid, g_ind) in [(10, 1), (49, 4)]:
+        df = _compute_res_curtailment_df(2012, gid, curt_fn="curtailment.json")
+        assert np.allclose(wind_speeds[:, g_ind], df["original_wind"])
+        assert not np.allclose(wind_speeds[:, g_ind], df["curtailed_wind"])
+
+    for (gid, g_ind) in [(0, 0), (33, 3)]:
+        df = _compute_res_curtailment_df(2012, gid, curt_fn="curtailment.json")
+        assert not np.allclose(wind_speeds[:, g_ind], df["original_wind"])
+        assert np.allclose(wind_speeds[:, g_ind], df["curtailed_wind"])
+
+    df = _compute_res_curtailment_df(2012, 25,
+                                     curt_fn="curtailment_date_range.json")
+    assert not np.allclose(wind_speeds[:, 2], df["original_wind"])
+    assert np.allclose(wind_speeds[:, 2], df["curtailed_wind"])
 
 
 def execute_pytest(capture="all", flags="-rapP"):
