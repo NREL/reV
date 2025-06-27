@@ -163,90 +163,373 @@ class SupplyCurveField(FieldEnum):
 
     Not all of these columns are guaranteed in every supply-curve like
     output (e.g. "convex_hull_area" is a bespoke-only output).
+
+    The docstrings for each field are used as a description when
+    exporting metadata information about supply curve columns. See
+    TBA for details.
     """
 
-    SC_GID = "sc_gid"
-    LATITUDE = "latitude"
-    LONGITUDE = "longitude"
-    COUNTRY = "country"
-    STATE = "state"
-    COUNTY = "county"
-    ELEVATION = "elevation_m"
-    TIMEZONE = "timezone"
-    SC_POINT_GID = "sc_point_gid"
-    SC_ROW_IND = "sc_row_ind"
-    SC_COL_IND = "sc_col_ind"
-    SOURCE_GIDS = "source_gids"
-    RES_GIDS = "res_gids"
-    GEN_GIDS = "gen_gids"
-    GID_COUNTS = "gid_counts"
-    N_GIDS = "n_gids"
-    ZONE_ID = "zone_id"
-    MEAN_RES = "resource"
-    MEAN_CF_AC = "capacity_factor_ac"
-    MEAN_CF_DC = "capacity_factor_dc"
-    WAKE_LOSSES = "losses_wakes_pct"
-    MEAN_LCOE = "lcoe_site_usd_per_mwh"
-    CAPACITY_AC_MW = "capacity_ac_mw"
-    CAPACITY_DC_MW = "capacity_dc_mw"
-    OFFSHORE = "offshore"
-    AREA_SQ_KM = "area_developable_sq_km"
-    MEAN_FRICTION = "friction_site"
-    MEAN_LCOE_FRICTION = "lcoe_friction_usd_per_mwh"
-    RAW_LCOE = "lcoe_raw_usd_per_mwh"
-    EOS_MULT = "multiplier_cc_eos"
-    FIXED_EOS_MULT = "multiplier_foc_eos"
-    VAR_EOS_MULT = "multiplier_voc_eos"
-    REG_MULT = "multiplier_cc_regional"
-    SC_POINT_ANNUAL_ENERGY_MWH = "annual_energy_site_mwh"
-    COST_BASE_CC_USD_PER_AC_MW = "cost_base_cc_usd_per_ac_mw"
-    COST_SITE_CC_USD_PER_AC_MW = "cost_site_cc_usd_per_ac_mw"
-    COST_BASE_FOC_USD_PER_AC_MW = "cost_base_foc_usd_per_ac_mw"
-    COST_SITE_FOC_USD_PER_AC_MW = "cost_site_foc_usd_per_ac_mw"
-    COST_BASE_VOC_USD_PER_AC_MWH = "cost_base_voc_usd_per_ac_mwh"
-    COST_SITE_VOC_USD_PER_AC_MWH = "cost_site_voc_usd_per_ac_mwh"
-    FIXED_CHARGE_RATE = "fixed_charge_rate"
+    # ############## #
+    # Shared outputs #
+    # ############## #
 
-    # Bespoke outputs
+    SC_GID = "sc_gid"
+    """Supply curve GID (Specific to this particular supply curve output)"""
+
+    LATITUDE = "latitude"
+    """Centroid latitude of the supply curve grid-cell"""
+
+    LONGITUDE = "longitude"
+    """Centroid longitude of the supply curve grid-cell"""
+
+    COUNTRY = "country"
+    """Country of the supply curve grid-cell"""
+
+    STATE = "state"
+    """State of the supply curve grid-cell"""
+
+    COUNTY = "county"
+    """County of the supply curve grid-cell"""
+
+    ELEVATION = "elevation_m"
+    """Mean elevation of the supply curve grid-cell"""
+
+    TIMEZONE = "timezone"
+    """
+    Timezone of supply curve grid-cell, expressed as an hourly offset from UTC
+    """
+
+    SC_POINT_GID = "sc_point_gid"
+    """
+    Unique ID that can be used to match supply curve grid-cells across reV
+    supply curves at the same resolution
+    """
+
+    SC_ROW_IND = "sc_row_ind"
+    """Supply curve grid-cell row ID (Invariant across supply curves)"""
+
+    SC_COL_IND = "sc_col_ind"
+    """Supply curve grid-cell column ID (Invariant across supply curves)"""
+
+    SOURCE_GIDS = "source_gids"
+
+    RES_GIDS = "res_gids"
+    """List of resource GID's mapped to this supply curve grid-cells"""
+
+    GEN_GIDS = "gen_gids"
+    """List of generation GID's mapped to this supply curve point"""
+
+    GID_COUNTS = "gid_counts"
+    """
+    Number of high-resolution cells corresponding to each generation GID
+    for this supply curve point
+    """
+
+    N_GIDS = "n_gids"
+    """
+    Total number of not fully excluded pixels associated with the available
+    resource/generation gids
+    """
+
+    ZONE_ID = "zone_id"
+    """Zone ID of the supply curve grid-cell, if applicable. Defaults to 1."""
+
+    MEAN_RES = "resource"
+    """
+    Mean resource (e.g. wind speed, gha, temperature, etc.) across the supply
+    curve grid-cell
+    """
+
+    MEAN_CF_AC = "capacity_factor_ac"
+    """Mean capacity factor (AC) across supply curve grid-cell"""
+
+    MEAN_CF_DC = "capacity_factor_dc"
+    """Mean capacity factor (DC) across supply curve grid-cell"""
+
+    WAKE_LOSSES = "losses_wakes_pct"
+    """Mean wake losses across supply curve grid-cell"""
+
+    MEAN_LCOE = "lcoe_site_usd_per_mwh"
+    """
+    Mean power plant levelized cost of energy across supply curve grid-cell
+    """
+
+    CAPACITY_AC_MW = "capacity_ac_mw"
+    """
+    Capacity of system based on area_sq_km * AC capacity density assumption
+    """
+
+    CAPACITY_DC_MW = "capacity_dc_mw"
+    """
+    Capacity of system based on area_sq_km * DC capacity density assumption
+    """
+
+    OFFSHORE = "offshore"
+    """
+    Flag value indicating if the supply curve grid-cell is offshore (1)
+    or not (0)
+    """
+
+    AREA_SQ_KM = "area_developable_sq_km"
+    """Developable area after spatial exclusions applied"""
+
+    MEAN_FRICTION = "friction_site"
+
+    MEAN_LCOE_FRICTION = "lcoe_friction_usd_per_mwh"
+
+    RAW_LCOE = "lcoe_raw_usd_per_mwh"
+    """
+    Mean power plant levelized cost of energy across supply curve grid-cell
+    without any multipliers or economies of scale applied
+    """
+
+    EOS_MULT = "multiplier_cc_eos"
+    """
+    Capital cost economies of Scale (EOS) multiplier value (defaults to `1`
+    if no EOS curve was specified)
+    """
+
+    FIXED_EOS_MULT = "multiplier_foc_eos"
+    """
+    Fixed operating cost economies of Scale (EOS) multiplier value (defaults
+    to `1` if no EOS curve was specified)
+    """
+
+    VAR_EOS_MULT = "multiplier_voc_eos"
+    """
+    Variable operating cost economies of Scale (EOS) multiplier value
+    (defaults to `1` if no EOS curve was specified)
+    """
+
+    REG_MULT = "multiplier_cc_regional"
+    """
+    Regional capital cost multiplier to capture taxes, labor, land lease
+    regional differences
+    """
+
+    SC_POINT_ANNUAL_ENERGY_MWH = "annual_energy_site_mwh"
+    """
+    Total annual energy for supply curve grid-cell (computed using
+    "capacity_ac_mw" and "capacity_factor_ac")
+    """
+
+    COST_BASE_CC_USD_PER_AC_MW = "cost_base_cc_usd_per_ac_mw"
+    """
+    Included-area weighted capital cost for supply curve grid-cell with no
+    multipliers or economies of scale applied (defaults to `None` for
+    non-LCOE runs)
+    """
+
+    COST_SITE_CC_USD_PER_AC_MW = "cost_site_cc_usd_per_ac_mw"
+    """
+    Included-area weighted capital cost for supply curve grid-cell
+    (defaults to `None` for non-LCOE runs)
+    """
+
+    COST_BASE_FOC_USD_PER_AC_MW = "cost_base_foc_usd_per_ac_mw"
+    """
+    Included-area weighted fixed operating cost for supply curve grid-cell
+    with no multipliers or economies of scale applied (defaults to `None` for
+    non-LCOE runs)
+    """
+
+    COST_SITE_FOC_USD_PER_AC_MW = "cost_site_foc_usd_per_ac_mw"
+    """
+    Included-area weighted fixed operating cost for supply curve grid-cell
+    (defaults to `None` for non-LCOE runs)
+    """
+
+    COST_BASE_VOC_USD_PER_AC_MWH = "cost_base_voc_usd_per_ac_mwh"
+    """
+    Included-area weighted variable operating cost for supply curve grid-cell
+    with no multipliers or economies of scale applied (defaults to `None` for
+    non-LCOE runs)
+    """
+
+    COST_SITE_VOC_USD_PER_AC_MWH = "cost_site_voc_usd_per_ac_mwh"
+    """
+    Included-area weighted variable operating cost for supply curve grid-cell
+    (defaults to `None` for non-LCOE runs)
+    """
+
+    FIXED_CHARGE_RATE = "fixed_charge_rate"
+    """
+    Fixed charge rate used for LCOE computation
+    (defaults to `None` for non-LCOE runs)
+    """
+
+    # ############### #
+    # Bespoke outputs #
+    # ############### #
+
     POSSIBLE_X_COORDS = "possible_x_coords"
+    """
+    List of turbine x coordinates considered during layout optimization
+    (in meters relative to grid-cell)
+    """
+
     POSSIBLE_Y_COORDS = "possible_y_coords"
+    """
+    List of turbine y coordinates considered during layout optimization
+    (in meters relative to grid-cell)
+    """
+
     TURBINE_X_COORDS = "turbine_x_coords"
+    """
+    List of optimized layout turbine x coordinates
+    (in meters relative to grid-cell)
+    """
+
     TURBINE_Y_COORDS = "turbine_y_coords"
+    """
+    List of optimized layout turbine y coordinates
+    (in meters relative to grid-cell)
+    """
+
     N_TURBINES = "n_turbines"
+    """
+    Number of turbines in the optimized layout for this supply curve
+    grid-cell
+    """
+
     INCLUDED_AREA = "area_included_sq_km"
+    """Area available for wind turbine layout optimization"""
+
     INCLUDED_AREA_CAPACITY_DENSITY = (
         "capacity_density_included_area_mw_per_km2"
     )
-    CONVEX_HULL_AREA = "area_convex_hull_sq_km"
-    CONVEX_HULL_CAPACITY_DENSITY = "capacity_density_convex_hull_mw_per_km2"
-    FULL_CELL_CAPACITY_DENSITY = "capacity_density_full_cell_mw_per_km2"
-    BESPOKE_AEP = "optimized_plant_aep"
-    BESPOKE_OBJECTIVE = "optimized_plant_objective"
-    BESPOKE_CAPITAL_COST = "optimized_plant_capital_cost"
-    BESPOKE_FIXED_OPERATING_COST = "optimized_plant_fixed_operating_cost"
-    BESPOKE_VARIABLE_OPERATING_COST = "optimized_plant_variable_operating_cost"
-    BESPOKE_BALANCE_OF_SYSTEM_COST = "optimized_plant_balance_of_system_cost"
+    """
+    Capacity density of the optimized wind plant layout defined using the
+    area available after removing the exclusions
+    """
 
-    # Transmission outputs
+    CONVEX_HULL_AREA = "area_convex_hull_sq_km"
+    """Area of the convex hull of the optimized wind plant layout"""
+
+    CONVEX_HULL_CAPACITY_DENSITY = "capacity_density_convex_hull_mw_per_km2"
+    """
+    Capacity density of the optimized wind plant layout defined using the
+    convex hull area of the layout
+    """
+
+    FULL_CELL_CAPACITY_DENSITY = "capacity_density_full_cell_mw_per_km2"
+    """
+    Capacity density of the optimized wind plant layout defined using the full
+    non-excluded area of the supply curve grid-cell
+    """
+
+    BESPOKE_AEP = "optimized_plant_aep"
+    """
+    Annual energy production of the optimized wind plant layout computed using
+    wind speed/direction joint probability distribution (as opposed to
+    historical weather data)
+    """
+
+    BESPOKE_OBJECTIVE = "optimized_plant_objective"
+    """
+    Objective function value of the optimized wind plant layout. This is
+    typically the LCOE computed using wind speed/direction joint probability
+    distribution (as opposed to historical weather data)
+    """
+
+    BESPOKE_CAPITAL_COST = "optimized_plant_capital_cost"
+    """Capital cost of the optimized wind plant layout"""
+
+    BESPOKE_FIXED_OPERATING_COST = "optimized_plant_fixed_operating_cost"
+    """Annual fixed operating cost of the optimized wind plant layout"""
+
+    BESPOKE_VARIABLE_OPERATING_COST = "optimized_plant_variable_operating_cost"
+    """Variable operating cost of the optimized wind plant layout"""
+
+    BESPOKE_BALANCE_OF_SYSTEM_COST = "optimized_plant_balance_of_system_cost"
+    """Balance of system cost of the optimized wind plant layout"""
+
+    # #################### #
+    # Transmission outputs #
+    # #################### #
+
     TRANS_GID = "trans_gid"
+    """Transmission connection feature GID"""
+
     TRANS_TYPE = "trans_type"
+    """Transmission connection feature type"""
+
     TOTAL_LCOE_FRICTION = "lcoe_total_friction_usd_per_mwh"
     TRANS_CAPACITY = "trans_capacity"
+
     DIST_SPUR_KM = "dist_spur_km"
+    """
+    Distance between the grid-cell centroid and cheapest available electrical
+    substation. Used in lcot calculations.
+    """
+
     DIST_EXPORT_KM = "dist_export_km"
+    """Length of the offshore export cable"""
+
     REINFORCEMENT_DIST_KM = "dist_reinforcement_km"
-    TIE_LINE_COST_PER_MW = "cost_spur_usd_per_mw"
-    CONNECTION_COST_PER_MW = "cost_poi_usd_per_mw"
-    EXPORT_COST_PER_MW = "cost_export_usd_per_mw"
-    REINFORCEMENT_COST_PER_MW = "cost_reinforcement_usd_per_mw"
-    TOTAL_TRANS_CAP_COST_PER_MW = "cost_total_trans_usd_per_mw"
+    """
+    Distance between the connected substation and nearest regional load
+    center. Used in lcot calculations.
+    """
+
+    TIE_LINE_COST_PER_MW = "cost_spur_usd_per_mw_ac"
+    """
+    Cost of the spur line used to connect the grid-cell centroid with the
+    cheapest available electrical substation
+    """
+
+    CONNECTION_COST_PER_MW = "cost_poi_usd_per_mw_ac"
+    """Substation connection/upgrade/installation cost"""
+
+    EXPORT_COST_PER_MW = "cost_export_usd_per_mw_ac"
+    """Cost of the offshore export cable """
+
+    REINFORCEMENT_COST_PER_MW = "cost_reinforcement_usd_per_mw_ac"
+    """Non-levelized reinforcement transmission capital costs"""
+
+    TOTAL_TRANS_CAP_COST_PER_MW = "cost_total_trans_usd_per_mw_ac"
+    """
+    Non-levelized spur and point-of-interconnection transmission capital costs
+    """
+
     LCOT = "lcot_usd_per_mwh"
+    """
+    Levelized cost of transmission. Includes spur-transmission,
+    point-of-interconnection, and reinforcement costs.
+    """
+
     TOTAL_LCOE = "lcoe_all_in_usd_per_mwh"
+    """All-in LCOE. Includes site-lcoe + lcot"""
+
     N_PARALLEL_TRANS = "count_num_parallel_trans"
+    """
+    Number of parallel transmission lines connecting the grid-cell centroid
+    with the cheapest available electrical substation
+    """
+
     POI_LAT = "latitude_poi"
+    """
+    Latitude of the cheapest available electrical substation for the supply
+    curve grid-cell
+    """
+
     POI_LON = "longitude_poi"
+    """
+    Longitude of the cheapest available electrical substation for the supply
+    curve grid-cell
+    """
+
     REINFORCEMENT_POI_LAT = "latitude_reinforcement_poi"
+    """
+    Latitude of the nearest regional load center for the supply curve
+    grid-cell
+    """
+
     REINFORCEMENT_POI_LON = "longitude_reinforcement_poi"
+    """
+    Longitude of the nearest regional load center for the supply curve
+    grid-cell
+    """
 
     @classmethod
     def map_from_legacy(cls):
@@ -293,10 +576,13 @@ class _LegacySCAliases(Enum):
     TRANS_CAPACITY = "avail_cap"
     DIST_SPUR_KM = "dist_km"
     REINFORCEMENT_DIST_KM = "reinforcement_dist_km"
-    TIE_LINE_COST_PER_MW = "tie_line_cost_per_mw"
-    CONNECTION_COST_PER_MW = "connection_cost_per_mw"
-    REINFORCEMENT_COST_PER_MW = "reinforcement_cost_per_mw"
-    TOTAL_TRANS_CAP_COST_PER_MW = "trans_cap_cost_per_mw"
+    TIE_LINE_COST_PER_MW = "tie_line_cost_per_mw", "cost_spur_usd_per_mw"
+    CONNECTION_COST_PER_MW = "connection_cost_per_mw", "cost_poi_usd_per_mw"
+    EXPORT_COST_PER_MW = "cost_export_usd_per_mw"
+    REINFORCEMENT_COST_PER_MW = ("reinforcement_cost_per_mw",
+                                 "cost_reinforcement_usd_per_mw")
+    TOTAL_TRANS_CAP_COST_PER_MW = ("trans_cap_cost_per_mw",
+                                   "cost_total_trans_usd_per_mw")
     LCOT = "lcot"
     TOTAL_LCOE = "total_lcoe"
     TOTAL_LCOE_FRICTION = "total_lcoe_friction"
