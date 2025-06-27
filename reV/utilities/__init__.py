@@ -38,7 +38,8 @@ class _DocstringEnumMeta(EnumMeta):
                             doc = body_item.value.s
                             member = cls.__members__.get(name)
                             if member:
-                                member._description = doc.strip()
+                                member._description = (doc.strip()
+                                                       .replace("\n    ", " "))
                             prev = None
         return cls
 
