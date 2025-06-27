@@ -97,7 +97,24 @@ class PlaceTurbines:
                   cost ($) as evaluated by
                   `balance_of_system_cost_function`
                 - ``self.wind_plant``: the SAM wind plant object,
-                  through which all SAM variables can be accessed
+                  through which all SAM variables can be accessed.
+
+                  .. IMPORTANT::
+                     When using the `self.wind_plant` variable,
+                     DO NOT include quotes around variable names (keys).
+
+                        - ❌ Wrong: ``self.wind_plant["annual_energy"]``
+                        - ✅ Correct: ``self.wind_plant[annual_energy]``
+
+                  .. IMPORTANT::
+                     It's possible for SAM wind plant variables to be
+                     ``None``, especially if something went wrong while
+                     optimizing the wind plant layout. In this case,
+                     your objective function may fail to evaluate and
+                     terminate the program entirely. To avoid this, add
+                     a default value for the variable in your objective
+                     function, like so:
+                     ``(self.wind_plant[annual_energy] or 0)``
 
         capital_cost_function : str
             The plant capital cost function as a string, must return the
