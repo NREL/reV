@@ -267,6 +267,11 @@ class SupplyCurveField(FieldEnum):
 
         return legacy_map
 
+    @property
+    def units(self):
+        """Units of the supply curve column, or ``"N/A"`` if not applicable"""
+        return _SC_UNITS.get(self, "N/A")
+
 
 class _LegacySCAliases(Enum):
     """Legacy supply curve column names.
@@ -377,3 +382,55 @@ def log_versions(logger):
     logger.info("Running with reV version {}".format(__version__))
     rex_log_versions(logger)
     logger.debug("- PySAM version {}".format(PySAM.__version__))
+
+
+_SC_UNITS = {
+    SupplyCurveField.ELEVATION: "m",
+    SupplyCurveField.LATITUDE: "degrees",
+    SupplyCurveField.LONGITUDE: "degrees",
+
+    SupplyCurveField.AREA_SQ_KM: "km2",
+    SupplyCurveField.CAPACITY_AC_MW: "MWac",
+    SupplyCurveField.CAPACITY_DC_MW: "MWdc",
+    SupplyCurveField.MEAN_CF_AC: "ratio",
+    SupplyCurveField.MEAN_CF_DC: "ratio",
+    SupplyCurveField.WAKE_LOSSES: "%",
+    SupplyCurveField.MEAN_LCOE: "$/MWh",
+    SupplyCurveField.RAW_LCOE: "$/MWh",
+    SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH: "MWh",
+    SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW: "$/MWac",
+    SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW: "$/MWac",
+    SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW: "$/MWac",
+    SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW: "$/MWac",
+    SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH: "$/MWh",
+    SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH: "$/MWh",
+
+    SupplyCurveField.BESPOKE_AEP: "MWh",
+    SupplyCurveField.BESPOKE_CAPITAL_COST: "$",
+    SupplyCurveField.BESPOKE_FIXED_OPERATING_COST: "$/year",
+    SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST: "$/kWh",
+    SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST: "$",
+    SupplyCurveField.INCLUDED_AREA: "km2",
+    SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY: "MW/km2",
+    SupplyCurveField.CONVEX_HULL_AREA: "km2",
+    SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY: "MW/km2",
+    SupplyCurveField.FULL_CELL_CAPACITY_DENSITY: "MW/km2",
+
+    SupplyCurveField.LCOT: "$/MWh",
+    SupplyCurveField.MEAN_RES: "varies",
+    SupplyCurveField.REINFORCEMENT_COST_PER_MW: "$/MWac",
+    SupplyCurveField.REINFORCEMENT_DIST_KM: "km",
+    SupplyCurveField.TOTAL_LCOE: "$/MWh",
+    SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW: "$/MWac",
+    SupplyCurveField.DIST_SPUR_KM: "km",
+    SupplyCurveField.DIST_EXPORT_KM: "km",
+    SupplyCurveField.TIE_LINE_COST_PER_MW: "$/MWac",
+    SupplyCurveField.CONNECTION_COST_PER_MW: "$/MWac",
+    SupplyCurveField.EXPORT_COST_PER_MW: "$/MWac",
+
+    SupplyCurveField.POI_LAT: "degrees",
+    SupplyCurveField.POI_LON: "degrees",
+    SupplyCurveField.REINFORCEMENT_POI_LAT: "degrees",
+    SupplyCurveField.REINFORCEMENT_POI_LON: "degrees",
+
+}
