@@ -483,7 +483,6 @@ def test_data_layer_methods():
         assert slope_min <= slope_mode <= slope_max
 
 
-
 @pytest.mark.parametrize(
     "cap_cost_scale",
     ["1", f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"]
