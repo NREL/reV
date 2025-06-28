@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=anomalous-backslash-in-string
 """
 reV supply curve points frameworks.
 """

@@ -245,6 +245,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
 class SupplyCurveAggregation(BaseAggregation):
     """SupplyCurveAggregation"""
 
+    # pylint: disable=line-too-long
     def __init__(self, excl_fpath, tm_dset, econ_fpath=None,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, res_fpath=None, gids=None,
