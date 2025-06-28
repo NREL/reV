@@ -1452,8 +1452,12 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
     """Supply curve point summary framework that ties a reV SC point to its
     respective generation and resource data."""
 
-    # technology-dependent power density estimates in MW/km2
     POWER_DENSITY = {"pv": 36, "wind": 3}
+    """Technology-dependent power density estimates (in MW/km\ :sup:`2`).
+
+    The PV power density is a \**DC power density*\*, while the wind power
+    density is an \**AC power density*\*.
+    """
 
     def __init__(
         self,

@@ -503,8 +503,15 @@ class SupplyCurveAggregation(BaseAggregation):
                 - ``power_density`` : power density value (in
                   MW/km\ :sup:`2`)
 
-            If ``None``, a constant power density is inferred from the
-            generation meta data technology. By default, ``None``.
+            If you are running reV for PV (more specifically, you have a
+            `dc_ac_ratio` in your generation file), then this input
+            should represent the \**DC power density*\*. For all other
+            technologies (wind, geothermal, etc), this input should
+            represent the \**AC power density*\*. If ``None``, a
+            constant power density value is pulled from
+            :obj:`~reV.supply_curve.points.GenerationSupplyCurvePoint.POWER_DENSITY`
+            by looking up the technology from the generation meta data.
+            By default, ``None``.
         friction_fpath : str, optional
             Filepath to friction surface data (cost based exclusions).
             Must be paired with the `friction_dset` input below. The
