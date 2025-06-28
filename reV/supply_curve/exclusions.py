@@ -3,6 +3,7 @@
 Generate reV inclusion mask from exclusion layers
 """
 import logging
+import fnmatch
 from warnings import warn
 
 import numpy as np
@@ -1129,15 +1130,33 @@ class ExclusionMaskFromDict(ExclusionMask):
             Run a pre-flight check on each layer to ensure they contain
             un-excluded values
         """
-        if layers_dict is not None:
-            layers = []
-            for layer, kwargs in layers_dict.items():
-                layers.append(LayerMask(layer, **kwargs))
-        else:
-            layers = None
-
-        super().__init__(excl_h5, layers=layers, min_area=min_area,
+        super().__init__(excl_h5, layers=layers_dict, min_area=min_area,
                          kernel=kernel, hsds=hsds, check_layers=check_layers)
+
+    def _add_many_layers(self, layers):
+        """Add multiple layers (with check for missing layers)"""
+        missing = {}
+        final_layers = {}
+
+        # sort pattern-first so that users can overwrite specific layers
+        sorted_layers = sorted(layers, key=_unix_patterns_first)
+        for layer_pattern in sorted_layers:
+            kwargs = layers[layer_pattern]
+            layer_names = fnmatch.filter(self.excl_layers, layer_pattern)
+            if not layer_names:
+                missing.add(layer_pattern)
+
+            for layer in layer_names:
+                final_layers[layer] = LayerMask(layer, **kwargs)
+
+        if any(missing):
+            msg = ("ExclusionMask layers {} are missing from: {}"
+                   .format(missing, self._excl_h5))
+            logger.error(msg)
+            raise KeyError(msg)
+
+        for layer in final_layers.values():
+            self.add_layer(layer)
 
     @classmethod
     def extract_inclusion_mask(cls, excl_fpath, tm_dset, excl_dict=None,
@@ -1299,3 +1318,9 @@ class FrictionMask(ExclusionMask):
             mask = f.mask
 
         return mask
+
+
+def _unix_patterns_first(layer_name):
+    """Key that will put layer names with unix patterns first"""
+    special_chars = {"?", "*", "!", "[", "]"}
+    return -1 * any(char in layer_name for char in special_chars), layer_name
