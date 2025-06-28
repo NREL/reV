@@ -2116,7 +2116,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             `None` for solar runs with "dc_ac_ratio" dataset in the
             generation file
         """
-        if self.power_density_ac is None:
+        if "dc_ac_ratio" not in self.gen.datasets:
             return None
 
         return self.area * self.power_density_ac
@@ -2138,7 +2138,7 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             `None` for solar runs with "dc_ac_ratio" dataset in the
             generation file
         """
-        if self.power_density_ac is None:
+        if "dc_ac_ratio" not in self.gen.datasets:
             return None
 
         return self.area * self.power_density
