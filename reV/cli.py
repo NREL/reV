@@ -10,7 +10,8 @@ from reV.generation.cli_gen import gen_command
 from reV.econ.cli_econ import econ_command
 from reV.handlers.cli_collect import collect_command
 from reV.handlers.cli_multi_year import my_command
-from reV.supply_curve.cli_sc_aggregation import sc_agg_command
+from reV.supply_curve.cli_sc_aggregation import (sc_agg_command,
+                                                 sc_col_descriptions)
 from reV.supply_curve.cli_supply_curve import sc_command
 from reV.supply_curve.cli_tech_mapping import tm_command
 from reV.rep_profiles.cli_rep_profiles import rep_profiles_command
@@ -31,6 +32,7 @@ commands = [bespoke_command, gen_command, econ_command, collect_command,
 main = make_cli(commands, info={"name": "reV", "version": __version__})
 main.add_command(qa_qc_extra)
 main.add_command(project_points)
+main.add_command(sc_col_descriptions)
 
 # export GAPs commands to namespace for documentation
 batch = main.commands["batch"]

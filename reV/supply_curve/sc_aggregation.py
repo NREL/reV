@@ -245,6 +245,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
 class SupplyCurveAggregation(BaseAggregation):
     """SupplyCurveAggregation"""
 
+    # pylint: disable=line-too-long
     def __init__(self, excl_fpath, tm_dset, econ_fpath=None,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  resolution=64, excl_area=None, res_fpath=None, gids=None,
@@ -503,8 +504,15 @@ class SupplyCurveAggregation(BaseAggregation):
                 - ``power_density`` : power density value (in
                   MW/km\ :sup:`2`)
 
-            If ``None``, a constant power density is inferred from the
-            generation meta data technology. By default, ``None``.
+            If you are running reV for PV (more specifically, you have a
+            `dc_ac_ratio` in your generation file), then this input
+            should represent the \**DC power density*\*. For all other
+            technologies (wind, geothermal, etc), this input should
+            represent the \**AC power density*\*. If ``None``, a
+            constant power density value is pulled from
+            :obj:`~reV.supply_curve.points.GenerationSupplyCurvePoint.POWER_DENSITY`
+            by looking up the technology from the generation meta data.
+            By default, ``None``.
         friction_fpath : str, optional
             Filepath to friction surface data (cost based exclusions).
             Must be paired with the `friction_dset` input below. The
@@ -1218,7 +1226,7 @@ class SupplyCurveAggregation(BaseAggregation):
                                          .format(gid, zone_id))
                         else:
                             pointsum['res_class'] = ri
-                            pointsum['zone_id'] = zone_id
+                            pointsum[SupplyCurveField.ZONE_ID] = zone_id
 
                             summary.append(pointsum)
                             logger.debug(
