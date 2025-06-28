@@ -600,19 +600,7 @@ class ExclusionMask:
         self._check_layers = check_layers
 
         if layers is not None:
-            if not isinstance(layers, list):
-                layers = [layers]
-
-            missing = [layer.name for layer in layers
-                       if layer.name not in self.excl_layers]
-            if any(missing):
-                msg = ("ExclusionMask layers {} are missing from: {}"
-                       .format(missing, self._excl_h5))
-                logger.error(msg)
-                raise KeyError(msg)
-
-            for layer in layers:
-                self.add_layer(layer)
+            self._add_many_layers(layers)
 
         if kernel in ["queen", "rook"]:
             self._min_area = min_area
@@ -622,6 +610,22 @@ class ExclusionMask:
                          .format(self._min_area, self._kernel))
         else:
             raise KeyError('kernel must be "queen" or "rook"')
+
+    def _add_many_layers(self, layers):
+        """Add multiple layers (with check for missing layers)"""
+        if not isinstance(layers, list):
+            layers = [layers]
+
+        missing = [layer.name for layer in layers
+                   if layer.name not in self.excl_layers]
+        if any(missing):
+            msg = ("ExclusionMask layers {} are missing from: {}"
+                   .format(missing, self._excl_h5))
+            logger.error(msg)
+            raise KeyError(msg)
+
+        for layer in layers:
+            self.add_layer(layer)
 
     def __enter__(self):
         return self
