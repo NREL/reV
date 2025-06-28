@@ -47,7 +47,7 @@ DATA_LAYERS = {
     "padus": {"dset": "ri_padus", "method": "mode"},
 }
 EXCL_DICT = {
-    "ri_srtm_slope": {"inclusion_range": (None, 5), "exclude_nodata": True},
+    "ri_srtm*slope": {"inclusion_range": (None, 5), "exclude_nodata": True},
     "ri_padus": {"exclude_values": [1], "exclude_nodata": True},
 }
 RTOL = 0.001
