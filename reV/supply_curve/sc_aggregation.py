@@ -485,16 +485,36 @@ class SupplyCurveAggregation(BaseAggregation):
             The ``"output_layer_name"`` is the column name under which
             the aggregated data will appear in the output CSV file. The
             ``"output_layer_name"`` does not have to match the ``dset``
-            input value. The latter should match the layer name in the
+            input value. The ``dset`` should match the layer name in the
             HDF5 from which the data to aggregate should be pulled. The
-            ``method`` should be one of
-            ``{"mode", "mean", "min", "max", "sum", "category"}``,
-            describing how the high-resolution data should be aggregated
-            for each supply curve point. ``fpath`` is an optional key
-            that can point to an HDF5 file containing the layer data. If
-            left out, the data is assumed to exist in the file(s)
-            specified by the `excl_fpath` input. If ``None``, no data
-            layer aggregation is performed. By default, ``None``
+            ``method`` key should be one of the following:
+
+                - ``"mode"``: Output values will be the numerical mode
+                  of the non-excluded high resolution data layer cell
+                  values
+                - ``"mean"``: Output values will be the arithmetic mean
+                  of the non-excluded high resolution data layer cell
+                  values
+                - ``"min"``: Output values will be the numerical minimum
+                  value of the non-excluded high resolution data layer
+                  cell values
+                - ``"max"``: Output values will be the numerical maximum
+                  value of the non-excluded high resolution data layer
+                  cell values
+                - ``"sum"``: Output values will be the sum of the
+                  non-excluded high resolution data layer cell values
+                - ``"category"``: Output values will be a string
+                  representation of a dictionary where the keys are the
+                  unique values of the non-excluded high resolution data
+                  layer cells and the values are the *total
+                  high-resolution pixel area* corresponding to that data
+                  layer value
+
+            ``fpath`` is an optional key that can point to an HDF5 file
+            containing the layer data. If left out, the data is assumed
+            to exist in the file(s) specified by the `excl_fpath` input.
+            If ``None``, no data layer aggregation is performed.
+            By default, ``None``
         power_density : float | str, optional
             Power density value (in MW/km\ :sup:`2`) or filepath to
             variable power density CSV file containing the following
