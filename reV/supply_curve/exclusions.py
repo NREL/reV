@@ -1113,7 +1113,7 @@ class ExclusionMaskFromDict(ExclusionMask):
         excl_h5 : str | list | tuple
             Path to one or more exclusions .h5 files
         layers_dict : dict | NoneType
-            Dictionary of LayerMask arugments {layer: {kwarg: value}}
+            Dictionary of LayerMask arguments {layer: {kwarg: value}}
         min_area : float | NoneType
             Minimum required contiguous area in sq-km
         kernel : str
