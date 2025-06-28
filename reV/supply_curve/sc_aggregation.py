@@ -378,8 +378,12 @@ class SupplyCurveAggregation(BaseAggregation):
             respective layer values equal ``1``, **except** for the
             ``wildcard_unique_exclusion`` layer, which will be used as
             an exclusion wherever that particular layer values equal
-            ``1``, ``2``, or ``3``. If ``None`` or empty dictionary, no
-            exclusions are applied. By default, ``None``.
+            ``1``, ``2``, or ``3``. You can use this strategy to
+            "exclude" layers from the wildcard match - simply set the
+            ``exclude_values`` key to a value that does not exist in
+            that layer and it will be effectively ignored. If ``None``
+            or empty dictionary, no exclusions are applied.
+            By default, ``None``.
         area_filter_kernel : {"queen", "rook"}, optional
             Contiguous area filter method to use on final exclusions
             mask. The filters are defined as::
