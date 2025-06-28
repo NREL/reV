@@ -1135,7 +1135,7 @@ class ExclusionMaskFromDict(ExclusionMask):
 
     def _add_many_layers(self, layers):
         """Add multiple layers (with check for missing layers)"""
-        missing = {}
+        missing = set()
         final_layers = {}
 
         # sort pattern-first so that users can overwrite specific layers

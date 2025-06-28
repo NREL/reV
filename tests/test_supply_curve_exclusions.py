@@ -470,6 +470,17 @@ def test_bad_layer():
         assert not f.mask.any()
 
 
+@pytest.mark.parametrize("dne_layer_name", ["dne", "*dne*"])
+def test_dne_layer(dne_layer_name):
+    """Test that layer in not in exclusion file raises KeyError"""
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    excl_dict = {dne_layer_name: {'exclude_values': [1, 2, 3]}}
+    with pytest.raises(KeyError):
+        with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+            # pylint: disable=pointless-statement
+            f.mask
+
+
 @pytest.mark.parametrize(('ds_slice'),
                          [None,
                           (1, ),
