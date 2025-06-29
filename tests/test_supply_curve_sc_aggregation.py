@@ -759,7 +759,7 @@ def test_agg_zones(zone_config, max_workers, pre_extract_inclusions):
                 apply_legacy_remap = True
             else:
                 excl_dict = {
-                    k: v for k, v in EXCL_DICT.items() if k == "ri_srtm_slope"
+                    k: v for k, v in EXCL_DICT.items() if k == "ri_srtm*slope"
                 }
                 res_class_bins = None
                 baseline = os.path.join(
