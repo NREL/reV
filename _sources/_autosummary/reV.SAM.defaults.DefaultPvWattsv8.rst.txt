@@ -1,0 +1,24 @@
+reV.SAM.defaults.DefaultPvWattsv8
+=================================
+
+.. currentmodule:: reV.SAM.defaults
+
+.. autoclass:: DefaultPvWattsv8
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DefaultPvWattsv8.default
+   
+   
+
+   
+   
+   

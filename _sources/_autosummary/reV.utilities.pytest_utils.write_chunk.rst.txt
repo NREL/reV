@@ -1,0 +1,6 @@
+reV.utilities.pytest\_utils.write\_chunk
+========================================
+
+.. currentmodule:: reV.utilities.pytest_utils
+
+.. autofunction:: write_chunk

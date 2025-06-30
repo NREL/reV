@@ -1,0 +1,6 @@
+reV.utilities.cli\_functions.compile\_descriptions
+==================================================
+
+.. currentmodule:: reV.utilities.cli_functions
+
+.. autofunction:: compile_descriptions
