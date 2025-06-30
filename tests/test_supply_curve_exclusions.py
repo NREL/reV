@@ -423,6 +423,43 @@ def test_inclusion_mask(scenario):
     assert np.allclose(truth, dict_test)
 
 
+def test_inclusion_mask_with_wildcards():
+    """Test creation of inclusion mask with wildcards"""
+
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    truth_path = os.path.join(TESTDATADIR, 'ri_exclusions', 'wind.npy')
+    truth = np.load(truth_path)
+
+    layer_name_map = {'ri_smod': 'layer1', 'ri_padus': 'layer2',
+                      'ri_srtm_slope': 'layer3'}
+    layers_dict = {'layer*': {'include_values': [1, ],
+                              'exclude_nodata': True},
+                   # Test user overwriting one of the layers
+                   'layer3': {'inclusion_range': (0, 20),
+                              'exclude_nodata': True}}
+
+    with tempfile.TemporaryDirectory() as td:
+        excl_fp = os.path.join(td, 'ri_exclusions.h5')
+        shutil.copy(excl_h5, excl_fp)
+
+        with h5py.File(excl_fp, mode="a") as fh:
+            for src_layer, dest_layer in layer_name_map.items():
+                if dest_layer == "layer2":
+                    data = fh[src_layer][:]
+                    data[data == 1] = 0
+                    data[data == 2] = 1
+                    fh.create_dataset(dest_layer, data=data)
+                else:
+                    fh.create_dataset(dest_layer, data=fh[src_layer])
+                for key, val in fh[src_layer].attrs.items():
+                    fh[dest_layer].attrs[key] = val
+
+                del fh[src_layer]
+
+        dict_test = ExclusionMaskFromDict.run(excl_fp, layers_dict=layers_dict)
+        assert np.allclose(truth, dict_test)
+
+
 def test_exclude_range():
     """
     Test creation of inclusion mask with "exclude_range" key
@@ -468,6 +505,17 @@ def test_bad_layer():
     with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict,
                                check_layers=False) as f:
         assert not f.mask.any()
+
+
+@pytest.mark.parametrize("dne_layer_name", ["dne", "*dne*"])
+def test_dne_layer(dne_layer_name):
+    """Test that layer in not in exclusion file raises KeyError"""
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    excl_dict = {dne_layer_name: {'exclude_values': [1, 2, 3]}}
+    with pytest.raises(KeyError):
+        with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+            # pylint: disable=pointless-statement
+            f.mask
 
 
 @pytest.mark.parametrize(('ds_slice'),

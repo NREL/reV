@@ -335,6 +335,12 @@ class SupplyCurveAggregation(BaseAggregation):
                         "exclude_nodata": True,
                         "nodata_value": -1
                     },
+                    "wildcard*exclusion": {
+                        "exclude_values": 1,
+                    },
+                    "wildcard_unique_exclusion": {
+                        "exclude_values": [1, 2, 3],
+                    },
                     "partial_setback": {
                         "use_as_weights": True
                     },
@@ -360,9 +366,24 @@ class SupplyCurveAggregation(BaseAggregation):
                     ...
                 }
 
-            Note that all the keys given in this dictionary should be
-            datasets of the `excl_fpath` file. If ``None`` or empty
-            dictionary, no exclusions are applied. By default, ``None``.
+            Note that all the keys given in this dictionary must be
+            datasets of the `excl_fpath` file or you will get an error.
+            You *may* include Unix-style wildcards (i.e. ``*``, ``?``,
+            or ``[]``) in the keys, but note that the same exclusion
+            configuration will be applied to **all** datasets that match
+            the wildcard pattern unless you explicitly override it for a
+            specific layer. For example, in the configuration above,
+            **all** of the layers matching the pattern
+            ``wildcard*exclusion`` will be used as exclusions where the
+            respective layer values equal ``1``, **except** for the
+            ``wildcard_unique_exclusion`` layer, which will be used as
+            an exclusion wherever that particular layer values equal
+            ``1``, ``2``, or ``3``. You can use this strategy to
+            "exclude" layers from the wildcard match - simply set the
+            ``exclude_values`` key to a value that does not exist in
+            that layer and it will be effectively ignored. If ``None``
+            or empty dictionary, no exclusions are applied.
+            By default, ``None``.
         area_filter_kernel : {"queen", "rook"}, optional
             Contiguous area filter method to use on final exclusions
             mask. The filters are defined as::

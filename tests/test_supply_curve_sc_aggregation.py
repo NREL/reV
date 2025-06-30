@@ -47,7 +47,7 @@ DATA_LAYERS = {
     "padus": {"dset": "ri_padus", "method": "mode"},
 }
 EXCL_DICT = {
-    "ri_srtm_slope": {"inclusion_range": (None, 5), "exclude_nodata": True},
+    "ri_srtm*slope": {"inclusion_range": (None, 5), "exclude_nodata": True},
     "ri_padus": {"exclude_values": [1], "exclude_nodata": True},
 }
 RTOL = 0.001
@@ -483,7 +483,6 @@ def test_data_layer_methods():
         assert slope_min <= slope_mode <= slope_max
 
 
-
 @pytest.mark.parametrize(
     "cap_cost_scale",
     ["1", f"2 * np.multiply(1000, {SupplyCurveField.CAPACITY_AC_MW}) ** -0.3"]
@@ -760,7 +759,7 @@ def test_agg_zones(zone_config, max_workers, pre_extract_inclusions):
                 apply_legacy_remap = True
             else:
                 excl_dict = {
-                    k: v for k, v in EXCL_DICT.items() if k == "ri_srtm_slope"
+                    k: v for k, v in EXCL_DICT.items() if k == "ri_srtm*slope"
                 }
                 res_class_bins = None
                 baseline = os.path.join(
