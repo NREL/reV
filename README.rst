@@ -41,8 +41,9 @@
 **reV** (the Renewable Energy Potential model)
 is an open-source geospatial techno-economic tool that
 estimates renewable energy technical potential (capacity and generation),
-system cost, and supply curves for solar photovoltaics (PV),
-concentrating solar power (CSP), geothermal, and wind energy.
+system cost, and supply curves for a variety of technologies, including
+but not limited to, geothermal (GT), pumped storage hydropower (PSH),
+solar photovoltaics (PV), concentrating solar power (CSP), wind energy, etc.
 reV allows researchers to include exhaustive spatial representation
 of the built and natural environment into the generation and cost estimates
 that it computes.
