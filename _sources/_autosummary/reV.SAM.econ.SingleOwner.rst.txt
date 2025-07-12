@@ -1,0 +1,55 @@
+reV.SAM.econ.SingleOwner
+========================
+
+.. currentmodule:: reV.SAM.econ
+
+.. autoclass:: SingleOwner
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SingleOwner.assign_inputs
+      ~SingleOwner.collect_outputs
+      ~SingleOwner.default
+      ~SingleOwner.drop_leap
+      ~SingleOwner.ensure_res_len
+      ~SingleOwner.execute
+      ~SingleOwner.flip_actual_irr
+      ~SingleOwner.get_sam_res
+      ~SingleOwner.get_time_interval
+      ~SingleOwner.gross_revenue
+      ~SingleOwner.lcoe_fcr
+      ~SingleOwner.lcoe_nom
+      ~SingleOwner.lcoe_real
+      ~SingleOwner.make_datetime
+      ~SingleOwner.npv
+      ~SingleOwner.outputs_to_utc_arr
+      ~SingleOwner.ppa_price
+      ~SingleOwner.reV_run
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SingleOwner.DIR
+      ~SingleOwner.IGNORE_ATTRS
+      ~SingleOwner.MODULE
+      ~SingleOwner.attr_dict
+      ~SingleOwner.input_list
+      ~SingleOwner.meta
+      ~SingleOwner.module
+      ~SingleOwner.pysam
+      ~SingleOwner.site
+   
+   

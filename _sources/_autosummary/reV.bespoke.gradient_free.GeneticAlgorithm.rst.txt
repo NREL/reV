@@ -1,0 +1,31 @@
+reV.bespoke.gradient\_free.GeneticAlgorithm
+===========================================
+
+.. currentmodule:: reV.bespoke.gradient_free
+
+.. autoclass:: GeneticAlgorithm
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GeneticAlgorithm.chromosome_2_variables
+      ~GeneticAlgorithm.crossover
+      ~GeneticAlgorithm.initialize_bits
+      ~GeneticAlgorithm.initialize_design_variables
+      ~GeneticAlgorithm.initialize_fitness
+      ~GeneticAlgorithm.initialize_population
+      ~GeneticAlgorithm.mutate
+      ~GeneticAlgorithm.optimize_ga
+   
+   
+
+   
+   
+   

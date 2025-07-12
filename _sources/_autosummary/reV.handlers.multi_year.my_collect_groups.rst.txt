@@ -1,0 +1,6 @@
+reV.handlers.multi\_year.my\_collect\_groups
+============================================
+
+.. currentmodule:: reV.handlers.multi_year
+
+.. autofunction:: my_collect_groups

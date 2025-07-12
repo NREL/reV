@@ -1,0 +1,33 @@
+reV.utilities.cli\_functions
+============================
+
+.. automodule:: reV.utilities.cli_functions
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      compile_descriptions
+      format_analysis_years
+      init_cli_logging
+      parse_from_pipeline
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

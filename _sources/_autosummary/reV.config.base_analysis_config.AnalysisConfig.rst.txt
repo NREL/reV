@@ -1,0 +1,54 @@
+reV.config.base\_analysis\_config.AnalysisConfig
+================================================
+
+.. currentmodule:: reV.config.base_analysis_config
+
+.. autoclass:: AnalysisConfig
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AnalysisConfig.check_files
+      ~AnalysisConfig.check_overwrite_keys
+      ~AnalysisConfig.clear
+      ~AnalysisConfig.copy
+      ~AnalysisConfig.fromkeys
+      ~AnalysisConfig.get
+      ~AnalysisConfig.items
+      ~AnalysisConfig.keys
+      ~AnalysisConfig.pop
+      ~AnalysisConfig.popitem
+      ~AnalysisConfig.resolve_path
+      ~AnalysisConfig.set_self_dict
+      ~AnalysisConfig.setdefault
+      ~AnalysisConfig.str_replace_and_resolve
+      ~AnalysisConfig.update
+      ~AnalysisConfig.values
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AnalysisConfig.NAME
+      ~AnalysisConfig.REQUIREMENTS
+      ~AnalysisConfig.STR_REP
+      ~AnalysisConfig.analysis_years
+      ~AnalysisConfig.config_dir
+      ~AnalysisConfig.config_keys
+      ~AnalysisConfig.execution_control
+      ~AnalysisConfig.log_directory
+      ~AnalysisConfig.log_level
+      ~AnalysisConfig.name
+   
+   

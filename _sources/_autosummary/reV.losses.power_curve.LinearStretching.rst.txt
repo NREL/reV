@@ -1,0 +1,31 @@
+reV.losses.power\_curve.LinearStretching
+========================================
+
+.. currentmodule:: reV.losses.power_curve
+
+.. autoclass:: LinearStretching
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LinearStretching.apply
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LinearStretching.bounds
+      ~LinearStretching.optm_bounds
+   
+   
