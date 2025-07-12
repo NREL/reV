@@ -1,0 +1,78 @@
+cff-version: 1.2.0
+title: reV
+message: >-
+  If you use this software, please cite both the technical paper
+  (citation in README) and the software itself (citation below)
+type: software
+authors:
+  - family-names: Buster
+    given-names: Grant
+    affiliation: National Renewable Energy Laboratory
+    orcid: 'https://orcid.org/0000-0001-8616-8100'
+  - family-names: Pinchuk
+    given-names: Pavlo
+    affiliation: National Renewable Energy Laboratory
+    orcid: 'https://orcid.org/0000-0003-4736-4728'
+  - family-names: Rossol
+    given-names: Michael
+    affiliation: National Renewable Energy Laboratory
+    orcid: 'https://orcid.org/0000-0001-9351-8404'
+  - family-names: Benton
+    given-names: Brandon
+    affiliation: National Renewable Energy Laboratory
+    orcid: "https://orcid.org/0009-0008-9931-2050"
+  - family-names: Gleason
+    given-names: Michael
+    affiliation: National Renewable Energy Laboratory
+    orcid: "https://orcid.org/0009-0003-5916-6726"
+  - family-names: Stanley
+    given-names: Andrew P.J.
+    affiliation: National Renewable Energy Laboratory
+    orcid: "https://orcid.org/0000-0002-0677-3413"
+  - family-names: Spencer
+    given-names: Robert
+    affiliation: National Renewable Energy Laboratory
+  - family-names: Bannister
+    given-names: Michael
+    affiliation: National Renewable Energy Laboratory
+  - family-names: Williams
+    given-names: Travis
+    affiliation: National Renewable Energy Laboratory
+    orcid: 'https://orcid.org/0000-0003-0973-1865'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.4501716
+repository-code: 'https://github.com/NREL/reV'
+abstract: >-
+  reV (the Renewable Energy Potential model) is an open-source
+  geospatial techno-economic tool that estimates renewable energy
+  technical potential (capacity and generation), system cost, and
+  supply curves for a variety of technologies, including but not
+  limited to, geothermal (GT), pumped storage hydropower (PSH),
+  solar photovoltaics (PV), concentrating solar power (CSP),
+  wind energy, etc. reV allows researchers to include exhaustive
+  spatial representation of the built and natural environment into
+  the generation and cost estimates that it computes. reV is highly
+  dynamic, allowing analysts to assess potential at varying levels
+  of detail — from a single  site up to an entire continent at
+  temporal resolutions ranging from five minutes to hourly, spanning
+  a single year or multiple decades. The reV model can provide broad
+  coverage across large spatial extents, including North America,
+  South and Central Asia, the Middle East, South America, and
+  South Africa to inform national and international-scale analyses.
+  Still, reV is equally well-suited for regional infrastructure and
+  deployment planning and analysis.
+keywords:
+  - Energy Analysis
+  - Energy Potential
+  - Supply Curve
+  - LCOE
+  - Siting
+  - Geothermal
+  - Pumped Storage Hydropower
+  - Solar
+  - Concentrating Solar Power
+  - Wind
+license: BSD-3-Clause
+version: 0.14.5
+date-released: '2020-03-02'
