@@ -218,6 +218,6 @@ Potential (reV) Model: A Geospatial Platform for Technical Potential and Supply
 Curve Modeling.” Golden, Colorado, United States: National Renewable Energy
 Laboratory. NREL/TP-6A20-73067. https://doi.org/10.2172/1563140.
 
-Grant Buster, Michael Rossol, Paul Pinchuk, Brandon N Benton, Robert Spencer,
-Mike Bannister, & Travis Williams. (2023).
-NREL/reV: reV 0.8.0 (v0.8.0). Zenodo. https://doi.org/10.5281/zenodo.8247528
+Buster, G., Pinchuk, P., Rossol, M., Benton, B., Gleason, M., Stanley, A. P.,
+Spencer, R., Bannister, M., & Williams, T. (2020). reV (Version 0.14.5)
+[Computer software]. https://github.com/NREL/reV
