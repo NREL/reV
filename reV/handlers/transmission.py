@@ -368,7 +368,7 @@ class TransmissionFeatures:
             Feature gid to check
         """
         avail_cap = self.available_capacity(gid)
-        if avail_cap == 0:
+        if avail_cap <= 0:
             self._available_mask[gid] = False
 
     def check_availability(self, gid):
