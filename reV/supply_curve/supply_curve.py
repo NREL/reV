@@ -1119,10 +1119,8 @@ class SupplyCurve:
     def _full_sort(  # noqa: C901
         self,
         trans_table,
-        trans_costs=None,
-        avail_cap_frac=1,
+        trans_features,
         comp_wind_dirs=None,
-        total_lcoe_fric=None,
         sort_on=SupplyCurveField.TOTAL_LCOE,
         columns=(
             SupplyCurveField.TRANS_GID,
@@ -1141,18 +1139,12 @@ class SupplyCurve:
         Parameters
         ----------
         trans_table : pandas.DataFrame
-            Supply Curve Tranmission table to sort on
-        trans_costs : str | dict, optional
-            Transmission feature costs to use with TransmissionFeatures
-            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
-            center_tie_in_cost, sink_tie_in_cost, by default None
-        avail_cap_frac : int, optional
-            Fraction of transmissions features capacity 'ac_cap' to make
-            available for connection to supply curve points, by default 1
+            Supply Curve Transmission table to sort on
+        trans_features : TransmissionFeatures
+            TransmissionFeatures handler instance to get transmission
+            cost information.
         comp_wind_dirs : CompetitiveWindFarms, optional
-            Pre-initilized CompetitiveWindFarms instance, by default None
-        total_lcoe_fric : ndarray, optional
-            Vector of lcoe friction values, by default None
+            Pre-initialized CompetitiveWindFarms instance, by default None
         sort_on : str, optional
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
@@ -1172,101 +1164,29 @@ class SupplyCurve:
             Updated sc_points table with transmission connections, LCOT
             and LCOE+LCOT based on full supply curve connections
         """
-        trans_features = self._create_handler(
-            self._trans_table,
-            trans_costs=trans_costs,
-            avail_cap_frac=avail_cap_frac,
-        )
-        init_list = [np.nan] * int(1 + np.max(self._sc_gids))
-        columns = list(columns)
-        if sort_on not in columns:
-            columns.append(sort_on)
+        all_cols = _get_connection_cols(columns, sort_on)
+        self._reset_mask_capacities()
 
-        conn_lists = {k: deepcopy(init_list) for k in columns}
+        conn_lists = self._connect_wile_cap_available(trans_table,
+                                                      trans_features,
+                                                      all_cols,
+                                                      comp_wind_dirs, downwind)
 
-        trans_sc_gids = trans_table[SupplyCurveField.SC_GID].values.astype(int)
+        conn_lists = self._connect_at_max_cap(conn_lists, trans_table,
+                                              all_cols, comp_wind_dirs,
+                                              downwind)
 
-        # syntax is final_key: source_key (source from trans_table)
-        all_cols = list(columns)
-        essentials = [SupplyCurveField.TRANS_GID,
-                      SupplyCurveField.TRANS_CAPACITY,
-                      SupplyCurveField.TRANS_TYPE,
-                      SupplyCurveField.DIST_SPUR_KM,
-                      SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
-                      SupplyCurveField.LCOT,
-                      SupplyCurveField.TOTAL_LCOE]
+        _warn_about_unconnected_gids(self._mask)
 
-        for col in essentials:
-            if col not in all_cols:
-                all_cols.append(col)
+        return self._merge_sc_with_connections(columns, conn_lists, sort_on)
 
-        arrays = {col: trans_table[col].values for col in all_cols}
-
-        sc_capacities = trans_table[self._sc_capacity_col].values
-
-        connected = 0
-        progress = 0
-        for i in range(len(trans_table)):
-            sc_gid = trans_sc_gids[i]
-            if self._mask[sc_gid]:
-                connect = trans_features.connect(
-                    arrays[SupplyCurveField.TRANS_GID][i], sc_capacities[i]
-                )
-                if connect:
-                    connected += 1
-                    logger.debug("Connecting sc gid {}".format(sc_gid))
-                    self._mask[sc_gid] = False
-
-                    for col_name, data_arr in arrays.items():
-                        conn_lists[col_name][sc_gid] = data_arr[i]
-
-                    if total_lcoe_fric is not None:
-                        col_name = SupplyCurveField.TOTAL_LCOE_FRICTION
-                        conn_lists[col_name][sc_gid] = total_lcoe_fric[i]
-
-                    current_prog = connected // (len(self) / 100)
-                    if current_prog > progress:
-                        progress = current_prog
-                        logger.info(
-                            "{} % of supply curve points connected".format(
-                                progress
-                            )
-                        )
-
-                    if comp_wind_dirs is not None:
-                        comp_wind_dirs = (
-                            self._exclude_noncompetitive_wind_farms(
-                                comp_wind_dirs, sc_gid, downwind=downwind
-                            )
-                        )
-
-        index = range(0, int(1 + np.max(self._sc_gids)))
-        connections = pd.DataFrame(conn_lists, index=index)
-        connections.index.name = SupplyCurveField.SC_GID
-        connections = connections.dropna(subset=[sort_on])
-        connections = connections[columns].reset_index()
-
-        sc_gids = self._sc_points[SupplyCurveField.SC_GID].values
-        connected = connections[SupplyCurveField.SC_GID].values
-        logger.debug('Connected gids {} out of total supply curve gids {}'
-                     .format(len(connected), len(sc_gids)))
-        unconnected = ~np.isin(sc_gids, connected)
-        unconnected = sc_gids[unconnected].tolist()
-
-        if unconnected:
-            msg = (
-                "{} supply curve points were not connected to tranmission! "
-                "Unconnected sc_gid's: {}".format(
-                    len(unconnected), unconnected
-                )
-            )
-            logger.warning(msg)
-            warn(msg)
-
-        supply_curve = self._sc_points.merge(
-            connections, on=SupplyCurveField.SC_GID)
-
-        return supply_curve.reset_index(drop=True)
+    def _reset_mask_capacities(self):
+        """Reset mask to have max SC point capacities for each SC GID"""
+        self._mask[:] = 0
+        sc_pt_capacities = self._sc_points.set_index(SupplyCurveField.SC_GID)
+        sc_pt_capacities = sc_pt_capacities[self._sc_capacity_col]
+        for gid, cap in sc_pt_capacities.to_dict().items():
+            self._mask[gid] = cap
 
     def _check_feature_capacity(self, avail_cap_frac=1):
         """
@@ -1278,6 +1198,99 @@ class SupplyCurve:
             fc = TF.feature_capacity(self._trans_table, **kwargs)
             self._trans_table = self._trans_table.merge(
                 fc, on=SupplyCurveField.TRANS_GID)
+
+    def _connect_wile_cap_available(self, trans_table, trans_features,
+                                    all_cols, comp_wind_dirs, downwind):
+        """Connect SC points to trans features that have available capacity"""
+        connected = 0
+        progress = 0
+        conn_lists = {k: [] for k in all_cols}
+        conn_lists[self._sc_capacity_col] = []
+
+        available_conn_mask = ~trans_table[_MAX_CAP_INDICATOR_COL]
+        for __, row in trans_table[available_conn_mask].iterrows():
+            sc_gid = row[SupplyCurveField.SC_GID]
+            if self._mask[sc_gid] > 0:
+                trans_gid = row[SupplyCurveField.TRANS_GID]
+                cap_connected = trans_features.connect(
+                    trans_gid, self._mask[sc_gid]
+                )
+                if cap_connected <= 0:
+                    continue
+
+                connected += 1
+                logger.debug("Connecting sc gid {} to trans gid {}: {:.2f} MW"
+                             .format(sc_gid, trans_gid, cap_connected))
+                self._mask[sc_gid] -= cap_connected
+
+                for col in all_cols:
+                    conn_lists[col].append(row[col])
+
+                conn_lists[self._sc_capacity_col].append(cap_connected)
+
+                current_prog = connected // (len(self) / 100)
+                if current_prog > progress:
+                    progress = current_prog
+                    logger.info("{} % of supply curve points connected"
+                                .format(progress))
+
+                if comp_wind_dirs is not None:
+                    comp_wind_dirs = (
+                        self._exclude_noncompetitive_wind_farms(
+                            comp_wind_dirs, sc_gid, downwind=downwind
+                        )
+                    )
+
+        return conn_lists
+
+    def _connect_at_max_cap(self, conn_lists, trans_table, all_cols,
+                            comp_wind_dirs, downwind):
+        """Connect SC points to trans features beyond max capacity"""
+        max_cap_mask = trans_table[_MAX_CAP_INDICATOR_COL]
+        for __, row in trans_table[max_cap_mask].iterrows():
+            sc_gid = row[SupplyCurveField.SC_GID]
+            if self._mask[sc_gid] <= 0:
+                continue
+
+            cap_connected = self._mask[sc_gid]
+            trans_gid = row[SupplyCurveField.TRANS_GID]
+            logger.debug("Connecting the rest of the capacity at sc gid {} to "
+                         "trans gid {}: {:.2f} MW"
+                         .format(sc_gid, trans_gid, cap_connected))
+            self._mask[sc_gid] = 0
+
+            for col in all_cols:
+                conn_lists[col].append(row[col])
+
+            conn_lists[self._sc_capacity_col].append(cap_connected)
+
+            if comp_wind_dirs is not None:
+                comp_wind_dirs = (
+                    self._exclude_noncompetitive_wind_farms(
+                        comp_wind_dirs, sc_gid, downwind=downwind
+                    )
+                )
+
+        return conn_lists
+
+    def _merge_sc_with_connections(self, columns, conn_lists, sort_on):
+        """Merge connections and SC for output"""
+        connections = pd.DataFrame(conn_lists).dropna(subset=[sort_on])
+
+        keep_for_merge_cols = list(columns)
+        if self._sc_capacity_col not in keep_for_merge_cols:
+            keep_for_merge_cols.append(self._sc_capacity_col)
+
+        to_drop = [str(col) for col in keep_for_merge_cols
+                   if col in self._sc_points.columns]
+        sc_points = self._sc_points.drop(columns=to_drop)
+
+        if SupplyCurveField.SC_GID not in keep_for_merge_cols:
+            keep_for_merge_cols.append(SupplyCurveField.SC_GID)
+
+        supply_curve = sc_points.merge(connections[keep_for_merge_cols],
+                                       on=SupplyCurveField.SC_GID)
+        return supply_curve.reset_index(drop=True)
 
     def _adjust_output_columns(self, columns, consider_friction):
         """Add extra output columns, if needed."""
@@ -1416,16 +1429,11 @@ class SupplyCurve:
         sort_on = self._determine_sort_on(sort_on)
 
         trans_table = self._trans_table.copy()
+        trans_table[_MAX_CAP_INDICATOR_COL] = False
         pos = trans_table[SupplyCurveField.LCOT].isnull()
         trans_table = trans_table.loc[~pos].sort_values(
             [sort_on, SupplyCurveField.TRANS_GID]
         )
-
-        total_lcoe_fric = None
-        col_in_table = SupplyCurveField.MEAN_LCOE_FRICTION in trans_table
-        if consider_friction and col_in_table:
-            total_lcoe_fric = \
-                trans_table[SupplyCurveField.TOTAL_LCOE_FRICTION].values
 
         comp_wind_dirs = None
         if wind_dirs is not None:
@@ -1446,12 +1454,17 @@ class SupplyCurve:
                 offshore=offshore_compete,
             )
 
-        supply_curve = self._full_sort(
-            trans_table,
+        trans_features = self._create_handler(
+            self._trans_table,
             trans_costs=transmission_costs,
             avail_cap_frac=avail_cap_frac,
+        )
+
+        supply_curve = self._full_sort(
+            trans_table,
+            trans_features,
             comp_wind_dirs=comp_wind_dirs,
-            total_lcoe_fric=total_lcoe_fric,
+            consider_friction=consider_friction,
             sort_on=sort_on,
             columns=columns,
             downwind=downwind,
