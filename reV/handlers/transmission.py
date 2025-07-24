@@ -190,6 +190,7 @@ class TransmissionFeatures:
         features = {}
 
         cap_frac = self._avail_cap_frac
+        trans_table['ac_cap'] = trans_table['ac_cap'].astype(np.float32)
         trans_features = trans_table.groupby(SupplyCurveField.TRANS_GID)
         trans_features = trans_features.first()
 
