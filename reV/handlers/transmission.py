@@ -503,7 +503,7 @@ class TransmissionFeatures:
         Parameters
         ----------
         gid : int
-            Unique id of feature of intereset
+            Unique id of feature of interest
         capacity : float
             Capacity needed in MW
         apply : bool
@@ -512,15 +512,15 @@ class TransmissionFeatures:
 
         Returns
         -------
-        connected : bool
-            Flag as to whether connection is possible or not
+        connected : float
+            Amount of capacity possible to connect
         """
         if self.check_availability(gid):
             avail_cap = self.available_capacity(gid)
             if avail_cap is not None and capacity > avail_cap:
-                connected = False
+                connected = 0
             else:
-                connected = True
+                connected = capacity
                 if apply:
                     feature_type = self[gid]['type']
                     if feature_type == 'transline':
@@ -533,7 +533,7 @@ class TransmissionFeatures:
 
                     self._update_availability(gid)
         else:
-            connected = False
+            connected = 0
 
         return connected
 
