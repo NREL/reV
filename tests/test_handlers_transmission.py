@@ -10,7 +10,7 @@ import pytest
 
 from reV import TESTDATADIR
 from reV.utilities import SupplyCurveField
-from reV.handlers.transmission import TransmissionFeatures as TF
+from reV.handlers.transmission import TransmissionFeatures as TF, POIFeatures
 
 TRANS_COSTS_1 = {
     "line_tie_in_cost": 200,
@@ -191,6 +191,43 @@ def test_substation_load_spreading(i, trans_costs, trans_table):
         expected_match = (LINE_CAPS[i][line_id]
                           == tf[line_id][SupplyCurveField.TRANS_CAPACITY])
         assert expected_match, msg
+
+
+def test_init_poi_features():
+    """Test POIFeatures initialization."""
+    poi_data = pd.DataFrame({SupplyCurveField.TRANS_GID: [0],
+                             "ac_cap": [1000]})
+
+    pf = POIFeatures(poi_data)
+
+    assert pf[0][SupplyCurveField.TRANS_CAPACITY] == 1000
+
+
+def test_poi_features_connect():
+    """Test POIFeatures connection capacity."""
+    poi_data = pd.DataFrame({SupplyCurveField.TRANS_GID: [0],
+                             "ac_cap": [1000]})
+
+    pf = POIFeatures(poi_data)
+
+    assert pf.connect(0, 300) == 300
+    assert pf.available_capacity(0) == 700
+    assert pf.connect(0, 1000) == 700
+    assert pf.available_capacity(0) == 0
+
+
+def test_poi_features_missing_method():
+    """Test POIFeatures for not supported methods."""
+    poi_data = pd.DataFrame({SupplyCurveField.TRANS_GID: [0],
+                             "ac_cap": [1000]})
+
+    pf = POIFeatures(poi_data)
+
+    with pytest.raises(NotImplementedError):
+        pf.cost()
+
+    with pytest.raises(NotImplementedError):
+        pf._calc_cost()
 
 
 def execute_pytest(capture="all", flags="-rapP"):
