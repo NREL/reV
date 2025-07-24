@@ -1464,7 +1464,6 @@ class SupplyCurve:
             trans_table,
             trans_features,
             comp_wind_dirs=comp_wind_dirs,
-            consider_friction=consider_friction,
             sort_on=sort_on,
             columns=columns,
             downwind=downwind,
