@@ -159,13 +159,14 @@ class SupplyCurve:
         logger.info("Supply curve capacity column: {}".format(sc_capacity_col))
 
         self._sc_capacity_col = sc_capacity_col
-        self._sc_points = self._parse_sc_points(
-            sc_points, sc_features=sc_features
-        )
-        self._trans_table = self._map_tables(
-            self._sc_points, trans_table, sc_capacity_col=sc_capacity_col
-        )
-        self._sc_gids, self._mask = self._parse_sc_gids(self._trans_table)
+        self._sc_points = self._parse_sc_points(sc_points,
+                                                sc_features=sc_features)
+        self._trans_table = self._map_tables(self._sc_points,
+                                             trans_table,
+                                             sc_capacity_col=sc_capacity_col,
+                                             poi_info=self._poi_info)
+        self._sc_gids, self._sc_capacities = self._parse_sc_gids(
+            self._trans_table)
 
     def __repr__(self):
         msg = "{} with {} points".format(self.__class__.__name__, len(self))
@@ -729,7 +730,7 @@ class SupplyCurve:
 
     @staticmethod
     def _parse_sc_gids(trans_table, gid_key=SupplyCurveField.SC_GID):
-        """Extract unique sc gids, make bool mask from tranmission table
+        """Extract unique sc gids, make float SC cap from transmission table
 
         Parameters
         ----------
@@ -743,15 +744,16 @@ class SupplyCurve:
         -------
         sc_gids : list
             List of unique integer supply curve gids (non-nan)
-        mask : np.ndarray
-            Boolean array initialized as true. Length is equal to the maximum
-            SC gid so that the SC gids can be used to index the mask directly.
+        sc_capacities : np.ndarray
+            Float array initialized as all zeros. Length is equal to the
+            maximum SC gid so that the SC gids can be used to index the
+            SC capacity directly.
         """
         sc_gids = list(np.sort(trans_table[gid_key].unique()))
         sc_gids = [int(gid) for gid in sc_gids]
-        mask = np.ones(int(1 + max(sc_gids)), dtype=bool)
+        sc_capacities = np.zeros(int(1 + max(sc_gids)), dtype=np.float32)
 
-        return sc_gids, mask
+        return sc_gids, sc_capacities
 
     @staticmethod
     def _get_capacity(sc_gid, sc_table, connectable=True,
@@ -1068,11 +1070,11 @@ class SupplyCurve:
                     if check:
                         sc_gids = comp_wind_dirs[SupplyCurveField.SC_GID, n]
                         for sc_id in sc_gids:
-                            if self._mask[sc_id]:
+                            if self._sc_capacities[sc_id] > 0:
                                 logger.debug(
                                     "Excluding sc_gid {}".format(sc_id)
                                 )
-                                self._mask[sc_id] = False
+                                self._sc_capacities[sc_id] = 0
 
         return comp_wind_dirs
 
@@ -1165,7 +1167,7 @@ class SupplyCurve:
             and LCOE+LCOT based on full supply curve connections
         """
         all_cols = _get_connection_cols(columns, sort_on)
-        self._reset_mask_capacities()
+        self._reset_sc_capacities()
 
         conn_lists = self._connect_wile_cap_available(trans_table,
                                                       trans_features,
@@ -1176,17 +1178,17 @@ class SupplyCurve:
                                               all_cols, comp_wind_dirs,
                                               downwind)
 
-        _warn_about_unconnected_gids(self._mask)
+        _warn_about_unconnected_gids(self._sc_capacities)
 
         return self._merge_sc_with_connections(columns, conn_lists, sort_on)
 
-    def _reset_mask_capacities(self):
-        """Reset mask to have max SC point capacities for each SC GID"""
-        self._mask[:] = 0
+    def _reset_sc_capacities(self):
+        """Reset SC caps to have max SC point capacities for each SC GID"""
+        self._sc_capacities[:] = 0
         sc_pt_capacities = self._sc_points.set_index(SupplyCurveField.SC_GID)
         sc_pt_capacities = sc_pt_capacities[self._sc_capacity_col]
         for gid, cap in sc_pt_capacities.to_dict().items():
-            self._mask[gid] = cap
+            self._sc_capacities[gid] = cap
 
     def _check_feature_capacity(self, avail_cap_frac=1):
         """
@@ -1210,10 +1212,10 @@ class SupplyCurve:
         available_conn_mask = ~trans_table[_MAX_CAP_INDICATOR_COL]
         for __, row in trans_table[available_conn_mask].iterrows():
             sc_gid = row[SupplyCurveField.SC_GID]
-            if self._mask[sc_gid] > 0:
+            if self._sc_capacities[sc_gid] > 0:
                 trans_gid = row[SupplyCurveField.TRANS_GID]
                 cap_connected = trans_features.connect(
-                    trans_gid, self._mask[sc_gid]
+                    trans_gid, self._sc_capacities[sc_gid]
                 )
                 if cap_connected <= 0:
                     continue
@@ -1221,7 +1223,7 @@ class SupplyCurve:
                 connected += 1
                 logger.debug("Connecting sc gid {} to trans gid {}: {:.2f} MW"
                              .format(sc_gid, trans_gid, cap_connected))
-                self._mask[sc_gid] -= cap_connected
+                self._sc_capacities[sc_gid] -= cap_connected
 
                 for col in all_cols:
                     conn_lists[col].append(row[col])
@@ -1249,15 +1251,15 @@ class SupplyCurve:
         max_cap_mask = trans_table[_MAX_CAP_INDICATOR_COL]
         for __, row in trans_table[max_cap_mask].iterrows():
             sc_gid = row[SupplyCurveField.SC_GID]
-            if self._mask[sc_gid] <= 0:
+            if self._sc_capacities[sc_gid] <= 0:
                 continue
 
-            cap_connected = self._mask[sc_gid]
+            cap_connected = self._sc_capacities[sc_gid]
             trans_gid = row[SupplyCurveField.TRANS_GID]
             logger.debug("Connecting the rest of the capacity at sc gid {} to "
                          "trans gid {}: {:.2f} MW"
                          .format(sc_gid, trans_gid, cap_connected))
-            self._mask[sc_gid] = 0
+            self._sc_capacities[sc_gid] = 0
 
             for col in all_cols:
                 conn_lists[col].append(row[col])
