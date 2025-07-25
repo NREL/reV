@@ -521,7 +521,7 @@ class SupplyCurve:
             logger.warning(msg)
             warn(msg)
 
-        if not any(trans_sc_gids) or not any(sc_gids):
+        if not trans_sc_gids or not sc_gids:
             msg = (
                 "Merging of sc points table and transmission features "
                 "table failed with {} original sc gids and {} transmission "
