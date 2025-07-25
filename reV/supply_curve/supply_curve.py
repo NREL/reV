@@ -8,7 +8,6 @@ import json
 import logging
 import os
 from itertools import chain
-from copy import deepcopy
 from warnings import warn
 
 import numpy as np
@@ -16,6 +15,7 @@ import pandas as pd
 from rex import Resource
 from rex.utilities import SpawnProcessPool, parse_table
 
+from reV.handlers.transmission import POIFeatures as PF
 from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
