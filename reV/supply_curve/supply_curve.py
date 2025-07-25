@@ -668,7 +668,8 @@ class SupplyCurve:
                              SupplyCurveField.CAPACITY_AC_MW,
                              SupplyCurveField.MEAN_CF_AC,
                              SupplyCurveField.MEAN_LCOE),
-                    sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
+                    sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW,
+                    poi_info=None):
         """
         Map supply curve points to transmission features
 
@@ -695,6 +696,19 @@ class SupplyCurve:
             "capacity" must also be included in `trans_sc_table` since
             those values match the "mean_cf" data (which is used to
             calculate LCOT and Total LCOE). By default, ``"capacity"``.
+        poi_info : str | pandas.DataFrame, optional
+            Path to CSV or DataFrame containing POI point connection
+            summary. This table should have at least the following
+            columns:
+
+                - "POI_limit" *or* "ac_cap": POI connection capacity (MW)
+                - "POI_name": String identifier for the POI used to
+                              merge with the ``"end"`` column from the
+                              `trans_table` input
+                - "POI_cost_MW": Connection cost for this POI, in $/MW.
+
+            This input is only required if you are performing a "poi"
+            connection sort. by default, ``None``.
 
         Returns
         -------
@@ -706,6 +720,10 @@ class SupplyCurve:
         trans_sc_table = cls._merge_sc_trans_tables(
             sc_points, trans_table, sc_cols=sc_cols, sc_capacity_col=scc
         )
+        if (SupplyCurveField.TRANS_GID not in trans_sc_table.columns and
+            poi_info is not None):
+            trans_sc_table = cls._pull_trans_gid_from_poi(trans_sc_table,
+                                                          poi_info)
 
         if "max_cap" in trans_sc_table:
             trans_sc_table = cls._map_trans_capacity(
@@ -719,6 +737,14 @@ class SupplyCurve:
         cls._check_sc_trans_table(sc_points, trans_sc_table)
 
         return trans_sc_table
+
+    @staticmethod
+    def _pull_trans_gid_from_poi(trans_sc_table, poi_info):
+        """Extract trans gid from POI table"""
+        trans_sc_table = trans_sc_table.rename(columns={"end": "POI_name"})
+        merge_data = poi_info[["POI_name", SupplyCurveField.TRANS_GID,
+                               SupplyCurveField.TRANS_TYPE, "ac_cap"]]
+        return trans_sc_table.merge(merge_data, on="POI_name")
 
     @staticmethod
     def _create_handler(trans_table, trans_costs=None, avail_cap_frac=1):

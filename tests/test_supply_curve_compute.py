@@ -885,3 +885,24 @@ def test_parsing_poi_info():
     assert sc._poi_info["ac_cap"].to_list() == [100, 200, 10]
     assert sc._poi_info["POI_cost_MW"].to_list() == [1000, 2000, 3000]
     assert (sc._poi_info[SupplyCurveField.TRANS_TYPE] == "loadcen").any()
+
+
+def test_trans_gid_pulled_from_poi_info():
+    """Test that the trans gid value is pulled from POI info"""
+
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0],
+                       SupplyCurveField.SC_ROW_IND: [0],
+                       SupplyCurveField.SC_COL_IND: [0],
+                       SupplyCurveField.CAPACITY_AC_MW: [10],
+                       SupplyCurveField.MEAN_CF_AC: [0.3],
+                       SupplyCurveField.MEAN_LCOE: [4]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0],
+                        SupplyCurveField.SC_COL_IND: [0],
+                        "POI_name": ["B"]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                        "POI_limit": [100, 200, 10],
+                        "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    assert (sc._trans_table[SupplyCurveField.TRANS_GID] == 1).all()
