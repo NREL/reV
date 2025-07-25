@@ -56,7 +56,8 @@ class SupplyCurve:
 
     def __init__(self, sc_points, trans_table, sc_features=None,
                  # str() to fix docs
-                 sc_capacity_col=str(SupplyCurveField.CAPACITY_AC_MW)):
+                 sc_capacity_col=str(SupplyCurveField.CAPACITY_AC_MW),
+                 poi_info=None):
         """ReV LCOT calculation and SupplyCurve sorting class.
 
         ``reV`` supply curve computes the transmission costs associated
@@ -115,6 +116,19 @@ class SupplyCurve:
             e.g., size transmission lines based on solar AC capacity (
             ``sc_capacity_col="capacity_ac"``). By default,
             ``"capacity"``.
+        poi_info : str | pandas.DataFrame, optional
+            Path to CSV or DataFrame containing POI point connection
+            summary. This table should have at least the following
+            columns:
+
+                - "POI_limit" *or* "ac_cap": POI connection capacity (MW)
+                - "POI_name": String identifier for the POI used to
+                              merge with the ``"end"`` column from the
+                              `trans_table` input
+                - "POI_cost_MW": Connection cost for this POI, in $/MW.
+
+            This input is only required if you are performing a "poi"
+            connection sort. by default, ``None``.
 
         Examples
         --------
@@ -158,6 +172,7 @@ class SupplyCurve:
         logger.info("Transmission table input: {}".format(trans_table))
         logger.info("Supply curve capacity column: {}".format(sc_capacity_col))
 
+        self._poi_info = self._parse_poi_info(poi_info)
         self._sc_capacity_col = sc_capacity_col
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
@@ -185,6 +200,19 @@ class SupplyCurve:
         i = self._sc_gids.index(gid)
 
         return self._sc_points.iloc[i]
+
+    @staticmethod
+    def _parse_poi_info(poi_info=None):
+        """Parse and format user POI input"""
+        if poi_info is None:
+            return None
+
+        poi_info = parse_table(poi_info)
+        poi_info.index.name = SupplyCurveField.TRANS_GID
+        poi_info = poi_info.reset_index()
+        poi_info = poi_info.rename(columns={"POI_limit": "ac_cap"})
+        poi_info[SupplyCurveField.TRANS_TYPE] = "loadcen"
+        return poi_info
 
     @staticmethod
     def _parse_sc_points(sc_points, sc_features=None):

@@ -862,3 +862,26 @@ def test_least_cost_simple_with_ac_capacity_column():
                       < sc_simple_ac_cap[SupplyCurveField.LCOT])
         assert np.all(sc_simple[SupplyCurveField.TOTAL_LCOE]
                       < sc_simple_ac_cap[SupplyCurveField.TOTAL_LCOE])
+
+
+def test_parsing_poi_info():
+    """Test that POI info is parsed correctly"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0],
+                       SupplyCurveField.SC_ROW_IND: [0],
+                       SupplyCurveField.SC_COL_IND: [0],
+                       SupplyCurveField.CAPACITY_AC_MW: [10],
+                       SupplyCurveField.MEAN_CF_AC: [0.3],
+                       SupplyCurveField.MEAN_LCOE: [4]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0],
+                        SupplyCurveField.SC_COL_IND: [0],
+                        SupplyCurveField.TRANS_GID: [1000]})
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 200, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    assert sc._poi_info[SupplyCurveField.TRANS_GID].to_list() == [0, 1, 2]
+    assert sc._poi_info["POI_name"].to_list() == ["A", "B", "C"]
+    assert sc._poi_info["ac_cap"].to_list() == [100, 200, 10]
+    assert sc._poi_info["POI_cost_MW"].to_list() == [1000, 2000, 3000]
+    assert (sc._poi_info[SupplyCurveField.TRANS_TYPE] == "loadcen").any()
