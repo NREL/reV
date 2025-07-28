@@ -1223,10 +1223,11 @@ class SupplyCurve:
         all_cols = _get_connection_cols(columns, sort_on)
         self._reset_sc_capacities()
 
-        conn_lists = self._connect_wile_cap_available(trans_table,
-                                                      trans_features,
-                                                      all_cols,
-                                                      comp_wind_dirs, downwind)
+        conn_lists = self._connect_while_cap_available(trans_table,
+                                                       trans_features,
+                                                       all_cols,
+                                                       comp_wind_dirs,
+                                                       downwind)
 
         conn_lists = self._connect_at_max_cap(conn_lists, trans_table,
                                               all_cols, comp_wind_dirs,
@@ -1255,8 +1256,8 @@ class SupplyCurve:
             self._trans_table = self._trans_table.merge(
                 fc, on=SupplyCurveField.TRANS_GID)
 
-    def _connect_wile_cap_available(self, trans_table, trans_features,
-                                    all_cols, comp_wind_dirs, downwind):
+    def _connect_while_cap_available(self, trans_table, trans_features,
+                                     all_cols, comp_wind_dirs, downwind):
         """Connect SC points to trans features that have available capacity"""
         connected = 0
         progress = 0
