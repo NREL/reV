@@ -1814,7 +1814,7 @@ def _warn_about_unconnected_gids(remaining_capacities):
     unconnected_sc_gids = np.where(remaining_capacities)[0].tolist()
     if unconnected_sc_gids:
         msg = (
-            "{} supply curve points were not connected to transmission! "
+            "{} supply curve points were not fully connected to transmission! "
             "Unconnected sc_gid's: {}".format(
                 len(unconnected_sc_gids), unconnected_sc_gids
             )
