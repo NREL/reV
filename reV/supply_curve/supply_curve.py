@@ -1430,7 +1430,7 @@ class SupplyCurve:
             Flag to have substation connection is limited by maximum capacity
             of the attached lines, legacy method, by default False
         connectable : bool, optional
-            Flag to only compute tranmission capital cost if transmission
+            Flag to only compute transmission capital cost if transmission
             feature has enough available capacity, by default True
         max_workers : int | NoneType, optional
             Number of workers to use to compute lcot, if > 1 run in parallel.
