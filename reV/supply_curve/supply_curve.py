@@ -1618,10 +1618,18 @@ class SupplyCurve:
         supply_curve = self._full_sort(
             trans_table,
             trans_features,
+            fcr,
             comp_wind_dirs=comp_wind_dirs,
             sort_on=sort_on,
             columns=columns,
             downwind=downwind,
+            transmission_costs=transmission_costs,
+            avail_cap_frac=avail_cap_frac,
+            line_limited=line_limited,
+            connectable=connectable,
+            max_workers=max_workers,
+            consider_friction=consider_friction,
+            max_cap_tie_in_cost_per_mw=None, # no conns after max cap
         )
 
         return supply_curve
