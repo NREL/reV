@@ -1888,3 +1888,39 @@ def _warn_about_unconnected_gids(remaining_capacities):
         )
         logger.warning(msg)
         warn(msg)
+
+
+def _add_tcc_mw_for_poi(trans_table, poi_info):
+    """Add transmission capital cost per MW using POI info"""
+    connectable_capacity = np.minimum(
+        trans_table[SupplyCurveField.CAPACITY_AC_MW], trans_table["ac_cap"])
+    tie_line_cost_per_mw = trans_table["cost"] / connectable_capacity
+
+    tie_in_cost_per_mw = (
+        trans_table[[SupplyCurveField.TRANS_GID]].merge(
+        poi_info[[SupplyCurveField.TRANS_GID, "POI_cost_MW"]],
+            on=SupplyCurveField.TRANS_GID
+        )["POI_cost_MW"])
+
+    tcc_per_mw_col = SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW
+    trans_table[tcc_per_mw_col] = (tie_line_cost_per_mw.to_numpy()
+                                   + tie_in_cost_per_mw.to_numpy())
+    return trans_table
+
+
+def max_tcc_per_mw_for_poi(trans_table, max_cap_tie_in_cost_per_mw):
+    """Add transmission capital cost per MW at max capacity using POI info"""
+    logger.debug("Adding extra connections at max capacity for "
+                 "{:,.2f} $/MW".format(max_cap_tie_in_cost_per_mw))
+
+    extra_conns = (trans_table.sort_values("cost")
+                   .groupby(SupplyCurveField.SC_GID).first()
+                   .reset_index())
+
+    tie_line_cost_per_mw = (extra_conns["cost"]
+                            / extra_conns[SupplyCurveField.CAPACITY_AC_MW])
+
+    tcc_per_mw_col = SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW
+    extra_conns[tcc_per_mw_col] = (tie_line_cost_per_mw
+                                   + max_cap_tie_in_cost_per_mw)
+    return extra_conns
