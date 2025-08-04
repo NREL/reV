@@ -1302,13 +1302,11 @@ class SupplyCurve:
                 raise RuntimeError("Too many iterations while connecting "
                                    "supply curve points!")
 
-            row = trans_table.iloc[trans_table[sort_on].argmin(skipna=True)]
-            trans_table = trans_table.drop(index=row.name)
-            sc_gid = row[SupplyCurveField.SC_GID]
-            trans_gid = row[SupplyCurveField.TRANS_GID]
+            trans_table, row, sc_gid, trans_gid = _best_connection(
+                trans_table, sort_on)
+
             if not trans_features.check_availability(trans_gid):
-                mask = trans_table[SupplyCurveField.TRANS_GID] != trans_gid
-                trans_table = trans_table[mask].copy()
+                trans_table = _remove_trans_gid(trans_table, trans_gid)
                 continue
 
             logger.debug("Examining SC GID {} connected to Transmission GID {}"
@@ -1344,8 +1342,7 @@ class SupplyCurve:
                     )
 
                 if self._sc_capacities[sc_gid] <= 0:
-                    mask = trans_table[SupplyCurveField.SC_GID] != sc_gid
-                    trans_table = trans_table[mask].copy()
+                    trans_table = _remove_sc_gid(trans_table, sc_gid)
 
                 trans_table = self._update_costs_new_capacity(
                     trans_table, sc_gid, trans_gid, cap_connected,
@@ -1364,15 +1361,12 @@ class SupplyCurve:
                 | (trans_table[SupplyCurveField.SC_GID] == sc_gid))
         new_tt = trans_table[mask].copy()
 
-        conn_mask = new_tt[SupplyCurveField.TRANS_GID] == trans_gid
-        new_tt["ac_cap"] = new_tt["ac_cap"].astype("float32")
-        new_tt.loc[conn_mask, "ac_cap"] -= cap_connected
-        new_tt.loc[conn_mask, "ac_cap"] = np.maximum(
-            0, new_tt.loc[conn_mask, "ac_cap"])
+        new_tt = _update_remaining_cap_trans_feature(new_tt, trans_gid,
+                                                     cap_connected)
 
-        sc_mask = new_tt[SupplyCurveField.SC_GID] == sc_gid
-        new_tt.loc[sc_mask, self._sc_capacity_col] = (
-            self._sc_capacities[sc_gid])
+        new_tt = _update_remaining_cap_sc_gid(new_tt, sc_gid,
+                                              self._sc_capacities[sc_gid],
+                                              self._sc_capacity_col)
 
         if self._poi_info is not None:
             new_tt = _add_tcc_mw_for_poi(new_tt, self._poi_info)
@@ -1963,3 +1957,41 @@ def max_tcc_per_mw_for_poi(trans_table, max_cap_tie_in_cost_per_mw):
     extra_conns[tcc_per_mw_col] = (tie_line_cost_per_mw
                                    + max_cap_tie_in_cost_per_mw)
     return extra_conns
+
+
+def _update_remaining_cap_trans_feature(trans_table, trans_gid, cap_connected):
+    """Update remaining capacity for transmission feature after connection"""
+    conn_mask = trans_table[SupplyCurveField.TRANS_GID] == trans_gid
+    trans_table["ac_cap"] = trans_table["ac_cap"].astype("float32")
+    trans_table.loc[conn_mask, "ac_cap"] -= cap_connected
+    trans_table.loc[conn_mask, "ac_cap"] = np.maximum(
+        0, trans_table.loc[conn_mask, "ac_cap"])
+    return trans_table
+
+
+def _update_remaining_cap_sc_gid(trans_table, sc_gid, remaining_cap, cap_col):
+    """Update remaining capacity for sc_gid feature after connection"""
+    sc_mask = trans_table[SupplyCurveField.SC_GID] == sc_gid
+    trans_table.loc[sc_mask, cap_col] = remaining_cap
+    return trans_table
+
+
+def _best_connection(trans_table, sort_on):
+    """Get row with best connection based on `sort_on` input"""
+    row = trans_table.iloc[trans_table[sort_on].argmin(skipna=True)]
+    trans_table = trans_table.drop(index=row.name)
+    sc_gid = row[SupplyCurveField.SC_GID]
+    trans_gid = row[SupplyCurveField.TRANS_GID]
+    return trans_table, row, sc_gid, trans_gid
+
+
+def _remove_trans_gid(trans_table, trans_gid):
+    """Remove a trans_gid from the transmission table"""
+    mask = trans_table[SupplyCurveField.TRANS_GID] != trans_gid
+    return trans_table[mask].copy()
+
+
+def _remove_sc_gid(trans_table, sc_gid):
+    """Remove an sc_gid from the transmission table"""
+    mask = trans_table[SupplyCurveField.SC_GID] != sc_gid
+    return trans_table[mask].copy()
