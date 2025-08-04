@@ -911,3 +911,204 @@ def test_trans_gid_pulled_from_poi_info():
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
     assert (sc._trans_table[SupplyCurveField.TRANS_GID] == 1).all()
+
+
+def test_basic_1_poi_to_1_sc_connection():
+    """Test the most basic case of POI connection"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0],
+                       SupplyCurveField.SC_ROW_IND: [0],
+                       SupplyCurveField.SC_COL_IND: [0],
+                       SupplyCurveField.CAPACITY_AC_MW: [10],
+                       SupplyCurveField.MEAN_CF_AC: [0.3],
+                       SupplyCurveField.MEAN_LCOE: [4]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0],
+                        SupplyCurveField.SC_COL_IND: [0],
+                        "POI_name": ["B"],
+                        "cost": [4000],
+                        SupplyCurveField.DIST_SPUR_KM: [10]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 200, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    out = sc.poi_sort(fcr=1)
+
+    # Full capacity was connected
+    assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [10]
+
+
+def test_basic_1_poi_to_many_sc_connection():
+    """Test a basic case of POI connection"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10],
+                       SupplyCurveField.SC_ROW_IND: [0, 1],
+                       SupplyCurveField.SC_COL_IND: [0, 1],
+                       SupplyCurveField.CAPACITY_AC_MW: [10, 90],
+                       SupplyCurveField.MEAN_CF_AC: [0.3, 0.3],
+                       SupplyCurveField.MEAN_LCOE: [4, 5]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0, 1],
+                        SupplyCurveField.SC_COL_IND: [0, 1],
+                        "POI_name": ["B", "B"],
+                        "cost": [4000, 4000],
+                        SupplyCurveField.DIST_SPUR_KM: [10, 20]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 200, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    out = sc.poi_sort(fcr=1)
+
+    # Full capacity was connected
+    assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [10, 90]
+
+
+def test_too_large_sc_connection():
+    """Test connecting some but not all capacity to POI"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10, 15, 20],
+                       SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                       SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                       SupplyCurveField.CAPACITY_AC_MW: [25, 100, 1000, 1],
+                       SupplyCurveField.MEAN_CF_AC: [0.3, 0.3, 0.3, 0.3],
+                       SupplyCurveField.MEAN_LCOE: [4, 5, 1, 10]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                        SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                        "POI_name": ["B", "B", "C", "B"],
+                        "cost": [4000, 4000, 100, 10_000],
+                        SupplyCurveField.DIST_SPUR_KM: [10, 20, 1, 40]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 100, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    out = sc.poi_sort(fcr=1)
+
+    # Full capacity was connected
+    assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [25, 75, 10]
+    assert 20 not in set(out[SupplyCurveField.SC_GID])
+
+    cost_per_mw = (np.array([4000, 4000, 100]) / np.array([25, 75, 10])
+                   + np.array([2000, 2000, 3000]))
+    truth_lcot = cost_per_mw / (8760 * 0.3)
+    assert np.allclose(out[SupplyCurveField.LCOT], truth_lcot,
+                       atol=1e-6, rtol=1e-6)
+
+    for trans_gid, cap in zip([1, 2], [100, 10]):
+        mask = out[SupplyCurveField.TRANS_GID] == trans_gid
+        assert np.isclose(
+            out.loc[mask, SupplyCurveField.CAPACITY_AC_MW].sum(), cap)
+
+
+def test_poi_connection_respects_limit():
+    """Test connecting to POI respects POI limit on capacity"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10, 15, 20],
+                       SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                       SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                       SupplyCurveField.CAPACITY_AC_MW: [25, 100, 1000, 1],
+                       SupplyCurveField.MEAN_CF_AC: [0.3, 0.3, 0.3, 0.3],
+                       SupplyCurveField.MEAN_LCOE: [4, 4, 1, 10]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0, 1, 2],
+                        SupplyCurveField.SC_COL_IND: [0, 1, 2],
+                        "POI_name": ["B", "B", "C"],
+                        "cost": [4000, 4500, 100],
+                        SupplyCurveField.DIST_SPUR_KM: [10, 20, 1]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 50, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    out = sc.poi_sort(fcr=1)
+
+    # Full capacity was connected
+    assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [50, 10]
+    assert set(out[SupplyCurveField.SC_GID]) == {10, 15}
+
+    cost_per_mw = (np.array([4500, 100]) / np.array([50, 10])
+                   + np.array([2000, 3000]))
+    truth_lcot = cost_per_mw / (8760 * 0.3)
+    assert np.allclose(out[SupplyCurveField.LCOT], truth_lcot,
+                       atol=1e-6, rtol=1e-6)
+
+    for trans_gid, cap in zip([1, 2], [50, 10]):
+        mask = out[SupplyCurveField.TRANS_GID] == trans_gid
+        assert np.isclose(
+            out.loc[mask, SupplyCurveField.CAPACITY_AC_MW].sum(), cap)
+
+
+def test_poi_connection_respects_selects_cheapest_lcoe():
+    """Test connecting to POI selects best connection"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10, 15, 20],
+                       SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                       SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                       SupplyCurveField.CAPACITY_AC_MW: [25, 100, 1000, 1],
+                       SupplyCurveField.MEAN_CF_AC: [0.3, 0.3, 0.3, 0.3],
+                       SupplyCurveField.MEAN_LCOE: [4, 4, 1, 10]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0, 1, 2],
+                        SupplyCurveField.SC_COL_IND: [0, 1, 2],
+                        "POI_name": ["B", "B", "C"],
+                        "cost": [4000, 4500, 100],
+                        SupplyCurveField.DIST_SPUR_KM: [10, 20, 1]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 25, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    out = sc.poi_sort(fcr=1)
+
+    # Full capacity was connected
+    assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [25, 10]
+    assert set(out[SupplyCurveField.SC_GID]) == {0, 15}
+
+    cost_per_mw = (np.array([4000, 100]) / np.array([25, 10])
+                   + np.array([2000, 3000]))
+    truth_lcot = cost_per_mw / (8760 * 0.3)
+    assert np.allclose(out[SupplyCurveField.LCOT], truth_lcot,
+                       atol=1e-6, rtol=1e-6)
+
+    for trans_gid, cap in zip([0, 1, 2], [0, 25, 10]):
+        mask = out[SupplyCurveField.TRANS_GID] == trans_gid
+        assert np.isclose(
+            out.loc[mask, SupplyCurveField.CAPACITY_AC_MW].sum(), cap)
+
+
+def test_too_large_sc_connection_allowed():
+    """Test connecting overflow capacity to POI"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10, 15, 20],
+                       SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                       SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                       SupplyCurveField.CAPACITY_AC_MW: [25, 100, 1000, 1],
+                       SupplyCurveField.MEAN_CF_AC: [0.3, 0.3, 0.3, 0.3],
+                       SupplyCurveField.MEAN_LCOE: [4, 5, 1, 10]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                        SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                        "POI_name": ["B", "B", "C", "B"],
+                        "cost": [4000, 4000, 100, 10_000],
+                        SupplyCurveField.DIST_SPUR_KM: [10, 20, 1, 40]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 100, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    out = sc.poi_sort(fcr=1, max_cap_tie_in_cost_per_mw=1_000_000)
+
+    # Full capacity was connected
+    assert (out[SupplyCurveField.CAPACITY_AC_MW].to_list()
+            == [25, 75, 25, 10, 990, 1])
+    assert set(out[SupplyCurveField.SC_GID]) == {0, 10, 15, 20}
+
+    cost_per_mw = (np.array([4000, 4000, 4000, 100, 100, 4000])
+                   / np.array([25, 75, 25, 10, 990, 1])
+                   + np.array([2000, 2000, 1_000_000, 3000, 1_000_000,
+                               1_000_000]))
+    truth_lcot = cost_per_mw / (8760 * 0.3)
+    assert np.allclose(out[SupplyCurveField.LCOT], truth_lcot,
+                       atol=1e-6, rtol=1e-6)
+
+    for trans_gid, cap in zip([0, 1, 2], [0, 126, 1000]):
+        mask = out[SupplyCurveField.TRANS_GID] == trans_gid
+        assert np.isclose(
+            out.loc[mask, SupplyCurveField.CAPACITY_AC_MW].sum(), cap)
