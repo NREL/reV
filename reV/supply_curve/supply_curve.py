@@ -1793,14 +1793,14 @@ def _get_connection_cols(columns, sort_on):
     """Get user cols + essential connection output columns"""
     all_cols = list(columns)
     essentials = [SupplyCurveField.SC_GID,
-                    SupplyCurveField.TRANS_GID,
-                    SupplyCurveField.TRANS_CAPACITY,
-                    SupplyCurveField.TRANS_TYPE,
-                    SupplyCurveField.DIST_SPUR_KM,
-                    SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
-                    SupplyCurveField.LCOT,
-                    SupplyCurveField.TOTAL_LCOE,
-                    sort_on]
+                  SupplyCurveField.TRANS_GID,
+                  SupplyCurveField.TRANS_CAPACITY,
+                  SupplyCurveField.TRANS_TYPE,
+                  SupplyCurveField.DIST_SPUR_KM,
+                  SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
+                  SupplyCurveField.LCOT,
+                  SupplyCurveField.TOTAL_LCOE,
+                  sort_on]
 
     for col in essentials:
         if col not in all_cols:
