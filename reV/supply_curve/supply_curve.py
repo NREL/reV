@@ -1201,6 +1201,8 @@ class SupplyCurve:
             SupplyCurveField.TOTAL_LCOE,
         ),
         downwind=False,
+        max_cap_tie_in_cost_per_mw=None,
+        **kwargs
     ):
         """
         Internal method to handle full supply curve sorting
@@ -1228,6 +1230,15 @@ class SupplyCurve:
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors,
             by default False
+        max_cap_tie_in_cost_per_mw : int | float, optional
+            Cost ($/MW) to tie into transmission features *after* they
+            have reached maximum capacity. If ``None``, then connections
+            after reaching max transmission feature capacity are
+            disallowed. By default, ``None``.
+        **kwargs
+            Extra keyword-value pair arguments to pass to
+            :meth:`SupplyCurve.compute_total_lcoe`. Should **NOT**
+            include ``trans_table``.
 
         Returns
         -------
