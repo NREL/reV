@@ -1188,6 +1188,7 @@ class SupplyCurve:
         self,
         trans_table,
         trans_features,
+        fcr,
         comp_wind_dirs=None,
         sort_on=SupplyCurveField.TOTAL_LCOE,
         columns=(
@@ -1211,6 +1212,8 @@ class SupplyCurve:
         trans_features : TransmissionFeatures
             TransmissionFeatures handler instance to get transmission
             cost information.
+        fcr : float
+            Fixed charge rate, used to compute LCOT
         comp_wind_dirs : CompetitiveWindFarms, optional
             Pre-initialized CompetitiveWindFarms instance, by default None
         sort_on : str, optional
