@@ -1628,6 +1628,94 @@ class SupplyCurve:
 
         return supply_curve
 
+    def poi_sort(
+        self,
+        fcr,
+        max_cap_tie_in_cost_per_mw=None,
+        consider_friction=True,
+        sort_on=None,
+        columns=(
+            SupplyCurveField.TRANS_GID,
+            SupplyCurveField.TRANS_CAPACITY,
+            SupplyCurveField.TRANS_TYPE,
+            SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
+            SupplyCurveField.DIST_SPUR_KM,
+            SupplyCurveField.LCOT,
+            SupplyCurveField.TOTAL_LCOE,
+        ),
+    ):
+        """
+        run POI-based supply curve sorting
+
+        Parameters
+        ----------
+        fcr : float
+            Fixed charge rate, used to compute LCOT
+        max_cap_tie_in_cost_per_mw : float, optional
+            Cost to tie into a POI after it has reached maximum
+            capacity. If you don't want to allow connections after the
+            POI capacity is reached, leave this input unspecified.
+            By default, ``None``.
+        consider_friction : bool, optional
+            Flag to consider friction layer on LCOE when
+            ``"mean_lcoe_friction"`` is in the sc points input.
+            By default, ``True``.
+        sort_on : str, optional
+            Column label to sort the Supply Curve table on. This affects
+            the build priority - connections with the lowest value in
+            this column will be built first. By default, ``None``, which
+            will use total LCOE without any reinforcement costs as the
+            sort value.
+        columns : list | tuple, optional
+            Columns to preserve in output connections dataframe,
+            by default ('trans_gid', 'trans_capacity', 'trans_type',
+            'trans_cap_cost_per_mw', 'dist_km', 'lcot', 'total_lcoe')
+
+        Returns
+        -------
+        supply_curve : pandas.DataFrame
+            Updated sc_points table with POI transmission connections,
+            LCOT and LCOE+LCOT based on POI supply curve connections.
+        """
+        logger.info("Starting full competitive supply curve sort.")
+
+        msg = "Must set poi_info before running poi_sort"
+        assert self._poi_info is not None, msg
+        self._trans_table = _add_tcc_mw_for_poi(self._trans_table,
+                                                self._poi_info)
+
+        self.compute_total_lcoe(fcr)
+
+        self._trans_table = self._trans_table.rename(
+            columns={"length_km": SupplyCurveField.DIST_SPUR_KM})
+        self._check_feature_capacity()
+
+        if isinstance(columns, tuple):
+            columns = list(columns)
+
+        columns = self._adjust_output_columns(columns, consider_friction)
+        sort_on = self._determine_sort_on(sort_on)
+        trans_table = self._trans_table.copy()
+        pos = trans_table[SupplyCurveField.LCOT].isnull()
+        trans_table = trans_table.loc[~pos].sort_values(
+            [sort_on, SupplyCurveField.TRANS_GID]
+        )
+
+        trans_features = PF(self._poi_info)
+
+        supply_curve = self._full_sort(
+            trans_table,
+            trans_features,
+            fcr,
+            sort_on=sort_on,
+            columns=columns,
+            comp_wind_dirs=None,
+            downwind=False,
+            max_cap_tie_in_cost_per_mw=max_cap_tie_in_cost_per_mw,
+        )
+
+        return supply_curve
+
     def simple_sort(
         self,
         fcr,
