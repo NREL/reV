@@ -24,7 +24,6 @@ from reV.utilities.exceptions import SupplyCurveError, SupplyCurveInputError
 
 logger = logging.getLogger(__name__)
 
-
 # map is column name to relative order in which it should appear in output file
 _REQUIRED_COMPUTE_AND_OUTPUT_COLS = {
     SupplyCurveField.TRANS_GID: 0,
@@ -1236,15 +1235,16 @@ class SupplyCurve:
         all_cols = _get_connection_cols(columns, sort_on)
         self._reset_sc_capacities()
 
-        conn_lists = self._connect_while_cap_available(trans_table,
-                                                       trans_features,
-                                                       all_cols,
-                                                       comp_wind_dirs,
-                                                       downwind)
+        conn_lists = self._connect_while_cap_available(
+                trans_table, trans_features, all_cols, comp_wind_dirs,
+                downwind, sort_on, fcr, **kwargs)
 
-        conn_lists = self._connect_at_max_cap(conn_lists, trans_table,
-                                              all_cols, comp_wind_dirs,
-                                              downwind)
+        if max_cap_tie_in_cost_per_mw:
+            conn_lists = self._connect_at_max_cap(conn_lists, all_cols,
+                                                  comp_wind_dirs,
+                                                  downwind, fcr, sort_on,
+                                                  max_cap_tie_in_cost_per_mw,
+                                                  **kwargs)
 
         _warn_about_unconnected_gids(self._sc_capacities)
 
@@ -1270,18 +1270,36 @@ class SupplyCurve:
                 fc, on=SupplyCurveField.TRANS_GID)
 
     def _connect_while_cap_available(self, trans_table, trans_features,
-                                     all_cols, comp_wind_dirs, downwind):
+                                     all_cols, comp_wind_dirs, downwind,
+                                     sort_on, fcr, **kwargs):
         """Connect SC points to trans features that have available capacity"""
         connected = 0
         progress = 0
         conn_lists = {k: [] for k in all_cols}
         conn_lists[self._sc_capacity_col] = []
 
-        available_conn_mask = ~trans_table[_MAX_CAP_INDICATOR_COL]
-        for __, row in trans_table[available_conn_mask].iterrows():
+        i = 0
+        while self._sc_capacities.any() and len(trans_table) > 0:
+            logger.debug("Entering while loop with {:,.2f} MW of capacity "
+                         "still to connect and {:,d} possible connections"
+                         .format(self._sc_capacities.sum(), len(trans_table)))
+            i += 1
+            if i > 1e7:
+                raise RuntimeError("Too many iterations while connecting "
+                                   "supply curve points!")
+
+            row = trans_table.iloc[trans_table[sort_on].argmin(skipna=True)]
+            trans_table = trans_table.drop(index=row.name)
             sc_gid = row[SupplyCurveField.SC_GID]
+            trans_gid = row[SupplyCurveField.TRANS_GID]
+            if not trans_features.check_availability(trans_gid):
+                mask = trans_table[SupplyCurveField.TRANS_GID] != trans_gid
+                trans_table = trans_table[mask].copy()
+                continue
+
+            logger.debug("Examining SC GID {} connected to Transmission GID {}"
+                         .format(sc_gid, trans_gid))
             if self._sc_capacities[sc_gid] > 0:
-                trans_gid = row[SupplyCurveField.TRANS_GID]
                 cap_connected = trans_features.connect(
                     trans_gid, self._sc_capacities[sc_gid]
                 )
@@ -1553,7 +1571,6 @@ class SupplyCurve:
         sort_on = self._determine_sort_on(sort_on)
 
         trans_table = self._trans_table.copy()
-        # trans_table[_MAX_CAP_INDICATOR_COL] = False
         pos = trans_table[SupplyCurveField.LCOT].isnull()
         trans_table = trans_table.loc[~pos].sort_values(
             [sort_on, SupplyCurveField.TRANS_GID]
