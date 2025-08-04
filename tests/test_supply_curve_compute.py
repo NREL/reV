@@ -906,8 +906,8 @@ def test_trans_gid_pulled_from_poi_info():
                         "POI_name": ["B"]})
 
     pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
-                        "POI_limit": [100, 200, 10],
-                        "POI_cost_MW": [1000, 2000, 3000]})
+                         "POI_limit": [100, 200, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
     assert (sc._trans_table[SupplyCurveField.TRANS_GID] == 1).all()
