@@ -1311,28 +1311,82 @@ class SupplyCurve:
                         )
                     )
 
+                if self._sc_capacities[sc_gid] <= 0:
+                    mask = trans_table[SupplyCurveField.SC_GID] != sc_gid
+                    trans_table = trans_table[mask].copy()
+
+                trans_table = self._update_costs_new_capacity(
+                    trans_table, sc_gid, trans_gid, cap_connected,
+                    fcr, **kwargs)
+
+            else:
+                mask = trans_table[SupplyCurveField.SC_GID] != sc_gid
+                trans_table = trans_table[mask].copy()
+
         return conn_lists
 
-    def _connect_at_max_cap(self, conn_lists, trans_table, all_cols,
-                            comp_wind_dirs, downwind):
+    def _update_costs_new_capacity(self, trans_table, sc_gid, trans_gid,
+                                   cap_connected, fcr, **kwargs):
+        """Update TX costs based on remaining capacity to connect"""
+        mask = ((trans_table[SupplyCurveField.TRANS_GID] == trans_gid)
+                | (trans_table[SupplyCurveField.SC_GID] == sc_gid))
+        new_tt = trans_table[mask].copy()
+
+        conn_mask = new_tt[SupplyCurveField.TRANS_GID] == trans_gid
+        new_tt["ac_cap"] = new_tt["ac_cap"].astype("float32")
+        new_tt.loc[conn_mask, "ac_cap"] -= cap_connected
+        new_tt.loc[conn_mask, "ac_cap"] = np.maximum(
+            0, new_tt.loc[conn_mask, "ac_cap"])
+
+        sc_mask = new_tt[SupplyCurveField.SC_GID] == sc_gid
+        new_tt.loc[sc_mask, self._sc_capacity_col] = (
+            self._sc_capacities[sc_gid])
+
+        if self._poi_info is not None:
+            new_tt = _add_tcc_mw_for_poi(new_tt, self._poi_info)
+        elif "trans_cap_cost" in trans_table:
+            tcc_per_mw_col = SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW
+            new_tt = new_tt.drop(columns=tcc_per_mw_col, errors="ignore")
+        else:  # originally had trans cap cost per MW input, so don't scale
+            return trans_table
+
+        new_costs = self.compute_total_lcoe(fcr=fcr, trans_table=new_tt,
+                                            **kwargs)
+        return pd.concat([trans_table[~mask], new_costs])
+
+    def _connect_at_max_cap(self, conn_lists, all_cols,
+                            comp_wind_dirs, downwind, fcr, sort_on,
+                            max_cap_tie_in_cost_per_mw=None, **kwargs):
         """Connect SC points to trans features beyond max capacity"""
-        max_cap_mask = trans_table[_MAX_CAP_INDICATOR_COL]
-        for __, row in trans_table[max_cap_mask].iterrows():
-            sc_gid = row[SupplyCurveField.SC_GID]
-            if self._sc_capacities[sc_gid] <= 0:
+        if not self._sc_capacities.any():
+            return conn_lists
+
+        sc_gids = np.where(self._sc_capacities)[0].tolist()
+        for ind, sc_gid in enumerate(sc_gids):
+            cap_remaining = self._sc_capacities[sc_gid]
+            if sc_gid not in self._sc_gids:
+                logger.debug("SC GID {} (capacity {:.2f}) has no possible "
+                             "connections; cannot connect at max-capacity "
+                             "cost value"
+                             .format(sc_gid, cap_remaining))
                 continue
 
-            cap_connected = self._sc_capacities[sc_gid]
-            trans_gid = row[SupplyCurveField.TRANS_GID]
-            logger.debug("Connecting the rest of the capacity at sc gid {} to "
-                         "trans gid {}: {:.2f} MW"
-                         .format(sc_gid, trans_gid, cap_connected))
+            logger.debug("Connecting SC GID {} at max cap ({:,d}/{:,d})"
+                         .format(sc_gid, ind + 1, len(sc_gids)))
+            mask = self._trans_table[SupplyCurveField.SC_GID] == sc_gid
+            sc_tt = self._trans_table[mask].copy()
+            sc_tt[SupplyCurveField.CAPACITY_AC_MW] = cap_remaining
+            sc_tt = max_tcc_per_mw_for_poi(sc_tt, max_cap_tie_in_cost_per_mw)
+            sc_tt = self.compute_total_lcoe(fcr=fcr, trans_table=sc_tt,
+                                            **kwargs)
+
+            row = sc_tt.iloc[sc_tt[sort_on].argmin(skipna=True)]
             self._sc_capacities[sc_gid] = 0
 
             for col in all_cols:
                 conn_lists[col].append(row[col])
 
-            conn_lists[self._sc_capacity_col].append(cap_connected)
+            conn_lists[self._sc_capacity_col].append(cap_remaining)
 
             if comp_wind_dirs is not None:
                 comp_wind_dirs = (
@@ -1499,7 +1553,7 @@ class SupplyCurve:
         sort_on = self._determine_sort_on(sort_on)
 
         trans_table = self._trans_table.copy()
-        trans_table[_MAX_CAP_INDICATOR_COL] = False
+        # trans_table[_MAX_CAP_INDICATOR_COL] = False
         pos = trans_table[SupplyCurveField.LCOT].isnull()
         trans_table = trans_table.loc[~pos].sort_values(
             [sort_on, SupplyCurveField.TRANS_GID]
