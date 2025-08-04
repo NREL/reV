@@ -984,6 +984,7 @@ class SupplyCurve:
         connectable=True,
         max_workers=None,
         consider_friction=True,
+        trans_table=None,
     ):
         """
         Compute LCOT and total LCOE for all sc point to transmission feature
@@ -1012,14 +1013,21 @@ class SupplyCurve:
         consider_friction : bool, optional
             Flag to consider friction layer on LCOE when "mean_lcoe_friction"
             is in the sc points input, by default True
+        trans_table : pd.DataFrame, optional
+            Optional transmission table to compute costs for. If no table
+            is provided, the object's `_trans_table` attribute is used
+            instead. By default, ``None``.
         """
+        if trans_table is None:
+            trans_table = self._trans_table
+
         tcc_per_mw_col = SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW
-        if tcc_per_mw_col in self._trans_table:
-            cost = self._trans_table[tcc_per_mw_col].values.copy()
-        elif "trans_cap_cost" not in self._trans_table:
+        if tcc_per_mw_col in trans_table:
+            cost = trans_table[tcc_per_mw_col].values.copy()
+        elif "trans_cap_cost" not in trans_table:
             scc = self._sc_capacity_col
             cost = self._compute_trans_cap_cost(
-                self._trans_table,
+                trans_table,
                 trans_costs=transmission_costs,
                 avail_cap_frac=avail_cap_frac,
                 line_limited=line_limited,
@@ -1027,68 +1035,73 @@ class SupplyCurve:
                 max_workers=max_workers,
                 sc_capacity_col=scc,
             )
-            self._trans_table[tcc_per_mw_col] = cost  # $/MW
+            trans_table[tcc_per_mw_col] = cost  # $/MW
         else:
-            cost = self._trans_table["trans_cap_cost"].values.copy()  # $
-            cost /= self._trans_table[SupplyCurveField.CAPACITY_AC_MW]  # $/MW
-            self._trans_table[tcc_per_mw_col] = cost
+            cost = trans_table["trans_cap_cost"].values.copy()  # $
+            cost /= trans_table[SupplyCurveField.CAPACITY_AC_MW]  # $/MW
+            trans_table[tcc_per_mw_col] = cost
 
-        self._trans_table[tcc_per_mw_col] = (
-            self._trans_table[tcc_per_mw_col].astype("float32")
+        trans_table[tcc_per_mw_col] = (
+            trans_table[tcc_per_mw_col].astype("float32")
         )
         cost = cost.astype("float32")
-        cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF_AC]
+        cf_mean_arr = trans_table[SupplyCurveField.MEAN_CF_AC]
         cf_mean_arr = cf_mean_arr.values.astype("float32")
-        resource_lcoe = self._trans_table[SupplyCurveField.MEAN_LCOE]
+        resource_lcoe = trans_table[SupplyCurveField.MEAN_LCOE]
         resource_lcoe = resource_lcoe.values.astype("float32")
 
-        if 'reinforcement_cost_floored_per_mw' in self._trans_table:
+        if 'reinforcement_cost_floored_per_mw' in trans_table:
             logger.info("'reinforcement_cost_floored_per_mw' column found in "
                         "transmission table. Adding floored reinforcement "
                         "cost LCOE as sorting option.")
-            fr_cost = (self._trans_table['reinforcement_cost_floored_per_mw']
+            fr_cost = (trans_table['reinforcement_cost_floored_per_mw']
                        .values.copy())
 
             lcot_fr = ((cost + fr_cost) * fcr) / (cf_mean_arr * 8760)
             lcoe_fr = lcot_fr + resource_lcoe
-            self._trans_table['lcot_floored_reinforcement'] = lcot_fr
-            self._trans_table['lcoe_floored_reinforcement'] = lcoe_fr
+            trans_table['lcot_floored_reinforcement'] = lcot_fr
+            trans_table['lcoe_floored_reinforcement'] = lcoe_fr
 
-        if SupplyCurveField.REINFORCEMENT_COST_PER_MW in self._trans_table:
+        rcpmw = SupplyCurveField.REINFORCEMENT_COST_PER_MW
+        if (rcpmw in trans_table and not trans_table[rcpmw].isna().all()):
             logger.info("%s column found in transmission table. Adding "
                         "reinforcement costs to total LCOE.",
                         SupplyCurveField.REINFORCEMENT_COST_PER_MW)
             lcot_nr = (cost * fcr) / (cf_mean_arr * 8760)
             lcoe_nr = lcot_nr + resource_lcoe
-            self._trans_table['lcot_no_reinforcement'] = lcot_nr
-            self._trans_table['lcoe_no_reinforcement'] = lcoe_nr
+            trans_table['lcot_no_reinforcement'] = lcot_nr
+            trans_table['lcoe_no_reinforcement'] = lcoe_nr
 
             col_name = SupplyCurveField.REINFORCEMENT_COST_PER_MW
-            r_cost = self._trans_table[col_name].astype("float32")
+            r_cost = trans_table[col_name].astype("float32")
             r_cost = r_cost.values.copy()
-            self._trans_table[tcc_per_mw_col] += r_cost
+            trans_table[tcc_per_mw_col] += r_cost
             cost += r_cost  # $/MW
 
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
-        self._trans_table[SupplyCurveField.LCOT] = lcot
-        self._trans_table[SupplyCurveField.TOTAL_LCOE] = lcot + resource_lcoe
+        trans_table[SupplyCurveField.LCOT] = lcot
+        trans_table[SupplyCurveField.TOTAL_LCOE] = lcot + resource_lcoe
 
         if consider_friction:
-            self._calculate_total_lcoe_friction()
+            trans_table = self._calculate_total_lcoe_friction(trans_table)
 
-    def _calculate_total_lcoe_friction(self):
+        return trans_table
+
+    def _calculate_total_lcoe_friction(self, trans_table):
         """Look for site mean LCOE with friction in the trans table and if
         found make a total LCOE column with friction."""
 
-        if SupplyCurveField.MEAN_LCOE_FRICTION in self._trans_table:
+        if SupplyCurveField.MEAN_LCOE_FRICTION in trans_table:
             lcoe_friction = (
-                self._trans_table[SupplyCurveField.LCOT]
-                + self._trans_table[SupplyCurveField.MEAN_LCOE_FRICTION])
-            self._trans_table[SupplyCurveField.TOTAL_LCOE_FRICTION] = (
+                trans_table[SupplyCurveField.LCOT]
+                + trans_table[SupplyCurveField.MEAN_LCOE_FRICTION])
+            trans_table[SupplyCurveField.TOTAL_LCOE_FRICTION] = (
                 lcoe_friction
             )
             logger.info('Found mean LCOE with friction. Adding key '
                         '"total_lcoe_friction" to trans table.')
+
+        return trans_table
 
     def _exclude_noncompetitive_wind_farms(
         self, comp_wind_dirs, sc_gid, downwind=False
