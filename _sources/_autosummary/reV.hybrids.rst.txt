@@ -1,0 +1,32 @@
+reV.hybrids
+===========
+
+.. automodule:: reV.hybrids
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   cli_hybrids
+   hybrid_methods
+   hybrids
+

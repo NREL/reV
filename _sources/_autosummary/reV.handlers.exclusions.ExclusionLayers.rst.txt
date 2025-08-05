@@ -1,0 +1,44 @@
+reV.handlers.exclusions.ExclusionLayers
+=======================================
+
+.. currentmodule:: reV.handlers.exclusions
+
+.. autoclass:: ExclusionLayers
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ExclusionLayers.close
+      ~ExclusionLayers.get_layer_crs
+      ~ExclusionLayers.get_layer_description
+      ~ExclusionLayers.get_layer_profile
+      ~ExclusionLayers.get_layer_values
+      ~ExclusionLayers.get_nodata_value
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ExclusionLayers.chunks
+      ~ExclusionLayers.crs
+      ~ExclusionLayers.h5
+      ~ExclusionLayers.iarr
+      ~ExclusionLayers.latitude
+      ~ExclusionLayers.layers
+      ~ExclusionLayers.longitude
+      ~ExclusionLayers.pixel_area
+      ~ExclusionLayers.profile
+      ~ExclusionLayers.shape
+   
+   

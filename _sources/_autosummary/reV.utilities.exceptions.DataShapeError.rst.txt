@@ -1,0 +1,6 @@
+reV.utilities.exceptions.DataShapeError
+=======================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: DataShapeError

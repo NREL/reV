@@ -1,0 +1,34 @@
+reV.losses.scheduled.SingleOutageScheduler
+==========================================
+
+.. currentmodule:: reV.losses.scheduled
+
+.. autoclass:: SingleOutageScheduler
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SingleOutageScheduler.calculate
+      ~SingleOutageScheduler.find_random_outage_slice
+      ~SingleOutageScheduler.schedule_losses
+      ~SingleOutageScheduler.update_when_can_schedule
+      ~SingleOutageScheduler.update_when_can_schedule_from_months
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SingleOutageScheduler.MAX_ITER
+   
+   

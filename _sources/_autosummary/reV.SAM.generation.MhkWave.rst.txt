@@ -1,0 +1,63 @@
+reV.SAM.generation.MhkWave
+==========================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: MhkWave
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MhkWave.add_scheduled_losses
+      ~MhkWave.annual_energy
+      ~MhkWave.assign_inputs
+      ~MhkWave.cf_mean
+      ~MhkWave.cf_profile
+      ~MhkWave.check_resource_data
+      ~MhkWave.collect_outputs
+      ~MhkWave.default
+      ~MhkWave.drop_leap
+      ~MhkWave.energy_yield
+      ~MhkWave.ensure_res_len
+      ~MhkWave.execute
+      ~MhkWave.gen_profile
+      ~MhkWave.get_sam_res
+      ~MhkWave.get_time_interval
+      ~MhkWave.make_datetime
+      ~MhkWave.outputs_to_utc_arr
+      ~MhkWave.reV_run
+      ~MhkWave.run
+      ~MhkWave.run_gen_and_econ
+      ~MhkWave.set_resource_data
+      ~MhkWave.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MhkWave.DIR
+      ~MhkWave.IGNORE_ATTRS
+      ~MhkWave.MODULE
+      ~MhkWave.OUTAGE_CONFIG_KEY
+      ~MhkWave.OUTAGE_SEED_CONFIG_KEY
+      ~MhkWave.attr_dict
+      ~MhkWave.has_timezone
+      ~MhkWave.input_list
+      ~MhkWave.meta
+      ~MhkWave.module
+      ~MhkWave.outage_seed
+      ~MhkWave.pysam
+      ~MhkWave.site
+   
+   

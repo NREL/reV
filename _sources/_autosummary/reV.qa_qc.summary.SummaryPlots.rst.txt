@@ -1,0 +1,37 @@
+reV.qa\_qc.summary.SummaryPlots
+===============================
+
+.. currentmodule:: reV.qa_qc.summary
+
+.. autoclass:: SummaryPlots
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SummaryPlots.dist_plot
+      ~SummaryPlots.dist_plotly
+      ~SummaryPlots.scatter
+      ~SummaryPlots.scatter_all
+      ~SummaryPlots.scatter_plot
+      ~SummaryPlots.scatter_plotly
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SummaryPlots.columns
+      ~SummaryPlots.data
+      ~SummaryPlots.summary
+   
+   

@@ -1,0 +1,6 @@
+reV.utilities.exceptions.ExclusionLayerError
+============================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: ExclusionLayerError

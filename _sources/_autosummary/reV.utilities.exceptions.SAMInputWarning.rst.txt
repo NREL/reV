@@ -1,0 +1,6 @@
+reV.utilities.exceptions.SAMInputWarning
+========================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: SAMInputWarning
