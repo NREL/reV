@@ -126,8 +126,8 @@ class SupplyCurve:
                               `trans_table` input
                 - "POI_cost_MW": Connection cost for this POI, in $/MW.
 
-            This input is only required if you are performing a "poi"
-            connection sort. by default, ``None``.
+            This input is required if you are running ``poi_sort``.
+            By default, ``None``.
 
         Examples
         --------
@@ -1745,7 +1745,7 @@ class SupplyCurve:
             Updated sc_points table with POI transmission connections,
             LCOT and LCOE+LCOT based on POI supply curve connections.
         """
-        logger.info("Starting full competitive supply curve sort.")
+        logger.info("Starting POI-based supply curve sort.")
 
         msg = "Must set poi_info before running poi_sort"
         assert self._poi_info is not None, msg
@@ -1888,6 +1888,107 @@ class SupplyCurve:
         supply_curve = supply_curve.reset_index(drop=True)
 
         return supply_curve
+
+    def run_poi(
+        self,
+        out_fpath,
+        fixed_charge_rate,
+        max_cap_tie_in_cost_per_mw=None,
+        scale_with_capacity=False,
+        consider_friction=True,
+        sort_on=None,
+        columns=DEFAULT_COLUMNS,
+        competition=None,
+    ):
+        """Run POI Supply Curve sort calculations
+
+        Run full POI-base supply curve transmission sort taking into
+        account available capacity of transmission features and POI's
+        when making connections.
+
+        Parameters
+        ----------
+        out_fpath : str
+            Full path to output CSV file. Does not need to include file
+            ending - it will be added automatically if missing.
+        fixed_charge_rate : float
+            Fixed charge rate, (in decimal form: 5% = 0.05). This value
+            is used to compute LCOT.
+        max_cap_tie_in_cost_per_mw : float, optional
+            Cost to tie into a POI after it has reached maximum
+            capacity. If you don't want to allow connections after the
+            POI capacity is reached, leave this input unspecified.
+            By default, ``None``.
+        scale_with_capacity : bool, default=False
+            Option to scale the costs as capacity changes. If ``False``,
+            costs are only computed once at the beginning of the sort.
+            If ``True``, costs are re-computed as parts of a plant are
+            connected, leaving the remainder of the plant capacity with
+            higher connection costs (since new lines have to be built
+            for a smaller amount of capacity). By default, ``False``.
+        consider_friction : bool, optional
+            Flag to add a new ``"total_lcoe_friction"`` column to the
+            supply curve output that contains the sum of the computed
+            ``"total_lcoe"`` value and the input
+            ``"mean_lcoe_friction"`` values. If ``"mean_lcoe_friction"``
+            is not in the `sc_points` input, this option is ignored.
+            By default, ``True``.
+        sort_on : str, optional
+            Column label to sort the supply curve table on. This affects
+            the build priority when doing a "full" sort - connections
+            with the lowest value in this column will be built first.
+            For a "simple" sort, only connections with the lowest value
+            in this column will be considered. If ``None``, the sort is
+            performed on the total LCOE *without* any reinforcement
+            costs added (this is typically what you want - it avoids
+            unrealistically long spur-line connections).
+            By default ``None``.
+        columns : list | tuple, optional
+            Columns to preserve in output supply curve dataframe.
+            By default, :obj:`DEFAULT_COLUMNS`.
+        competition : dict, optional
+            Optional dictionary of arguments for competitive wind farm
+            exclusions, which removes supply curve points upwind (and
+            optionally downwind) of the lowest LCOE supply curves.
+            If ``None``, no competition is applied. Otherwise, this
+            dictionary can have up to four keys:
+
+                - ``wind_dirs`` (required) : A path to a CSV file or
+                  :py:class:`reVX ProminentWindDirections
+                  <reVX.wind_dirs.prominent_wind_dirs.ProminentWindDirections>`
+                  output with the neighboring supply curve point gids
+                  and power-rose values at each cardinal direction.
+                - ``n_dirs`` (optional) : An integer representing the
+                  number of prominent directions to use during wind farm
+                  competition. By default, ``2``.
+                - ``downwind`` (optional) : A flag indicating that
+                  downwind neighbors should be removed in addition to
+                  upwind neighbors during wind farm competition.
+                  By default, ``False``.
+                - ``offshore_compete`` (optional) : A flag indicating
+                  that offshore farms should be included during wind
+                  farm competition. By default, ``False``.
+
+            By default ``None``.
+
+        Returns
+        -------
+        str
+            Path to output supply curve.
+        """
+        kwargs = {
+            "fcr": fixed_charge_rate,
+            "consider_friction": consider_friction,
+            "sort_on": sort_on,
+            "columns": columns,
+            "scale_with_capacity": scale_with_capacity,
+            "max_cap_tie_in_cost_per_mw": max_cap_tie_in_cost_per_mw,
+        }
+        kwargs.update(competition or {})
+        supply_curve = self.poi_sort(**kwargs)
+        out_fpath = _format_sc_out_fpath(out_fpath)
+        supply_curve.to_csv(out_fpath, index=False)
+        return out_fpath
 
     def run(
         self,
@@ -2032,6 +2133,7 @@ def _format_sc_out_fpath(out_fpath):
 
     project_dir, out_fn = os.path.split(out_fpath)
     out_fn = out_fn.replace("supply_curve", "supply-curve")
+    out_fn = out_fn.replace("poi_sort", "poi-sort")
     return os.path.join(project_dir, out_fn)
 
 

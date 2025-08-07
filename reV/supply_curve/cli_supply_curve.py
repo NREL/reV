@@ -61,6 +61,11 @@ sc_command = CLICommandFromClass(SupplyCurve, method="run",
                                  config_preprocessor=_preprocessor)
 main = as_click_command(sc_command)
 
+sc_poi_command = CLICommandFromClass(SupplyCurve, method="run_poi",
+                                     name=str(ModuleName.SUPPLY_CURVE_POI),
+                                     add_collect=False, split_keys=None,
+                                     config_preprocessor=_preprocessor)
+
 
 if __name__ == '__main__':
     try:

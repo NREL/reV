@@ -633,6 +633,7 @@ class ModuleName(str, Enum):
     QA_QC = "qa-qc"
     REP_PROFILES = "rep-profiles"
     SUPPLY_CURVE = "supply-curve"
+    SUPPLY_CURVE_POI = "poi-sort"
     SUPPLY_CURVE_AGGREGATION = "supply-curve-aggregation"
     TECH_MAPPING = "tech-mapping"
 
