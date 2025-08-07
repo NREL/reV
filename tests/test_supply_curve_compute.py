@@ -1060,7 +1060,8 @@ def test_poi_connection_respects_limit(scale_cap):
             out.loc[mask, SupplyCurveField.CAPACITY_AC_MW].sum(), cap)
 
 
-def test_poi_connection_respects_selects_cheapest_lcoe():
+@pytest.mark.parametrize("scale_cap", (True, False))
+def test_poi_connection_respects_selects_cheapest_lcoe(scale_cap):
     """Test connecting to POI selects best connection"""
     sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10, 15, 20],
                        SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
@@ -1079,7 +1080,7 @@ def test_poi_connection_respects_selects_cheapest_lcoe():
                          "POI_cost_MW": [1000, 2000, 3000]})
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
-    out = sc.poi_sort(fcr=1, scale_with_capacity=True)
+    out = sc.poi_sort(fcr=1, scale_with_capacity=scale_cap)
 
     # Full capacity was connected
     assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [25, 10]
