@@ -132,14 +132,18 @@ def test_integrated_sc_full(i, trans_costs):
         baseline_verify(sc_full, fpath_baseline)
 
 
-@pytest.mark.parametrize(
-    ("i", "trans_costs"), ((1, TRANS_COSTS_1), (2, TRANS_COSTS_2))
-)
-def test_integrated_sc_simple(i, trans_costs):
+@pytest.mark.parametrize(("i", "trans_costs"),
+                         ((1, TRANS_COSTS_1), (2, TRANS_COSTS_2)))
+@pytest.mark.parametrize("drop_ac_cap", (True, False))
+def test_integrated_sc_simple(i, trans_costs, drop_ac_cap):
     """Run the simple SC test and verify results against baseline file."""
     tcosts = trans_costs.copy()
     tcosts.pop("available_capacity", 1)
-    sc = SupplyCurve(SC_POINTS, TRANS_TABLE, sc_features=MULTIPLIERS)
+    tt = TRANS_TABLE.copy()
+    if drop_ac_cap:
+        tt = tt.drop(columns="ac_cap")
+
+    sc = SupplyCurve(SC_POINTS, tt, sc_features=MULTIPLIERS)
     with tempfile.TemporaryDirectory() as td:
         out_fpath = os.path.join(td, "sc")
         sc_simple = sc.run(
