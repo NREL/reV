@@ -1202,6 +1202,7 @@ class SupplyCurve:
         ),
         downwind=False,
         max_cap_tie_in_cost_per_mw=None,
+        scale_with_capacity=False,
         **kwargs
     ):
         """
@@ -1235,6 +1236,13 @@ class SupplyCurve:
             have reached maximum capacity. If ``None``, then connections
             after reaching max transmission feature capacity are
             disallowed. By default, ``None``.
+        scale_with_capacity : bool, default=False
+            Option to scale the costs as capacity changes. If ``False``,
+            costs are only computed once at the beginning of the sort.
+            If ``True``, costs are re-computed as parts of a plant are
+            connected, leaving the remainder of the plant capacity with
+            higher connection costs (since new lines have to be built
+            for a smaller amount of capacity). By default, ``False``.
         **kwargs
             Extra keyword-value pair arguments to pass to
             :meth:`SupplyCurve.compute_total_lcoe`. Should **NOT**
