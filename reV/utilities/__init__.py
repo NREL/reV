@@ -10,11 +10,11 @@ from rex.utilities.loggers import log_versions as rex_log_versions
 from reV.version import __version__
 
 
-class _DocstringEnumMeta(EnumMeta):
+class _DocstringEnumMeta(EnumMeta):  # noqa
     """Metaclass to assign docstrings to Enum members"""
 
-    def __new__(metacls, clsname, bases, clsdict):
-        cls = super().__new__(metacls, clsname, bases, clsdict)
+    def __new__(mcs, clsname, bases, clsdict):
+        cls = super().__new__(mcs, clsname, bases, clsdict)
 
         try:
             source = inspect.getsource(cls)

@@ -719,8 +719,8 @@ class SupplyCurve:
         trans_sc_table = cls._merge_sc_trans_tables(
             sc_points, trans_table, sc_cols=sc_cols, sc_capacity_col=scc
         )
-        if (SupplyCurveField.TRANS_GID not in trans_sc_table.columns and
-            poi_info is not None):
+        if (SupplyCurveField.TRANS_GID not in trans_sc_table.columns
+            and poi_info is not None):
             trans_sc_table = cls._pull_trans_gid_from_poi(trans_sc_table,
                                                           poi_info)
 
@@ -1259,8 +1259,8 @@ class SupplyCurve:
 
         if scale_with_capacity:
             conn_lists = self._connect_while_cap_available(
-                    trans_table, trans_features, all_cols, comp_wind_dirs,
-                    downwind, sort_on, fcr, **kwargs)
+                trans_table, trans_features, all_cols, comp_wind_dirs,
+                downwind, sort_on, fcr, **kwargs)
         else:
             conn_lists = self._connect_while_cap_available_no_scale(
                 trans_table, trans_features, all_cols, comp_wind_dirs,
@@ -1683,7 +1683,7 @@ class SupplyCurve:
             connectable=connectable,
             max_workers=max_workers,
             consider_friction=consider_friction,
-            max_cap_tie_in_cost_per_mw=None, # no conns after max cap
+            max_cap_tie_in_cost_per_mw=None,  # no conns after max cap
         )
 
         return supply_curve
@@ -2190,7 +2190,7 @@ def _add_tcc_mw_for_poi(trans_table, poi_info):
 
     tie_in_cost_per_mw = (
         trans_table[[SupplyCurveField.TRANS_GID]].merge(
-        poi_info[[SupplyCurveField.TRANS_GID, "POI_cost_MW"]],
+            poi_info[[SupplyCurveField.TRANS_GID, "POI_cost_MW"]],
             on=SupplyCurveField.TRANS_GID
         )["POI_cost_MW"])
 
