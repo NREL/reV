@@ -917,7 +917,8 @@ def test_trans_gid_pulled_from_poi_info():
     assert (sc._trans_table[SupplyCurveField.TRANS_GID] == 1).all()
 
 
-def test_basic_1_poi_to_1_sc_connection():
+@pytest.mark.parametrize("scale_cap", (True, False))
+def test_basic_1_poi_to_1_sc_connection(scale_cap):
     """Test the most basic case of POI connection"""
     sc = pd.DataFrame({SupplyCurveField.SC_GID: [0],
                        SupplyCurveField.SC_ROW_IND: [0],
@@ -936,7 +937,7 @@ def test_basic_1_poi_to_1_sc_connection():
                          "POI_cost_MW": [1000, 2000, 3000]})
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
-    out = sc.poi_sort(fcr=1, scale_with_capacity=True)
+    out = sc.poi_sort(fcr=1, scale_with_capacity=scale_cap)
 
     # Full capacity was connected
     assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [10]
