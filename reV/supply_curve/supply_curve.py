@@ -1257,15 +1257,21 @@ class SupplyCurve:
         all_cols = _get_connection_cols(columns, sort_on)
         self._reset_sc_capacities()
 
-        conn_lists = self._connect_while_cap_available(
+        if scale_with_capacity:
+            conn_lists = self._connect_while_cap_available(
+                    trans_table, trans_features, all_cols, comp_wind_dirs,
+                    downwind, sort_on, fcr, **kwargs)
+        else:
+            conn_lists = self._connect_while_cap_available_no_scale(
                 trans_table, trans_features, all_cols, comp_wind_dirs,
-                downwind, sort_on, fcr, **kwargs)
+                downwind)
 
         if max_cap_tie_in_cost_per_mw:
             conn_lists = self._connect_at_max_cap(conn_lists, all_cols,
                                                   comp_wind_dirs,
                                                   downwind, fcr, sort_on,
                                                   max_cap_tie_in_cost_per_mw,
+                                                  scale_with_capacity,
                                                   **kwargs)
 
         _warn_about_unconnected_gids(self._sc_capacities)
@@ -1390,7 +1396,8 @@ class SupplyCurve:
 
     def _connect_at_max_cap(self, conn_lists, all_cols,
                             comp_wind_dirs, downwind, fcr, sort_on,
-                            max_cap_tie_in_cost_per_mw=None, **kwargs):
+                            max_cap_tie_in_cost_per_mw=None,
+                            scale_with_capacity=False, **kwargs):
         """Connect SC points to trans features beyond max capacity"""
         if not self._sc_capacities.any():
             return conn_lists
@@ -1409,7 +1416,8 @@ class SupplyCurve:
                          .format(sc_gid, ind + 1, len(sc_gids)))
             mask = self._trans_table[SupplyCurveField.SC_GID] == sc_gid
             sc_tt = self._trans_table[mask].copy()
-            sc_tt[SupplyCurveField.CAPACITY_AC_MW] = cap_remaining
+            if scale_with_capacity:
+                sc_tt[SupplyCurveField.CAPACITY_AC_MW] = cap_remaining
             sc_tt = max_tcc_per_mw_for_poi(sc_tt, max_cap_tie_in_cost_per_mw)
             sc_tt = self.compute_total_lcoe(fcr=fcr, trans_table=sc_tt,
                                             **kwargs)
@@ -1428,6 +1436,50 @@ class SupplyCurve:
                         comp_wind_dirs, sc_gid, downwind=downwind
                     )
                 )
+
+        return conn_lists
+
+    def _connect_while_cap_available_no_scale(self, trans_table,
+                                              trans_features, all_cols,
+                                              comp_wind_dirs, downwind):
+        """Connect SC points to trans features that have available capacity"""
+        connected = 0
+        progress = 0
+        conn_lists = {k: [] for k in all_cols}
+        conn_lists[self._sc_capacity_col] = []
+
+        for __, row in trans_table.iterrows():
+            sc_gid = row[SupplyCurveField.SC_GID]
+            if self._sc_capacities[sc_gid] > 0:
+                trans_gid = row[SupplyCurveField.TRANS_GID]
+                cap_connected = trans_features.connect(
+                    trans_gid, self._sc_capacities[sc_gid]
+                )
+                if cap_connected <= 0:
+                    continue
+
+                connected += 1
+                logger.debug("Connecting sc gid {} to trans gid {}: {:.2f} MW"
+                             .format(sc_gid, trans_gid, cap_connected))
+                self._sc_capacities[sc_gid] -= cap_connected
+
+                for col in all_cols:
+                    conn_lists[col].append(row[col])
+
+                conn_lists[self._sc_capacity_col].append(cap_connected)
+
+                current_prog = connected // (len(self) / 100)
+                if current_prog > progress:
+                    progress = current_prog
+                    logger.info("{} % of supply curve points connected"
+                                .format(progress))
+
+                if comp_wind_dirs is not None:
+                    comp_wind_dirs = (
+                        self._exclude_noncompetitive_wind_farms(
+                            comp_wind_dirs, sc_gid, downwind=downwind
+                        )
+                    )
 
         return conn_lists
 
