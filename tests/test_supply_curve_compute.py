@@ -941,6 +941,10 @@ def test_basic_1_poi_to_1_sc_connection():
     # Full capacity was connected
     assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [10]
 
+    truth_lcot = (4000 / 10 + 2000) / (8760 * 0.3)
+    assert np.allclose(out[SupplyCurveField.LCOT], truth_lcot,
+                       atol=1e-6, rtol=1e-6)
+
 
 def test_basic_1_poi_to_many_sc_connection():
     """Test a basic case of POI connection"""
