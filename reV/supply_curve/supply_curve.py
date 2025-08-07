@@ -1694,6 +1694,7 @@ class SupplyCurve:
         max_cap_tie_in_cost_per_mw=None,
         consider_friction=True,
         sort_on=None,
+        scale_with_capacity=False,
         columns=(
             SupplyCurveField.TRANS_GID,
             SupplyCurveField.TRANS_CAPACITY,
@@ -1726,6 +1727,13 @@ class SupplyCurve:
             this column will be built first. By default, ``None``, which
             will use total LCOE without any reinforcement costs as the
             sort value.
+        scale_with_capacity : bool, default=False
+            Option to scale the costs as capacity changes. If ``False``,
+            costs are only computed once at the beginning of the sort.
+            If ``True``, costs are re-computed as parts of a plant are
+            connected, leaving the remainder of the plant capacity with
+            higher connection costs (since new lines have to be built
+            for a smaller amount of capacity). By default, ``False``.
         columns : list | tuple, optional
             Columns to preserve in output connections dataframe,
             by default ('trans_gid', 'trans_capacity', 'trans_type',
@@ -1772,6 +1780,7 @@ class SupplyCurve:
             comp_wind_dirs=None,
             downwind=False,
             max_cap_tie_in_cost_per_mw=max_cap_tie_in_cost_per_mw,
+            scale_with_capacity=scale_with_capacity,
         )
 
         return supply_curve
