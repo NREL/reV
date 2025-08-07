@@ -979,7 +979,8 @@ def test_basic_1_poi_to_many_sc_connection(scale_cap):
                        atol=1e-6, rtol=1e-6)
 
 
-def test_too_large_sc_connection():
+@pytest.mark.parametrize("scale_cap", (True, False))
+def test_too_large_sc_connection(scale_cap):
     """Test connecting some but not all capacity to POI"""
     sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10, 15, 20],
                        SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
@@ -998,13 +999,18 @@ def test_too_large_sc_connection():
                          "POI_cost_MW": [1000, 2000, 3000]})
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
-    out = sc.poi_sort(fcr=1, scale_with_capacity=True)
+    out = sc.poi_sort(fcr=1, scale_with_capacity=scale_cap)
 
     # Full capacity was connected
     assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [25, 75, 10]
     assert 20 not in set(out[SupplyCurveField.SC_GID])
 
-    cost_per_mw = (np.array([4000, 4000, 100]) / np.array([25, 75, 10])
+    if scale_cap:
+        lcot_capacities = np.array([25, 75, 10])
+    else:
+        lcot_capacities = np.array([25, 100, 10])
+
+    cost_per_mw = (np.array([4000, 4000, 100]) / lcot_capacities
                    + np.array([2000, 2000, 3000]))
     truth_lcot = cost_per_mw / (8760 * 0.3)
     assert np.allclose(out[SupplyCurveField.LCOT], truth_lcot,
