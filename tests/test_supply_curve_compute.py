@@ -936,7 +936,7 @@ def test_basic_1_poi_to_1_sc_connection():
                          "POI_cost_MW": [1000, 2000, 3000]})
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
-    out = sc.poi_sort(fcr=1)
+    out = sc.poi_sort(fcr=1, scale_with_capacity=True)
 
     # Full capacity was connected
     assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [10]
@@ -961,7 +961,7 @@ def test_basic_1_poi_to_many_sc_connection():
                          "POI_cost_MW": [1000, 2000, 3000]})
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
-    out = sc.poi_sort(fcr=1)
+    out = sc.poi_sort(fcr=1, scale_with_capacity=True)
 
     # Full capacity was connected
     assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [10, 90]
@@ -986,7 +986,7 @@ def test_too_large_sc_connection():
                          "POI_cost_MW": [1000, 2000, 3000]})
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
-    out = sc.poi_sort(fcr=1)
+    out = sc.poi_sort(fcr=1, scale_with_capacity=True)
 
     # Full capacity was connected
     assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [25, 75, 10]
@@ -1023,7 +1023,7 @@ def test_poi_connection_respects_limit():
                          "POI_cost_MW": [1000, 2000, 3000]})
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
-    out = sc.poi_sort(fcr=1)
+    out = sc.poi_sort(fcr=1, scale_with_capacity=True)
 
     # Full capacity was connected
     assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [50, 10]
