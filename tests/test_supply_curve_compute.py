@@ -1060,7 +1060,7 @@ def test_poi_connection_respects_selects_cheapest_lcoe():
                          "POI_cost_MW": [1000, 2000, 3000]})
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
-    out = sc.poi_sort(fcr=1)
+    out = sc.poi_sort(fcr=1, scale_with_capacity=True)
 
     # Full capacity was connected
     assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [25, 10]
@@ -1097,7 +1097,8 @@ def test_too_large_sc_connection_allowed():
                          "POI_cost_MW": [1000, 2000, 3000]})
 
     sc = SupplyCurve(sc, lcp, poi_info=pois)
-    out = sc.poi_sort(fcr=1, max_cap_tie_in_cost_per_mw=1_000_000)
+    out = sc.poi_sort(fcr=1, max_cap_tie_in_cost_per_mw=1_000_000,
+                      scale_with_capacity=True)
 
     # Full capacity was connected
     assert (out[SupplyCurveField.CAPACITY_AC_MW].to_list()
