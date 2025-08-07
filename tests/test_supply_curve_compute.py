@@ -980,6 +980,43 @@ def test_basic_1_poi_to_many_sc_connection(scale_cap):
 
 
 @pytest.mark.parametrize("scale_cap", (True, False))
+def test_basic_1_poi_to_many_sc_connection_with_partial(scale_cap):
+    """Test a basic case of POI connection"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10],
+                       SupplyCurveField.SC_ROW_IND: [0, 1],
+                       SupplyCurveField.SC_COL_IND: [0, 1],
+                       SupplyCurveField.CAPACITY_AC_MW: [10, 300],
+                       SupplyCurveField.MEAN_CF_AC: [0.3, 0.3],
+                       SupplyCurveField.MEAN_LCOE: [4, 5]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0, 1],
+                        SupplyCurveField.SC_COL_IND: [0, 1],
+                        "POI_name": ["B", "B"],
+                        "cost": [4000, 4000],
+                        SupplyCurveField.DIST_SPUR_KM: [10, 20]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 200, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    out = sc.poi_sort(fcr=1, scale_with_capacity=scale_cap)
+
+    # Full capacity was connected
+    assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [10, 190]
+
+    if scale_cap:
+        lcot_capacities = np.array([10, 190])
+    else:
+        lcot_capacities = np.array([10, 200])
+
+    cost_per_mw = (np.array([4000, 4000]) / lcot_capacities
+                   + np.array([2000, 2000]))
+    truth_lcot = cost_per_mw / (8760 * 0.3)
+    assert np.allclose(out[SupplyCurveField.LCOT], truth_lcot,
+                       atol=1e-6, rtol=1e-6)
+
+
+@pytest.mark.parametrize("scale_cap", (True, False))
 def test_too_large_sc_connection(scale_cap):
     """Test connecting some but not all capacity to POI"""
     sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10, 15, 20],
