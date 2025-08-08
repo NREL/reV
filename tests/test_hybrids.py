@@ -736,7 +736,7 @@ def test_hybrids_data_contains_col(solar_fpath, wind_fpath):
      f"solar_{SupplyCurveField.AREA_SQ_KM}"
      f"/wind_{SupplyCurveField.AREA_SQ_KM}"],
 )
-@pytest.mark.parametrize("ratio_bounds", [None, (0.5, 1.5), (0.3, 3.6)])
+@pytest.mark.parametrize("ratio_bounds", [None, [0.5, 1.5], [0.3, 3.6]])
 @pytest.mark.parametrize("input_combination", [(False, False), (True, True)])
 def test_hybrids_cli_from_config(
     runner, half_hour, ratio, ratio_bounds, input_combination, clear_loggers,
@@ -811,6 +811,10 @@ def test_hybrids_cli_from_config(
             meta_from_file = f.meta.fillna(fv).replace("nan", fv)
             assert np.all(meta_from_file == h.hybrid_meta.fillna(fv))
             assert np.all(f.time_index.values == h.hybrid_time_index.values)
+
+            assert "run_directory" in f.h5.attrs
+            assert "hybrids_config" in f.h5.attrs
+            assert json.loads(f.h5.attrs["hybrids_config"]) == config
 
         clear_loggers()
 

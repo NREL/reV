@@ -17,13 +17,14 @@ from rex.utilities.utilities import to_records_array
 
 from reV.handlers.outputs import Outputs
 from reV.hybrids.hybrid_methods import HYBRID_METHODS
-from reV.utilities import SupplyCurveField
+from reV.utilities import SupplyCurveField, ModuleName
 from reV.utilities.exceptions import (
     FileInputError,
     InputError,
     InputWarning,
     OutputWarning,
 )
+from reV.utilities.cli_functions import add_to_run_attrs
 
 logger = logging.getLogger(__name__)
 
@@ -1108,7 +1109,8 @@ class Hybridization:
         """
         return self._profiles
 
-    def run(self, fout=None, save_hybrid_meta=True):
+    def run(self, fout=None, save_hybrid_meta=True, config_file=None,
+            project_dir=None):
         """Run hybridization of profiles and save to disc.
 
         Parameters
@@ -1119,6 +1121,14 @@ class Hybridization:
         save_hybrid_meta : bool, optional
             Flag to save hybrid SC table to hybrid rep profile output.
             By default, ``True``.
+        config_file : str, optional
+            Path to config file used for this hybrids run (if
+            applicable). This is used to store information about the run
+            in the output file attrs. By default, ``None``.
+        project_dir : str, optional
+            Path to run directory used for this hybrids run (if
+            applicable). This is used to store information about the run
+            in the output file attrs. By default, ``None``.
 
         Returns
         -------
@@ -1130,7 +1140,9 @@ class Hybridization:
         self.run_profiles()
 
         if fout is not None:
-            self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta)
+            self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta,
+                               config_file=config_file,
+                               project_dir=project_dir)
 
         logger.info("Hybridization of representative profiles complete!")
         return fout
@@ -1220,7 +1232,8 @@ class Hybridization:
             self._profiles[sp_name] + self._profiles[wp_name]
         )
 
-    def _init_h5_out(self, fout, save_hybrid_meta=True):
+    def _init_h5_out(self, fout, save_hybrid_meta=True, config_file=None,
+                     project_dir=None):
         """Initialize an output h5 file for hybrid profiles.
 
         Parameters
@@ -1229,6 +1242,14 @@ class Hybridization:
             Filepath to output h5 file.
         save_hybrid_meta : bool
             Flag to save hybrid SC table to hybrid rep profile output.
+        config_file : str, optional
+            Path to config file used for this hybrids run (if
+            applicable). This is used to store information about the run
+            in the output file attrs. By default, ``None``.
+        project_dir : str, optional
+            Path to run directory used for this hybrids run (if
+            applicable). This is used to store information about the run
+            in the output file attrs. By default, ``None``.
         """
         dsets = []
         shapes = {}
@@ -1250,6 +1271,10 @@ class Hybridization:
             except ValueError:
                 pass
 
+        run_attrs = add_to_run_attrs(config_file=config_file,
+                                     project_dir=project_dir,
+                                     module=ModuleName.HYBRIDS)
+
         Outputs.init_h5(
             fout,
             dsets,
@@ -1259,6 +1284,7 @@ class Hybridization:
             dtypes,
             meta,
             time_index=self.hybrid_time_index,
+            run_attrs=run_attrs,
         )
 
         if save_hybrid_meta:
@@ -1290,7 +1316,8 @@ class Hybridization:
             for dset, data in self.profiles.items():
                 out[dset] = data
 
-    def save_profiles(self, fout, save_hybrid_meta=True):
+    def save_profiles(self, fout, save_hybrid_meta=True, config_file=None,
+                      project_dir=None):
         """Initialize fout and save profiles.
 
         Parameters
@@ -1299,7 +1326,16 @@ class Hybridization:
             Filepath to output h5 file.
         save_hybrid_meta : bool
             Flag to save hybrid SC table to hybrid rep profile output.
+        config_file : str, optional
+            Path to config file used for this hybrids run (if
+            applicable). This is used to store information about the run
+            in the output file attrs. By default, ``None``.
+        project_dir : str, optional
+            Path to run directory used for this hybrids run (if
+            applicable). This is used to store information about the run
+            in the output file attrs. By default, ``None``.
         """
 
-        self._init_h5_out(fout, save_hybrid_meta=save_hybrid_meta)
+        self._init_h5_out(fout, save_hybrid_meta=save_hybrid_meta,
+                          config_file=config_file, project_dir=project_dir)
         self._write_h5_out(fout, save_hybrid_meta=save_hybrid_meta)
