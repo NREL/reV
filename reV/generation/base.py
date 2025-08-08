@@ -994,7 +994,8 @@ class BaseGen(ABC):
         self._out_fpath = os.path.join(project_dir, out_fn)
         self._run_attrs["out_fpath"] = out_fpath
 
-    def _init_h5(self, mode="w", config_file=None, project_dir=None):
+    def _init_h5(self, mode="w", config_file=None, project_dir=None,
+                 module=ModuleName.GENERATION):
         """Initialize the single h5 output file with all output requests.
 
         Parameters
@@ -1050,10 +1051,10 @@ class BaseGen(ABC):
 
         run_attrs = copy.deepcopy(self.run_attrs)
         run_attrs["run_directory"] = str(project_dir)
-        run_attrs["generation_config"] = "{}"
+        run_attrs[f"{module}_config"] = "{}"
         if config_file and os.path.exists(config_file):
             with open(config_file, "r") as fh:
-                run_attrs["generation_config"] = fh.read()
+                run_attrs[f"{module}_config"] = fh.read()
 
         Outputs.init_h5(
             self._out_fpath,
