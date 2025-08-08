@@ -10,11 +10,11 @@ from rex.utilities.loggers import log_versions as rex_log_versions
 from reV.version import __version__
 
 
-class _DocstringEnumMeta(EnumMeta):
+class _DocstringEnumMeta(EnumMeta):  # noqa
     """Metaclass to assign docstrings to Enum members"""
 
-    def __new__(metacls, clsname, bases, clsdict):
-        cls = super().__new__(metacls, clsname, bases, clsdict)
+    def __new__(mcs, clsname, bases, clsdict):
+        cls = super().__new__(mcs, clsname, bases, clsdict)
 
         try:
             source = inspect.getsource(cls)
@@ -633,6 +633,7 @@ class ModuleName(str, Enum):
     QA_QC = "qa-qc"
     REP_PROFILES = "rep-profiles"
     SUPPLY_CURVE = "supply-curve"
+    SUPPLY_CURVE_POI = "poi-sort"
     SUPPLY_CURVE_AGGREGATION = "supply-curve-aggregation"
     TECH_MAPPING = "tech-mapping"
 
