@@ -1109,8 +1109,7 @@ class Hybridization:
         """
         return self._profiles
 
-    def run(self, fout=None, save_hybrid_meta=True, config_file=None,
-            project_dir=None):
+    def run(self, fout=None, save_hybrid_meta=True, config_file=None):
         """Run hybridization of profiles and save to disc.
 
         Parameters
@@ -1125,10 +1124,6 @@ class Hybridization:
             Path to config file used for this hybrids run (if
             applicable). This is used to store information about the run
             in the output file attrs. By default, ``None``.
-        project_dir : str, optional
-            Path to run directory used for this hybrids run (if
-            applicable). This is used to store information about the run
-            in the output file attrs. By default, ``None``.
 
         Returns
         -------
@@ -1141,8 +1136,7 @@ class Hybridization:
 
         if fout is not None:
             self.save_profiles(fout, save_hybrid_meta=save_hybrid_meta,
-                               config_file=config_file,
-                               project_dir=project_dir)
+                               config_file=config_file)
 
         logger.info("Hybridization of representative profiles complete!")
         return fout
@@ -1232,8 +1226,7 @@ class Hybridization:
             self._profiles[sp_name] + self._profiles[wp_name]
         )
 
-    def _init_h5_out(self, fout, save_hybrid_meta=True, config_file=None,
-                     project_dir=None):
+    def _init_h5_out(self, fout, save_hybrid_meta=True, config_file=None):
         """Initialize an output h5 file for hybrid profiles.
 
         Parameters
@@ -1244,10 +1237,6 @@ class Hybridization:
             Flag to save hybrid SC table to hybrid rep profile output.
         config_file : str, optional
             Path to config file used for this hybrids run (if
-            applicable). This is used to store information about the run
-            in the output file attrs. By default, ``None``.
-        project_dir : str, optional
-            Path to run directory used for this hybrids run (if
             applicable). This is used to store information about the run
             in the output file attrs. By default, ``None``.
         """
@@ -1272,7 +1261,6 @@ class Hybridization:
                 pass
 
         run_attrs = add_to_run_attrs(config_file=config_file,
-                                     project_dir=project_dir,
                                      module=ModuleName.HYBRIDS)
 
         Outputs.init_h5(
@@ -1316,8 +1304,7 @@ class Hybridization:
             for dset, data in self.profiles.items():
                 out[dset] = data
 
-    def save_profiles(self, fout, save_hybrid_meta=True, config_file=None,
-                      project_dir=None):
+    def save_profiles(self, fout, save_hybrid_meta=True, config_file=None):
         """Initialize fout and save profiles.
 
         Parameters
@@ -1330,12 +1317,8 @@ class Hybridization:
             Path to config file used for this hybrids run (if
             applicable). This is used to store information about the run
             in the output file attrs. By default, ``None``.
-        project_dir : str, optional
-            Path to run directory used for this hybrids run (if
-            applicable). This is used to store information about the run
-            in the output file attrs. By default, ``None``.
         """
 
         self._init_h5_out(fout, save_hybrid_meta=save_hybrid_meta,
-                          config_file=config_file, project_dir=project_dir)
+                          config_file=config_file)
         self._write_h5_out(fout, save_hybrid_meta=save_hybrid_meta)

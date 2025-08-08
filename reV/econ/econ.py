@@ -498,7 +498,7 @@ class Econ(BaseGen):
         return data_shape
 
     def run(self, out_fpath=None, max_workers=1, timeout=1800, pool_size=None,
-            config_file=None, project_dir=None):
+            config_file=None):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
@@ -524,10 +524,6 @@ class Econ(BaseGen):
             Path to config file used for this econ run (if applicable).
             This is used to store information about the run in the
             output file attrs. By default, ``None``.
-        project_dir : str, optional
-            Path to run directory used for this econ run (if
-            applicable). This is used to store information about the run
-            in the output file attrs. By default, ``None``.
 
         Returns
         -------
@@ -545,8 +541,7 @@ class Econ(BaseGen):
             self._init_fpath(out_fpath, ModuleName.ECON)
 
         self._init_h5(mode="a" if self._append else "w",
-                      config_file=config_file, project_dir=project_dir,
-                      module=ModuleName.ECON)
+                      config_file=config_file, module=ModuleName.ECON)
         self._init_out_arrays()
 
         diff = list(set(self.points_control.sites)

@@ -113,7 +113,7 @@ def test_gen_from_config(runner, tech, clear_loggers):
                         else:
                             assert output not in cf.datasets
 
-                    assert "run_directory" in cf.h5.attrs
+                    assert "generation_config_fp" in cf.h5.attrs
                     assert "generation_config" in cf.h5.attrs
                     assert (json.loads(cf.h5.attrs["generation_config"])
                             == config)

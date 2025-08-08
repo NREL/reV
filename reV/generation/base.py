@@ -995,7 +995,7 @@ class BaseGen(ABC):
         self._out_fpath = os.path.join(project_dir, out_fn)
         self._run_attrs["out_fpath"] = out_fpath
 
-    def _init_h5(self, mode="w", config_file=None, project_dir=None,
+    def _init_h5(self, mode="w", config_file=None,
                  module=ModuleName.GENERATION):
         """Initialize the single h5 output file with all output requests.
 
@@ -1052,7 +1052,6 @@ class BaseGen(ABC):
 
         run_attrs = add_to_run_attrs(run_attrs=self.run_attrs,
                                      config_file=config_file,
-                                     project_dir=project_dir,
                                      module=ModuleName.GENERATION)
 
         Outputs.init_h5(

@@ -161,7 +161,7 @@ def compile_descriptions(cols=None):
     return pd.DataFrame(data, columns=["reV Column", "Units", "Description"])
 
 
-def add_to_run_attrs(run_attrs=None, config_file=None, project_dir=None,
+def add_to_run_attrs(run_attrs=None, config_file=None,
                      module=ModuleName.GENERATION):
     """Add config and project directory to run attrs
 
@@ -173,10 +173,6 @@ def add_to_run_attrs(run_attrs=None, config_file=None, project_dir=None,
         Path to config file used for this module's run (if applicable).
         This is used to store the run config in the output attrs.
         By default, ``None``.
-    project_dir : _type_, optional
-        Path to run directory used for this module's run (if
-        applicable). This is used to store information about the run
-        in the output attrs. By default, ``None``.
     module : :obj:`~reV.utilities.ModuleName`, optional
         Module that this run represents.
         By default, ``ModuleName.GENERATION``.
@@ -190,7 +186,7 @@ def add_to_run_attrs(run_attrs=None, config_file=None, project_dir=None,
     if run_attrs:
         out = deepcopy(run_attrs)
 
-    out["run_directory"] = str(project_dir)
+    out[f"{module}_config_fp"] = str(config_file)
     out[f"{module}_config"] = "{}"
     if config_file and os.path.exists(config_file):
         with open(config_file, "r") as fh:

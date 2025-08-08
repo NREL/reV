@@ -1045,7 +1045,7 @@ class Gen(BaseGen):
         return kwargs
 
     def run(self, out_fpath=None, max_workers=1, timeout=1800, pool_size=None,
-            config_file=None, project_dir=None):
+            config_file=None):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -1073,10 +1073,6 @@ class Gen(BaseGen):
             Path to config file used for this generation run (if
             applicable). This is used to store information about the run
             in the output file attrs. By default, ``None``.
-        project_dir : str, optional
-            Path to run directory used for this generation run (if
-            applicable). This is used to store information about the run
-            in the output file attrs. By default, ``None``.
 
         Returns
         -------
@@ -1086,7 +1082,7 @@ class Gen(BaseGen):
         """
         # initialize output file
         self._init_fpath(out_fpath, module=ModuleName.GENERATION)
-        self._init_h5(config_file=config_file, project_dir=project_dir)
+        self._init_h5(config_file=config_file, module=ModuleName.GENERATION)
         self._init_out_arrays()
         if pool_size is None:
             pool_size = os.cpu_count() * 2
