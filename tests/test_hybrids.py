@@ -812,8 +812,14 @@ def test_hybrids_cli_from_config(
             assert np.all(meta_from_file == h.hybrid_meta.fillna(fv))
             assert np.all(f.time_index.values == h.hybrid_time_index.values)
 
+            assert "solar_fpath" in f.h5.attrs
+            assert "wind_fpath" in f.h5.attrs
             assert "hybrids_config_fp" in f.h5.attrs
             assert "hybrids_config" in f.h5.attrs
+
+            assert f.h5.attrs["solar_fpath"] == sfp
+            assert f.h5.attrs["wind_fpath"] == wfp
+            assert f.h5.attrs["hybrids_config_fp"] == config_path
             assert json.loads(f.h5.attrs["hybrids_config"]) == config
 
         clear_loggers()

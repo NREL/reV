@@ -1260,7 +1260,10 @@ class Hybridization:
             except ValueError:
                 pass
 
-        run_attrs = add_to_run_attrs(config_file=config_file,
+        run_attrs = {"solar_fpath": self.data.solar_fpath,
+                     "wind_fpath": self.data.wind_fpath}
+        run_attrs = add_to_run_attrs(run_attrs=run_attrs,
+                                     config_file=config_file,
                                      module=ModuleName.HYBRIDS)
 
         Outputs.init_h5(
