@@ -455,6 +455,7 @@ class Gen(BaseGen):
         self._sam_module = self.OPTIONS[self.tech]
         self._run_attrs["sam_module"] = self._sam_module.MODULE
         self._run_attrs["res_file"] = resource_file
+        self._run_attrs["low_res_resource_file"] = str(low_res_resource_file)
 
         self._multi_h5_res, self._hsds = check_res_file(resource_file)
         self._gid_map = self._parse_gid_map(gid_map)
