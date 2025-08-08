@@ -12,12 +12,13 @@ from pandas.testing import assert_frame_equal
 from rex.resource import Resource
 
 from reV import TESTDATADIR
+from reV.cli import main
 from reV.rep_profiles.rep_profiles import (
     RegionRepProfile,
     RepProfiles,
     RepresentativeMethods,
 )
-from reV.utilities import ResourceMetaField, SupplyCurveField
+from reV.utilities import ResourceMetaField, SupplyCurveField, ModuleName
 
 GEN_FPATH = os.path.join(TESTDATADIR, "gen_out/gen_ri_pv_2012_x000.h5")
 
@@ -354,6 +355,72 @@ def test_file_options():
         assert np.issubdtype(dtype, np.integer)
         assert attrs["scale_factor"] == 1000
         assert np.allclose(rp.profiles[0], disk_profiles)
+        assert "rev_summary" not in disk_dsets
+
+
+def test_rep_profiles_cli(runner, clear_loggers):
+    """Test rep profiles CLI"""
+    with tempfile.TemporaryDirectory() as td:
+        sites = np.arange(100)
+        zeros = np.zeros((100,))
+        regions = (["r0"] * 7) + (["r1"] * 33) + (["r2"] * 60)
+        timezone = np.random.choice([-4, -5, -6, -7], 100)
+        rev_summary = pd.DataFrame({SupplyCurveField.GEN_GIDS: sites,
+                                    SupplyCurveField.RES_GIDS: sites,
+                                    'res_class': zeros,
+                                    'region': regions,
+                                    SupplyCurveField.TIMEZONE: timezone})
+        summary_fp = os.path.join(td, 'rev_summary.csv')
+        rev_summary.to_csv(summary_fp, index=False)
+
+        config = {
+            "log_directory": td,
+            "log_level": "INFO",
+            "execution_control": {"option": "local"},
+            "gen_fpath": GEN_FPATH,
+            "rev_summary": summary_fp,
+            "reg_cols": "region",
+            "n_profiles": 3,
+            "weight": None,
+            "scaled_precision": True,
+            "save_rev_summary": False,
+        }
+
+        config_path = os.path.join(td, "config.json")
+        with open(config_path, "w") as f:
+            json.dump(config, f)
+
+        result = runner.invoke(
+            main, [str(ModuleName.REP_PROFILES), "-c", config_path]
+        )
+
+        if result.exit_code != 0:
+            import traceback
+
+            msg = "Failed with error {}".format(
+                traceback.print_exception(*result.exc_info)
+            )
+            clear_loggers()
+            raise RuntimeError(msg)
+
+        dirname = os.path.basename(td)
+        fn_out = "{}_{}.h5".format(dirname, ModuleName.REP_PROFILES)
+        out_fpath = os.path.join(td, fn_out)
+        with Resource(out_fpath) as res:
+            dtype = res.get_dset_properties("rep_profiles_0")[1]
+            attrs = res.get_attrs("rep_profiles_0")
+            disk_dsets = res.datasets
+
+            assert "gen_fpath" in res.h5.attrs
+            assert "rep-profiles_config_fp" in res.h5.attrs
+            assert "rep-profiles_config" in res.h5.attrs
+
+            assert res.h5.attrs["gen_fpath"] == GEN_FPATH
+            assert res.h5.attrs["rep-profiles_config_fp"] == config_path
+            assert json.loads(res.h5.attrs["rep-profiles_config"]) == config
+
+        assert np.issubdtype(dtype, np.integer)
+        assert attrs["scale_factor"] == 1000
         assert "rev_summary" not in disk_dsets
 
 
