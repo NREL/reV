@@ -28,6 +28,7 @@ from reV.utilities.exceptions import (
     OutputWarning,
     ParallelExecutionWarning,
 )
+from reV.utilities.cli_functions import add_to_run_attrs
 
 logger = logging.getLogger(__name__)
 
@@ -1049,12 +1050,10 @@ class BaseGen(ABC):
         else:
             ti = None
 
-        run_attrs = copy.deepcopy(self.run_attrs)
-        run_attrs["run_directory"] = str(project_dir)
-        run_attrs[f"{module}_config"] = "{}"
-        if config_file and os.path.exists(config_file):
-            with open(config_file, "r") as fh:
-                run_attrs[f"{module}_config"] = fh.read()
+        run_attrs = add_to_run_attrs(run_attrs=self.run_attrs,
+                                     config_file=config_file,
+                                     project_dir=project_dir,
+                                     module=ModuleName.GENERATION)
 
         Outputs.init_h5(
             self._out_fpath,

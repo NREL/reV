@@ -2,7 +2,9 @@
 """
 General CLI utility functions.
 """
+import os
 import logging
+from copy import deepcopy
 from warnings import warn
 
 import pandas as pd
@@ -157,3 +159,41 @@ def compile_descriptions(cols=None):
         data.append((str(scf), scf.units, scf.description))
 
     return pd.DataFrame(data, columns=["reV Column", "Units", "Description"])
+
+
+def add_to_run_attrs(run_attrs=None, config_file=None, project_dir=None,
+                     module=ModuleName.GENERATION):
+    """Add config and project directory to run attrs
+
+    Parameters
+    ----------
+    run_attrs : dict, optional
+        Existing `run_attrs` (if any). By default, ``None``.
+    config_file : str, optional
+        Path to config file used for this module's run (if applicable).
+        This is used to store the run config in the output attrs.
+        By default, ``None``.
+    project_dir : _type_, optional
+        Path to run directory used for this module's run (if
+        applicable). This is used to store information about the run
+        in the output attrs. By default, ``None``.
+    module : :obj:`~reV.utilities.ModuleName`, optional
+        Module that this run represents.
+        By default, ``ModuleName.GENERATION``.
+
+    Returns
+    -------
+    dict
+        Run attributes that can be written to the file's attrs.
+    """
+    out = {}
+    if run_attrs:
+        out = deepcopy(run_attrs)
+
+    out["run_directory"] = str(project_dir)
+    out[f"{module}_config"] = "{}"
+    if config_file and os.path.exists(config_file):
+        with open(config_file, "r") as fh:
+            out[f"{module}_config"] = fh.read()
+
+    return out
