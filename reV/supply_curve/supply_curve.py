@@ -719,8 +719,8 @@ class SupplyCurve:
         trans_sc_table = cls._merge_sc_trans_tables(
             sc_points, trans_table, sc_cols=sc_cols, sc_capacity_col=scc
         )
-        if (SupplyCurveField.TRANS_GID not in trans_sc_table.columns
-            and poi_info is not None):
+        gid_missing = SupplyCurveField.TRANS_GID not in trans_sc_table.columns
+        if gid_missing and poi_info is not None:
             trans_sc_table = cls._pull_trans_gid_from_poi(trans_sc_table,
                                                           poi_info)
 
