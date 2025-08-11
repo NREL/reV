@@ -199,7 +199,7 @@ class MultiYearGroup:
         """
         Returns
         -------
-        _dsets :list | tuple
+        _dsets : list | tuple
             Datasets to collect
         """
         return self._dsets
