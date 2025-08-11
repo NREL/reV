@@ -1051,8 +1051,7 @@ class BaseGen(ABC):
             ti = None
 
         run_attrs = add_to_run_attrs(run_attrs=self.run_attrs,
-                                     config_file=config_file,
-                                     module=ModuleName.GENERATION)
+                                     config_file=config_file, module=module)
 
         Outputs.init_h5(
             self._out_fpath,
