@@ -205,6 +205,16 @@ def test_cli(runner, clear_loggers):
             assert np.allclose(res['pass_through_2'],
                                2 * np.arange(len(res.meta)))
 
+            assert "multi-year_config_fp" in res.h5.attrs
+            assert "multi-year_config" in res.h5.attrs
+
+            assert res.h5.attrs["multi-year_config_fp"] == fp_config
+            assert res.h5.attrs["multi-year_config"] == json.dumps(config)
+
+            assert "multi-year_source_files" in res.h5.attrs
+            assert (set(json.loads(res.h5.attrs["multi-year_source_files"]))
+                    == set(temp_h5_files))
+
         clear_loggers()
 
 
@@ -268,6 +278,16 @@ def test_cli_single_file(runner, clear_loggers):
                                1 * np.arange(len(res.meta)))
             assert np.allclose(res['pass_through_2'],
                                2 * np.arange(len(res.meta)))
+
+            assert "multi-year_config_fp" in res.h5.attrs
+            assert "multi-year_config" in res.h5.attrs
+
+            assert res.h5.attrs["multi-year_config_fp"] == fp_config
+            assert res.h5.attrs["multi-year_config"] == json.dumps(config)
+
+            assert "multi-year_source_files" in res.h5.attrs
+            assert (json.loads(res.h5.attrs["multi-year_source_files"])
+                    == [fp_in])
 
         clear_loggers()
 

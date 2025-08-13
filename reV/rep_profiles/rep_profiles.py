@@ -23,8 +23,10 @@ from rex.utilities.utilities import parse_year, to_records_array
 from scipy import stats
 
 from reV.handlers.outputs import Outputs
-from reV.utilities import ResourceMetaField, SupplyCurveField, log_versions
+from reV.utilities import (ResourceMetaField, SupplyCurveField, log_versions,
+                           ModuleName)
 from reV.utilities.exceptions import DataShapeError, FileInputError
+from reV.utilities.cli_functions import add_to_run_attrs
 
 logger = logging.getLogger(__name__)
 
@@ -835,9 +837,8 @@ class RepProfilesBase(ABC):
         """
         return self._profiles
 
-    def _init_h5_out(
-        self, fout, save_rev_summary=True, scaled_precision=False
-    ):
+    def _init_h5_out(self, fout, save_rev_summary=True,
+                     scaled_precision=False, config_file=None):
         """Initialize an output h5 file for n_profiles
 
         Parameters
@@ -848,6 +849,10 @@ class RepProfilesBase(ABC):
             Flag to save full reV SC table to rep profile output.
         scaled_precision : bool
             Flag to scale cf_profiles by 1000 and save as uint16.
+        config_file : str, optional
+            Path to config file used for this representative profiles
+            run (if applicable). This is used to store information about
+            the run in the output file attrs. By default, ``None``.
         """
         dsets = []
         shapes = {}
@@ -873,16 +878,13 @@ class RepProfilesBase(ABC):
             with contextlib.suppress(ValueError):
                 meta[c] = pd.to_numeric(meta[c])
 
-        Outputs.init_h5(
-            fout,
-            dsets,
-            shapes,
-            attrs,
-            chunks,
-            dtypes,
-            meta,
-            time_index=self.time_index,
-        )
+        run_attrs = {"gen_fpath": self._gen_fpath}
+        run_attrs = add_to_run_attrs(run_attrs=run_attrs,
+                                     config_file=config_file,
+                                     module=ModuleName.REP_PROFILES)
+
+        Outputs.init_h5(fout, dsets, shapes, attrs, chunks, dtypes, meta,
+                        time_index=self.time_index, run_attrs=run_attrs)
 
         if save_rev_summary:
             with Outputs(fout, mode="a") as out:
@@ -912,9 +914,8 @@ class RepProfilesBase(ABC):
                 dset = "rep_profiles_{}".format(i)
                 out[dset] = self.profiles[i]
 
-    def save_profiles(
-        self, fout, save_rev_summary=True, scaled_precision=False
-    ):
+    def save_profiles(self, fout, save_rev_summary=True,
+                      scaled_precision=False, config_file=None):
         """Initialize fout and save profiles.
 
         Parameters
@@ -925,13 +926,15 @@ class RepProfilesBase(ABC):
             Flag to save full reV SC table to rep profile output.
         scaled_precision : bool
             Flag to scale cf_profiles by 1000 and save as uint16.
+        config_file : str, optional
+            Path to config file used for this representative profiles
+            run (if applicable). This is used to store information about
+            the run in the output file attrs. By default, ``None``.
         """
 
-        self._init_h5_out(
-            fout,
-            save_rev_summary=save_rev_summary,
-            scaled_precision=scaled_precision,
-        )
+        self._init_h5_out(fout, save_rev_summary=save_rev_summary,
+                          scaled_precision=scaled_precision,
+                          config_file=config_file)
         self._write_h5_out(fout, save_rev_summary=save_rev_summary)
 
     @abstractmethod
@@ -1284,13 +1287,8 @@ class RepProfiles(RepProfilesBase):
                         self._meta.at[i, "rep_gen_gid"] = str(ggids)
                         self._meta.at[i, "rep_res_gid"] = str(rgids)
 
-    def run(
-        self,
-        fout=None,
-        save_rev_summary=True,
-        scaled_precision=False,
-        max_workers=None,
-    ):
+    def run(self, fout=None, save_rev_summary=True, scaled_precision=False,
+            max_workers=None, config_file=None):
         """
         Run representative profiles in serial or parallel and save to disc
 
@@ -1309,6 +1307,10 @@ class RepProfiles(RepProfilesBase):
             Number of parallel rep profile workers. ``1`` will run
             serial, while ``None`` will use all available.
             By default, ``None``.
+        config_file : str, optional
+            Path to config file used for this representative profiles
+            run (if applicable). This is used to store information about
+            the run in the output file attrs. By default, ``None``.
         """
 
         if max_workers == 1:
@@ -1323,11 +1325,10 @@ class RepProfiles(RepProfilesBase):
                     "'save_rev_summary' input to `False`"
                 )
                 save_rev_summary = False
-            self.save_profiles(
-                fout,
-                save_rev_summary=save_rev_summary,
-                scaled_precision=scaled_precision,
-            )
+
+            self.save_profiles(fout, save_rev_summary=save_rev_summary,
+                               scaled_precision=scaled_precision,
+                               config_file=config_file)
 
         logger.info("Representative profiles complete!")
 

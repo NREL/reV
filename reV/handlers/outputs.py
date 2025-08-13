@@ -9,6 +9,7 @@ import sys
 import NRWAL
 import PySAM
 import rex
+import gaps
 from rex.outputs import Outputs as rexOutputs
 
 from reV.version import __version__
@@ -144,6 +145,7 @@ class Outputs(rexOutputs):
                         'pysam': PySAM.__version__,
                         'python': sys.version,
                         'nrwal': NRWAL.__version__,
+                        'gaps': gaps.__version__,
                         }
         versions = super().full_version_record
         versions.update(rev_versions)

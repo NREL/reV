@@ -31,7 +31,7 @@ classifiers=[
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "NREL-gaps>=0.8.0",
+  "NREL-gaps>=0.8.11",
   "NREL-NRWAL>=0.0.11",
   "NREL-PySAM~=7.0.0",
   "NREL-rex>=0.4.0",
