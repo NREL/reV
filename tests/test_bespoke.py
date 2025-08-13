@@ -1750,6 +1750,12 @@ def test_cli(runner, clear_loggers):
                 assert f[dset].shape[1] == len(meta)
                 assert f[dset].any()  # not all zeros
 
+            assert "bespoke_config_fp" in f.h5.attrs
+            assert "bespoke_config" in f.h5.attrs
+
+            assert f.h5.attrs["bespoke_config_fp"] == config_path
+            assert f.h5.attrs["bespoke_config"] == json.dumps(config)
+
         clear_loggers()
 
 
