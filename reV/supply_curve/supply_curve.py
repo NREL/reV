@@ -1413,16 +1413,13 @@ class SupplyCurve:
 
         sc_gids = np.where(self._sc_capacities)[0].tolist()
         for ind, sc_gid in enumerate(sc_gids):
-            if connection_upper_limit:
-                connected_cap = sum(conn_lists[self._sc_capacity_col])
-                if connected_cap >= connection_upper_limit:
-                    break
-                cap_remaining = min(self._sc_capacities[sc_gid],
-                                    connection_upper_limit - connected_cap)
-                if cap_remaining <= 0:
-                    continue
-            else:
-                cap_remaining = self._sc_capacities[sc_gid]
+            cap_remaining = self._determine_cap_to_connect(
+                conn_lists, sc_gid, connection_upper_limit)
+
+            if cap_remaining < 0:
+                break
+            elif np.isclose(cap_remaining, 0):
+                continue
 
             if sc_gid not in self._sc_gids:
                 logger.debug("SC GID {} (capacity {:.2f}) has no possible "
