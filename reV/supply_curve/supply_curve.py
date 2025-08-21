@@ -1203,7 +1203,7 @@ class SupplyCurve:
         downwind=False,
         max_cap_tie_in_cost_per_mw=None,
         scale_with_capacity=False,
-        build_limit=None,
+        connection_upper_limit=None,
         **kwargs
     ):
         """
@@ -1244,7 +1244,7 @@ class SupplyCurve:
             connected, leaving the remainder of the plant capacity with
             higher connection costs (since new lines have to be built
             for a smaller amount of capacity). By default, ``False``.
-        build_limit : int | float, optional
+        connection_upper_limit : int | float, optional
             Optional upper limit for total capacity (MW). If specified,
             the sort will stop when this amount of capacity has been
             connected. By default, ``None`` which does not impose any
@@ -1278,7 +1278,7 @@ class SupplyCurve:
                                                   downwind, fcr, sort_on,
                                                   max_cap_tie_in_cost_per_mw,
                                                   scale_with_capacity,
-                                                  build_limit,
+                                                  connection_upper_limit,
                                                   **kwargs)
 
         _warn_about_unconnected_gids(self._sc_capacities)
@@ -1404,7 +1404,8 @@ class SupplyCurve:
     def _connect_at_max_cap(self, conn_lists, all_cols,
                             comp_wind_dirs, downwind, fcr, sort_on,
                             max_cap_tie_in_cost_per_mw=None,
-                            scale_with_capacity=False, build_limit=None,
+                            scale_with_capacity=False,
+                            connection_upper_limit=None,
                             **kwargs):
         """Connect SC points to trans features beyond max capacity"""
         if not self._sc_capacities.any():
@@ -1412,12 +1413,12 @@ class SupplyCurve:
 
         sc_gids = np.where(self._sc_capacities)[0].tolist()
         for ind, sc_gid in enumerate(sc_gids):
-            if build_limit:
+            if connection_upper_limit:
                 connected_cap = sum(conn_lists[self._sc_capacity_col])
-                if connected_cap >= build_limit:
+                if connected_cap >= connection_upper_limit:
                     break
                 cap_remaining = min(self._sc_capacities[sc_gid],
-                                    build_limit - connected_cap)
+                                    connection_upper_limit - connected_cap)
                 if cap_remaining <= 0:
                     continue
             else:
@@ -1713,7 +1714,7 @@ class SupplyCurve:
         consider_friction=True,
         sort_on=None,
         scale_with_capacity=False,
-        build_limit=None,
+        connection_upper_limit=None,
         columns=(
             SupplyCurveField.TRANS_GID,
             SupplyCurveField.TRANS_CAPACITY,
@@ -1753,7 +1754,7 @@ class SupplyCurve:
             connected, leaving the remainder of the plant capacity with
             higher connection costs (since new lines have to be built
             for a smaller amount of capacity). By default, ``False``.
-        build_limit : int | float, optional
+        connection_upper_limit : int | float, optional
             Optional upper limit for total capacity (MW). If specified,
             the sort will stop when this amount of capacity has been
             connected. By default, ``None`` which does not impose any
@@ -1805,7 +1806,7 @@ class SupplyCurve:
             downwind=False,
             max_cap_tie_in_cost_per_mw=max_cap_tie_in_cost_per_mw,
             scale_with_capacity=scale_with_capacity,
-            build_limit=build_limit,
+            connection_upper_limit=connection_upper_limit,
         )
 
         return supply_curve
