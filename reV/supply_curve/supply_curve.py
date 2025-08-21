@@ -1270,7 +1270,7 @@ class SupplyCurve:
         else:
             conn_lists = self._connect_while_cap_available_no_scale(
                 trans_table, trans_features, all_cols, comp_wind_dirs,
-                downwind)
+                downwind, connection_upper_limit)
 
         if max_cap_tie_in_cost_per_mw:
             conn_lists = self._connect_at_max_cap(conn_lists, all_cols,
