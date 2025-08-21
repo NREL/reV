@@ -1266,7 +1266,7 @@ class SupplyCurve:
         if scale_with_capacity:
             conn_lists = self._connect_while_cap_available(
                 trans_table, trans_features, all_cols, comp_wind_dirs,
-                downwind, sort_on, fcr, **kwargs)
+                downwind, sort_on, fcr, connection_upper_limit, **kwargs)
         else:
             conn_lists = self._connect_while_cap_available_no_scale(
                 trans_table, trans_features, all_cols, comp_wind_dirs,
@@ -1306,7 +1306,8 @@ class SupplyCurve:
 
     def _connect_while_cap_available(self, trans_table, trans_features,
                                      all_cols, comp_wind_dirs, downwind,
-                                     sort_on, fcr, **kwargs):
+                                     sort_on, fcr,
+                                     connection_upper_limit=None, **kwargs):
         """Connect SC points to trans features that have available capacity"""
         connected = 0
         progress = 0
@@ -1330,48 +1331,57 @@ class SupplyCurve:
                 trans_table = _remove_trans_gid(trans_table, trans_gid)
                 continue
 
-            logger.debug("Examining SC GID {} connected to Transmission GID {}"
-                         .format(sc_gid, trans_gid))
-            if self._sc_capacities[sc_gid] > 0:
-                cap_connected = trans_features.connect(
-                    trans_gid, self._sc_capacities[sc_gid]
-                )
-                if cap_connected <= 0:
-                    continue
+            cap_remaining = self._determine_cap_to_connect(
+                conn_lists, sc_gid, connection_upper_limit)
 
-                connected += 1
-                logger.debug("Connecting sc gid {} to trans gid {}: {:.2f} MW"
-                             .format(sc_gid, trans_gid, cap_connected))
-                self._sc_capacities[sc_gid] -= cap_connected
-
-                for col in all_cols:
-                    conn_lists[col].append(row[col])
-
-                conn_lists[self._sc_capacity_col].append(cap_connected)
-
-                current_prog = connected // (len(self) / 100)
-                if current_prog > progress:
-                    progress = current_prog
-                    logger.info("{} % of supply curve points connected"
-                                .format(progress))
-
-                if comp_wind_dirs is not None:
-                    comp_wind_dirs = (
-                        self._exclude_noncompetitive_wind_farms(
-                            comp_wind_dirs, sc_gid, downwind=downwind
-                        )
-                    )
-
-                if self._sc_capacities[sc_gid] <= 0:
-                    trans_table = _remove_sc_gid(trans_table, sc_gid)
-
-                trans_table = self._update_costs_new_capacity(
-                    trans_table, sc_gid, trans_gid, cap_connected,
-                    fcr, **kwargs)
-
-            else:
+            if cap_remaining < 0:
+                logger.info("Total capacity limit of %.2f MW reached, "
+                            "stopping connection procedure",
+                            connection_upper_limit)
+                break
+            elif np.isclose(cap_remaining, 0):
+                logger.debug("No remaining capacity found for sc_gid %d",
+                             sc_gid)
                 mask = trans_table[SupplyCurveField.SC_GID] != sc_gid
                 trans_table = trans_table[mask].copy()
+                continue
+
+            logger.debug("Examining SC GID {} connected to Transmission GID {}"
+                         .format(sc_gid, trans_gid))
+
+            cap_connected = trans_features.connect(trans_gid, cap_remaining)
+            if cap_connected <= 0:
+                continue
+
+            connected += 1
+            logger.debug("Connecting sc gid {} to trans gid {}: {:.2f} MW"
+                         .format(sc_gid, trans_gid, cap_connected))
+            self._sc_capacities[sc_gid] -= cap_connected
+
+            for col in all_cols:
+                conn_lists[col].append(row[col])
+
+            conn_lists[self._sc_capacity_col].append(cap_connected)
+
+            current_prog = connected // (len(self) / 100)
+            if current_prog > progress:
+                progress = current_prog
+                logger.info("{} % of supply curve points connected"
+                            .format(progress))
+
+            if comp_wind_dirs is not None:
+                comp_wind_dirs = (
+                    self._exclude_noncompetitive_wind_farms(
+                        comp_wind_dirs, sc_gid, downwind=downwind
+                    )
+                )
+
+            if self._sc_capacities[sc_gid] <= 0:
+                trans_table = _remove_sc_gid(trans_table, sc_gid)
+
+            trans_table = self._update_costs_new_capacity(
+                trans_table, sc_gid, trans_gid, cap_connected,
+                fcr, **kwargs)
 
         return conn_lists
 
