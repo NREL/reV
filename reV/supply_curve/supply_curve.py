@@ -1502,6 +1502,21 @@ class SupplyCurve:
 
         return conn_lists
 
+    def _determine_cap_to_connect(self, conn_lists, sc_gid,
+                                  connection_upper_limit=None):
+        """Determine how much of the points capacity is left to connect"""
+
+        if not connection_upper_limit:
+            return max(0, self._sc_capacities[sc_gid])
+
+        connected_cap = sum(conn_lists[self._sc_capacity_col])
+        if connected_cap >= connection_upper_limit:
+            return -1
+
+        cap_remaining = min(self._sc_capacities[sc_gid],
+                            connection_upper_limit - connected_cap)
+        return max(0, cap_remaining)
+
     def _merge_sc_with_connections(self, columns, conn_lists, sort_on):
         """Merge connections and SC for output"""
         connections = pd.DataFrame(conn_lists).dropna(subset=[sort_on])
