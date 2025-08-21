@@ -1417,8 +1417,13 @@ class SupplyCurve:
                 conn_lists, sc_gid, connection_upper_limit)
 
             if cap_remaining < 0:
+                logger.info("Total capacity limit of %.2f MW reached, "
+                            "stopping connection procedure",
+                            connection_upper_limit)
                 break
             elif np.isclose(cap_remaining, 0):
+                logger.debug("No remaining capacity found for sc_gid %d",
+                             sc_gid)
                 continue
 
             if sc_gid not in self._sc_gids:
@@ -1471,8 +1476,13 @@ class SupplyCurve:
                 conn_lists, sc_gid, connection_upper_limit)
 
             if cap_remaining < 0:
+                logger.info("Total capacity limit of %.2f MW reached, "
+                            "stopping connection procedure",
+                            connection_upper_limit)
                 break
             elif np.isclose(cap_remaining, 0):
+                logger.debug("No remaining capacity found for sc_gid %d",
+                             sc_gid)
                 continue
 
             trans_gid = row[SupplyCurveField.TRANS_GID]
