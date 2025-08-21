@@ -1444,7 +1444,7 @@ class SupplyCurve:
                 continue
 
             logger.debug("Connecting SC GID {} at max cap ({:,d}/{:,d})"
-                         .format(sc_gid, ind + 1, len(sc_gids)))
+                         .format(sc_gid, ind + 1, len(self._trans_table)))
             mask = self._trans_table[SupplyCurveField.SC_GID] == sc_gid
             sc_tt = self._trans_table[mask].copy()
             if scale_with_capacity:
