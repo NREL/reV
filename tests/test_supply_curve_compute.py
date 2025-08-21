@@ -1180,3 +1180,84 @@ def test_too_large_sc_connection_allowed(scale_cap):
         mask = out[SupplyCurveField.TRANS_GID] == trans_gid
         assert np.isclose(
             out.loc[mask, SupplyCurveField.CAPACITY_AC_MW].sum(), cap)
+
+
+@pytest.mark.parametrize("cul", (None, 5, 10, 25, 50, 51, 60, 75))
+@pytest.mark.parametrize("scale_cap", (True, False))
+def test_poi_connection_respects_upper_limit(scale_cap, cul):
+    """Test connecting to POI respects upper limit on capacity"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10, 15, 20],
+                       SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                       SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                       SupplyCurveField.CAPACITY_AC_MW: [25, 100, 1000, 1],
+                       SupplyCurveField.MEAN_CF_AC: [0.3, 0.3, 0.3, 0.3],
+                       SupplyCurveField.MEAN_LCOE: [4, 4, 1, 10]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0, 1, 2],
+                        SupplyCurveField.SC_COL_IND: [0, 1, 2],
+                        "POI_name": ["B", "B", "C"],
+                        "cost": [4000, 4500, 100],
+                        SupplyCurveField.DIST_SPUR_KM: [10, 20, 1]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 50, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    out = sc.poi_sort(fcr=1, scale_with_capacity=scale_cap,
+                      connection_upper_limit=cul)
+
+    if not cul:
+        # Full capacity was connected
+        assert out[SupplyCurveField.CAPACITY_AC_MW].to_list() == [50, 10]
+        assert set(out[SupplyCurveField.SC_GID]) == {10, 15}
+    else:
+        assert out[SupplyCurveField.CAPACITY_AC_MW].sum() <= cul
+        if cul > 10:
+            assert set(out[SupplyCurveField.SC_GID]) == {10, 15}
+        else:
+            assert set(out[SupplyCurveField.SC_GID]) == {15}
+
+
+@pytest.mark.parametrize("cul",
+                         (None, 5, 10, 25, 50, 51, 60, 75, 100, 1000,
+                          1026, 2000))
+@pytest.mark.parametrize("scale_cap", (True, False))
+def test_poi_connection_respects_upper_limit_with_no_poi_limit(scale_cap, cul):
+    """Test connecting to POI respects upper limit on capacity (no POI lim)"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10, 15, 20],
+                       SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                       SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                       SupplyCurveField.CAPACITY_AC_MW: [25, 100, 1000, 1],
+                       SupplyCurveField.MEAN_CF_AC: [0.3, 0.3, 0.3, 0.3],
+                       SupplyCurveField.MEAN_LCOE: [4, 5, 1, 10]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                        SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                        "POI_name": ["B", "B", "C", "B"],
+                        "cost": [4000, 4000, 100, 10_000],
+                        SupplyCurveField.DIST_SPUR_KM: [10, 20, 1, 40]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 100, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    out = sc.poi_sort(fcr=1, max_cap_tie_in_cost_per_mw=1_000_000,
+                      scale_with_capacity=scale_cap,
+                      connection_upper_limit=cul)
+
+    if not cul:
+        # Full capacity was connected
+        assert (out[SupplyCurveField.CAPACITY_AC_MW].to_list()
+                == [25, 75, 25, 10, 990, 1])
+        assert set(out[SupplyCurveField.SC_GID]) == {0, 10, 15, 20}
+    else:
+        assert out[SupplyCurveField.CAPACITY_AC_MW].sum() <= cul
+        if cul > 1026:
+            assert set(out[SupplyCurveField.SC_GID]) == {0, 10, 15, 20}
+        elif cul > 25:
+            assert set(out[SupplyCurveField.SC_GID]) == {0, 10, 15}
+        elif cul > 10:
+            assert set(out[SupplyCurveField.SC_GID]) == {0, 15}
+        else:
+            assert set(out[SupplyCurveField.SC_GID]) == {15}
+
