@@ -1261,3 +1261,49 @@ def test_poi_connection_respects_upper_limit_with_no_poi_limit(scale_cap, cul):
         else:
             assert set(out[SupplyCurveField.SC_GID]) == {15}
 
+
+@pytest.mark.parametrize("scale_cap", (True, False))
+def test_too_large_sc_connection_best_choice_when_limited(scale_cap):
+    """Test connecting to POI after limit selects best connection first"""
+    sc = pd.DataFrame({SupplyCurveField.SC_GID: [0, 10, 15, 20],
+                       SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                       SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                       SupplyCurveField.CAPACITY_AC_MW: [25, 100, 1000, 1],
+                       SupplyCurveField.MEAN_CF_AC: [0.3, 0.3, 0.3, 0.3],
+                       SupplyCurveField.MEAN_LCOE: [4, 5, 1, 10]})
+    lcp = pd.DataFrame({SupplyCurveField.SC_ROW_IND: [0, 1, 2, 1],
+                        SupplyCurveField.SC_COL_IND: [0, 1, 2, 1],
+                        "POI_name": ["B", "B", "C", "B"],
+                        "cost": [4000, 4000, 100, 10_000],
+                        SupplyCurveField.DIST_SPUR_KM: [10, 20, 1, 40]})
+
+    pois = pd.DataFrame({"POI_name": ["A", "B", "C"],
+                         "POI_limit": [100, 100, 10],
+                         "POI_cost_MW": [1000, 2000, 3000]})
+
+    sc = SupplyCurve(sc, lcp, poi_info=pois)
+    out = sc.poi_sort(fcr=1, max_cap_tie_in_cost_per_mw=10_000,
+                      scale_with_capacity=scale_cap,
+                      connection_upper_limit=120)
+
+    # Full capacity was connected
+    assert (out[SupplyCurveField.CAPACITY_AC_MW].to_list()
+            == [25, 75, 10, 10])
+    assert out[SupplyCurveField.SC_GID].to_list() == [0, 10, 15, 15]
+
+    if scale_cap:
+        lcot_capacities = np.array([25, 75, 10, 990])
+    else:
+        lcot_capacities = np.array([25, 100, 10, 1000])
+
+    cost_per_mw = (np.array([4000, 4000, 100, 100])
+                   / lcot_capacities
+                   + np.array([2000, 2000, 3000, 10_000]))
+    truth_lcot = cost_per_mw / (8760 * 0.3)
+    assert np.allclose(out[SupplyCurveField.LCOT], truth_lcot,
+                       atol=1e-6, rtol=1e-6)
+
+    for trans_gid, cap in zip([0, 1, 2], [0, 100, 20]):
+        mask = out[SupplyCurveField.TRANS_GID] == trans_gid
+        assert np.isclose(
+            out.loc[mask, SupplyCurveField.CAPACITY_AC_MW].sum(), cap)
