@@ -1421,8 +1421,24 @@ class SupplyCurve:
         if not self._sc_capacities.any():
             return conn_lists
 
-        sc_gids = np.where(self._sc_capacities)[0].tolist()
-        for ind, sc_gid in enumerate(sc_gids):
+        tt = self._trans_table.copy()
+        if scale_with_capacity:
+            logger.debug("Scaling cost with remaining capacities...")
+            sc_gids = np.where(self._sc_capacities)[0].tolist()
+            for sc_gid in sc_gids:
+                cap_remaining = self._sc_capacities[sc_gid]
+                mask = tt[SupplyCurveField.SC_GID] == sc_gid
+                tt.loc[mask, SupplyCurveField.CAPACITY_AC_MW] = cap_remaining
+
+        tt = max_tcc_per_mw_for_poi(tt, max_cap_tie_in_cost_per_mw)
+        tt = self.compute_total_lcoe(fcr=fcr, trans_table=tt, **kwargs)
+        tt = tt.sort_values(sort_on)
+        zero_cap_gids = set()
+        for ind, (__, row) in enumerate(tt.iterrows()):
+            sc_gid = row[SupplyCurveField.SC_GID]
+            if sc_gid in zero_cap_gids:
+                continue
+
             cap_remaining = self._determine_cap_to_connect(
                 conn_lists, sc_gid, connection_upper_limit)
 
@@ -1434,6 +1450,7 @@ class SupplyCurve:
             elif np.isclose(cap_remaining, 0):
                 logger.debug("No remaining capacity found for sc_gid %d",
                              sc_gid)
+                zero_cap_gids.add(sc_gid)
                 continue
 
             if sc_gid not in self._sc_gids:
@@ -1445,13 +1462,8 @@ class SupplyCurve:
 
             logger.debug("Connecting SC GID {} at max cap ({:,d}/{:,d})"
                          .format(sc_gid, ind + 1, len(self._trans_table)))
-            mask = self._trans_table[SupplyCurveField.SC_GID] == sc_gid
-            sc_tt = self._trans_table[mask].copy()
-            if scale_with_capacity:
-                sc_tt[SupplyCurveField.CAPACITY_AC_MW] = cap_remaining
-            sc_tt = max_tcc_per_mw_for_poi(sc_tt, max_cap_tie_in_cost_per_mw)
-            sc_tt = self.compute_total_lcoe(fcr=fcr, trans_table=sc_tt,
-                                            **kwargs)
+            mask = tt[SupplyCurveField.SC_GID] == sc_gid
+            sc_tt = tt[mask].copy()
 
             row = sc_tt.iloc[sc_tt[sort_on].argmin(skipna=True)]
             self._sc_capacities[sc_gid] = 0
