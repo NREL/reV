@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import tempfile
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -819,7 +820,9 @@ def test_hybrids_cli_from_config(
 
             assert f.h5.attrs["solar_fpath"] == sfp
             assert f.h5.attrs["wind_fpath"] == wfp
-            assert f.h5.attrs["hybrids_config_fp"] == config_path
+
+            config_fp = str(Path(config_path).expanduser().resolve())
+            assert f.h5.attrs["hybrids_config_fp"] == config_fp
             assert json.loads(f.h5.attrs["hybrids_config"]) == config
 
         clear_loggers()

@@ -8,6 +8,7 @@ import shutil
 import tempfile
 import traceback
 from glob import glob
+from pathlib import Path
 
 import h5py
 import numpy as np
@@ -1753,7 +1754,8 @@ def test_cli(runner, clear_loggers):
             assert "bespoke_config_fp" in f.h5.attrs
             assert "bespoke_config" in f.h5.attrs
 
-            assert f.h5.attrs["bespoke_config_fp"] == config_path
+            config_fp = str(Path(config_path).expanduser().resolve())
+            assert f.h5.attrs["bespoke_config_fp"] == config_fp
             assert f.h5.attrs["bespoke_config"] == json.dumps(config)
 
         clear_loggers()

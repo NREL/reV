@@ -4,6 +4,7 @@
 import json
 import os
 import tempfile
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -416,7 +417,9 @@ def test_rep_profiles_cli(runner, clear_loggers):
             assert "rep-profiles_config" in res.h5.attrs
 
             assert res.h5.attrs["gen_fpath"] == GEN_FPATH
-            assert res.h5.attrs["rep-profiles_config_fp"] == config_path
+
+            config_fp = str(Path(config_path).expanduser().resolve())
+            assert res.h5.attrs["rep-profiles_config_fp"] == config_fp
             assert json.loads(res.h5.attrs["rep-profiles_config"]) == config
 
         assert np.issubdtype(dtype, np.integer)
