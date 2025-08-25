@@ -231,9 +231,8 @@ def test_cli_single_file(runner, clear_loggers):
                                       "pass_through_dsets": ['pass_through_1',
                                                              'pass_through_2'],
                                       "source_dir": temp,
-                                      "source_prefix": (
-                                          "ri_wind_gen_profiles"
-                                      )}},
+                                      "source_prefix": ("ri_wind_gen_profiles")
+                                      }},
                   "log_level": "INFO"}
 
         dirname = os.path.basename(temp)
@@ -421,9 +420,9 @@ def test_pass_through_dsets():
         group = {"dsets": ["cf_profile", "cf_profile_ac", "cf_mean",
                            "cf_mean_ac", "ghi_mean", "lcoe_fcr", "ac", "dc",
                            "clipped_power"],
-                "source_dir": temp,
-                "source_prefix": "gen_ri_pv",
-                "pass_through_dsets": deepcopy(test_pass_through_dsets)}
+                 "source_dir": temp,
+                 "source_prefix": "gen_ri_pv",
+                 "pass_through_dsets": deepcopy(test_pass_through_dsets)}
 
         group = MultiYearGroup("test", ".", **group)
         test_ptd = group.pass_through_dsets
