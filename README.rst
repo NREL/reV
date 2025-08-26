@@ -152,6 +152,21 @@ Option 2: Clone repo (recommended for developers)
         - ``reV``
 
 
+reV Ecosystem
+=============
+The reV model suite comes with a set of tools that can be used alongside the core model
+to assist with data preparation and analysis:
+
+- `reVX <https://nrel.github.io/reVX/>`_ - Collection of helper methods to pre- and post- process geospatial reV data (e.g. setback layers, inclusion masks, etc.)
+- `rex <https://nrel.github.io/rex/>`_ - Library to assist with reV-style data I/O, especially resource data
+- reVRt (Coming soon!) - reV routing tool used to compute transmission costs
+- `reVReports <https://github.com/NREL/reVReports>`_ - Tool for generating publication-ready maps of reV supply curve outputs
+- `reView <https://github.com/NREL/reView>`_ - Dashboard for interactive visualization of reV supply curve outputs
+- `reV tutorial <https://github.com/NREL/reV-tutorial>`_ - Collection of tutorials for learning how to use reV
+- `gaps <https://nrel.github.io/gaps/>`_ - Underlying reV pipeline job submission and management system
+
+
+
 reV command line tools
 ======================
 
