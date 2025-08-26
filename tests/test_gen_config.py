@@ -12,6 +12,7 @@ import os
 import shutil
 import tempfile
 import traceback
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -94,12 +95,10 @@ def test_gen_from_config(runner, tech, clear_loggers):
         # get reV 2.0 generation profiles from disk
         rev2_profiles = None
         flist = os.listdir(run_dir)
-        print(flist)
         for fname in flist:
             if fname.endswith('.h5'):
                 path = os.path.join(run_dir, fname)
                 with Outputs(path, 'r') as cf:
-
                     msg = 'cf_profile not written to disk'
                     assert 'cf_profile' in cf.datasets, msg
                     rev2_profiles = cf['cf_profile']
@@ -115,6 +114,14 @@ def test_gen_from_config(runner, tech, clear_loggers):
                         else:
                             assert output not in cf.datasets
 
+                    assert "generation_config_fp" in cf.h5.attrs
+                    assert "generation_config" in cf.h5.attrs
+                    config_fp = Path(config_path).expanduser().resolve()
+                    assert (Path(cf.h5.attrs["generation_config_fp"])
+                            == config_fp)
+                    assert (json.loads(cf.h5.attrs["generation_config"])
+                            == config)
+
                 break
 
         if rev2_profiles is None:
@@ -129,9 +136,6 @@ def test_gen_from_config(runner, tech, clear_loggers):
 
         result = np.allclose(rev1_profiles, rev2_profiles,
                              rtol=RTOL, atol=ATOL)
-
-        print(rev1_profiles)
-        print(rev2_profiles)
 
         clear_loggers()
         msg = ('reV generation from config input failed for "{}" module!'

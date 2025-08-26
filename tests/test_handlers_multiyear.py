@@ -8,6 +8,7 @@ import shutil
 import tempfile
 import traceback
 from copy import deepcopy
+from pathlib import Path
 
 import h5py
 import numpy as np
@@ -205,6 +206,17 @@ def test_cli(runner, clear_loggers):
             assert np.allclose(res['pass_through_2'],
                                2 * np.arange(len(res.meta)))
 
+            assert "multi-year_config_fp" in res.h5.attrs
+            assert "multi-year_config" in res.h5.attrs
+
+            config_fp = Path(fp_config).expanduser().resolve()
+            assert Path(res.h5.attrs["multi-year_config_fp"]) == config_fp
+            assert res.h5.attrs["multi-year_config"] == json.dumps(config)
+
+            assert "multi-year_source_files" in res.h5.attrs
+            assert (set(json.loads(res.h5.attrs["multi-year_source_files"]))
+                    == set(temp_h5_files))
+
         clear_loggers()
 
 
@@ -219,9 +231,8 @@ def test_cli_single_file(runner, clear_loggers):
                                       "pass_through_dsets": ['pass_through_1',
                                                              'pass_through_2'],
                                       "source_dir": temp,
-                                      "source_prefix": (
-                                          "ri_wind_gen_profiles"
-                                      )}},
+                                      "source_prefix": ("ri_wind_gen_profiles")
+                                      }},
                   "log_level": "INFO"}
 
         dirname = os.path.basename(temp)
@@ -268,6 +279,17 @@ def test_cli_single_file(runner, clear_loggers):
                                1 * np.arange(len(res.meta)))
             assert np.allclose(res['pass_through_2'],
                                2 * np.arange(len(res.meta)))
+
+            assert "multi-year_config_fp" in res.h5.attrs
+            assert "multi-year_config" in res.h5.attrs
+
+            config_fp = Path(fp_config).expanduser().resolve()
+            assert Path(res.h5.attrs["multi-year_config_fp"]) == config_fp
+            assert res.h5.attrs["multi-year_config"] == json.dumps(config)
+
+            assert "multi-year_source_files" in res.h5.attrs
+            assert (json.loads(res.h5.attrs["multi-year_source_files"])
+                    == [fp_in])
 
         clear_loggers()
 
@@ -398,9 +420,9 @@ def test_pass_through_dsets():
         group = {"dsets": ["cf_profile", "cf_profile_ac", "cf_mean",
                            "cf_mean_ac", "ghi_mean", "lcoe_fcr", "ac", "dc",
                            "clipped_power"],
-                "source_dir": temp,
-                "source_prefix": "gen_ri_pv",
-                "pass_through_dsets": deepcopy(test_pass_through_dsets)}
+                 "source_dir": temp,
+                 "source_prefix": "gen_ri_pv",
+                 "pass_through_dsets": deepcopy(test_pass_through_dsets)}
 
         group = MultiYearGroup("test", ".", **group)
         test_ptd = group.pass_through_dsets

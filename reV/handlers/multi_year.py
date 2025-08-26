@@ -2,6 +2,7 @@
 """
 Classes to collect reV outputs from multiple annual files.
 """
+import json
 import glob
 import logging
 import os
@@ -23,6 +24,7 @@ from reV.config.output_request import SAMOutputRequest
 from reV.handlers.outputs import Outputs
 from reV.utilities import ModuleName, log_versions
 from reV.utilities.exceptions import ConfigError, HandlerRuntimeError
+from reV.utilities.cli_functions import add_to_run_attrs
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +201,7 @@ class MultiYearGroup:
         """
         Returns
         -------
-        _dsets :list | tuple
+        _dsets : list | tuple
             Datasets to collect
         """
         return self._dsets
@@ -413,7 +415,8 @@ class MultiYear(Outputs):
 
         return source_files
 
-    def collect(self, source_files, dset, profiles=False, pass_through=False):
+    def collect(self, source_files, dset, profiles=False, pass_through=False,
+                config_file=None):
         """
         Collect dataset dset from given list of h5 files
 
@@ -433,15 +436,24 @@ class MultiYear(Outputs):
         pass_through : bool
             Flag to just pass through dataset without name modifications
             (no differences between years, no means or stdevs)
+        config_file : str, optional
+            Path to config file used for this multi-year collection run
+            (if applicable). This is used to store information about the
+            run in the output file attrs. By default, ``None``.
         """
         source_files = self.parse_source_files_pattern(source_files)
         with Outputs(source_files[0], mode='r') as f_in:
+            global_attrs = f_in.get_attrs()
+            meta_attrs = f_in.get_attrs("meta")
             meta = f_in.h5['meta'][...]
 
         if 'meta' not in self.datasets:
             logger.debug("Copying meta")
             self._create_dset('meta', meta.shape, meta.dtype,
-                              data=meta)
+                              data=meta, attrs=meta_attrs)
+
+        self._copy_global_attrs(global_attrs, source_files,
+                                config_file=config_file)
 
         meta = pd.DataFrame(meta)
         for year_h5 in source_files:
@@ -450,6 +462,19 @@ class MultiYear(Outputs):
 
             self._copy_dset(year_h5, dset, meta=meta,
                             pass_through=pass_through)
+
+    def _copy_global_attrs(self, global_attrs, source_files, config_file=None):
+        """Copy global attrs to file"""
+        prefix = (f"{self._group}_{ModuleName.MULTI_YEAR}"
+                  if self._group else f"{ModuleName.MULTI_YEAR}")
+
+        run_attrs = add_to_run_attrs(run_attrs=global_attrs,
+                                     config_file=config_file, module=prefix)
+
+        run_attrs[f"{prefix}_source_files"] = json.dumps(source_files)
+
+        for key, value in run_attrs.items():
+            self.h5.attrs[key] = value
 
     def _get_source_dsets(self, dset_out):
         """
@@ -658,7 +683,8 @@ class MultiYear(Outputs):
         return len(shape) == 2
 
     @classmethod
-    def pass_through(cls, my_file, source_files, dset, group=None):
+    def pass_through(cls, my_file, source_files, dset, group=None,
+                     config_file=None):
         """
         Pass through a dataset that is identical in all source files to a
         dataset of the same name in the output multi-year file.
@@ -678,15 +704,21 @@ class MultiYear(Outputs):
             dataset in my_file)
         group : str
             Group to collect datasets into
+        config_file : str, optional
+            Path to config file used for this multi-year collection run
+            (if applicable). This is used to store information about the
+            run in the output file attrs. By default, ``None``.
         """
         source_files = cls.parse_source_files_pattern(source_files)
         logger.info('Passing through {} into {}.'
                     .format(dset, my_file))
         with cls(my_file, mode='a', group=group) as my:
-            my.collect(source_files, dset, pass_through=True)
+            my.collect(source_files, dset, pass_through=True,
+                       config_file=config_file)
 
     @classmethod
-    def collect_means(cls, my_file, source_files, dset, group=None):
+    def collect_means(cls, my_file, source_files, dset, group=None,
+                      config_file=None):
         """
         Collect and compute multi-year means for given dataset
 
@@ -704,18 +736,23 @@ class MultiYear(Outputs):
             Dataset to collect
         group : str
             Group to collect datasets into
+        config_file : str, optional
+            Path to config file used for this multi-year collection run
+            (if applicable). This is used to store information about the
+            run in the output file attrs. By default, ``None``.
         """
         logger.info('Collecting {} into {} '
                     'and computing multi-year means and standard deviations.'
                     .format(dset, my_file))
         source_files = cls.parse_source_files_pattern(source_files)
         with cls(my_file, mode='a', group=group) as my:
-            my.collect(source_files, dset)
+            my.collect(source_files, dset, config_file=config_file)
             means = my._compute_means("{}-means".format(dset))
             my._compute_stdev("{}-stdev".format(dset), means=means)
 
     @classmethod
-    def collect_profiles(cls, my_file, source_files, dset, group=None):
+    def collect_profiles(cls, my_file, source_files, dset, group=None,
+                         config_file=None):
         """
         Collect multi-year profiles associated with given dataset
 
@@ -733,14 +770,19 @@ class MultiYear(Outputs):
             Profiles dataset to collect
         group : str
             Group to collect datasets into
+        config_file : str, optional
+            Path to config file used for this multi-year collection run
+            (if applicable). This is used to store information about the
+            run in the output file attrs. By default, ``None``.
         """
         logger.info('Collecting {} into {}'.format(dset, my_file))
         source_files = cls.parse_source_files_pattern(source_files)
         with cls(my_file, mode='a', group=group) as my:
-            my.collect(source_files, dset, profiles=True)
+            my.collect(source_files, dset, profiles=True,
+                       config_file=config_file)
 
 
-def my_collect_groups(out_fpath, groups, clobber=True):
+def my_collect_groups(out_fpath, groups, clobber=True, config_file=None):
     """Collect all groups into a single multi-year HDF5 file.
 
     ``reV`` multi-year combines ``reV`` generation data from multiple
@@ -808,6 +850,10 @@ def my_collect_groups(out_fpath, groups, clobber=True):
         single-year files. If ``False``, then datasets in the existing
         file will **not** be overwritten with (potentially new/updated)
         data from the single-year files. By default, ``True``.
+    config_file : str, optional
+        Path to config file used for this multi-year collection run
+        (if applicable). This is used to store information about the
+        run in the output file attrs. By default, ``None``.
     """
     if not out_fpath.endswith(".h5"):
         out_fpath = '{}.h5'.format(out_fpath)
@@ -835,15 +881,18 @@ def my_collect_groups(out_fpath, groups, clobber=True):
         for dset in group['dsets']:
             if MultiYear.is_profile(group['source_files'], dset):
                 MultiYear.collect_profiles(out_fpath, group['source_files'],
-                                           dset, group=group['group'])
+                                           dset, group=group['group'],
+                                           config_file=config_file)
             else:
                 MultiYear.collect_means(out_fpath, group['source_files'],
-                                        dset, group=group['group'])
+                                        dset, group=group['group'],
+                                        config_file=config_file)
 
         pass_through_dsets = group.get('pass_through_dsets') or []
         for dset in pass_through_dsets:
             MultiYear.pass_through(out_fpath, group['source_files'],
-                                   dset, group=group['group'])
+                                   dset, group=group['group'],
+                                   config_file=config_file)
 
         runtime = (time.time() - t0) / 60
         logger.info('- {} collection completed in: {:.2f} min.'
