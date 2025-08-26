@@ -426,6 +426,8 @@ def test_rep_profiles_cli(runner, clear_loggers):
         assert attrs["scale_factor"] == 1000
         assert "rev_summary" not in disk_dsets
 
+        clear_loggers()
+
 
 def execute_pytest(capture="all", flags="-rapP"):
     """Execute module as pytest with detailed summary report.
