@@ -214,8 +214,11 @@ def test_cli(runner, clear_loggers):
             assert res.h5.attrs["multi-year_config"] == json.dumps(config)
 
             assert "multi-year_source_files" in res.h5.attrs
-            assert (set(json.loads(res.h5.attrs["multi-year_source_files"]))
-                    == set(temp_h5_files))
+            h5_paths = {Path(p)
+                        for p
+                        in json.loads(res.h5.attrs["multi-year_source_files"])}
+            expected_files = {Path(p) for p in temp_h5_files}
+            assert h5_paths == expected_files
 
         clear_loggers()
 
@@ -288,8 +291,11 @@ def test_cli_single_file(runner, clear_loggers):
             assert res.h5.attrs["multi-year_config"] == json.dumps(config)
 
             assert "multi-year_source_files" in res.h5.attrs
-            assert (json.loads(res.h5.attrs["multi-year_source_files"])
-                    == [fp_in])
+            h5_paths = {Path(p)
+                        for p
+                        in json.loads(res.h5.attrs["multi-year_source_files"])}
+            expected_files = {Path(fp_in)}
+            assert h5_paths == expected_files
 
         clear_loggers()
 

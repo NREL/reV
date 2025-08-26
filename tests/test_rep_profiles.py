@@ -416,7 +416,7 @@ def test_rep_profiles_cli(runner, clear_loggers):
             assert "rep-profiles_config_fp" in res.h5.attrs
             assert "rep-profiles_config" in res.h5.attrs
 
-            assert res.h5.attrs["gen_fpath"] == GEN_FPATH
+            assert Path(res.h5.attrs["gen_fpath"]) == Path(GEN_FPATH)
 
             config_fp = Path(config_path).expanduser().resolve()
             assert Path(res.h5.attrs["rep-profiles_config_fp"]) == config_fp
