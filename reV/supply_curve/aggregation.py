@@ -20,6 +20,7 @@ from reV.supply_curve.extent import SupplyCurveExtent
 from reV.supply_curve.points import AggregationSupplyCurvePoint
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.utilities import ResourceMetaField, SupplyCurveField, log_versions
+from reV.utilities.cli_functions import add_to_run_attrs
 from reV.utilities.exceptions import (
     EmptySupplyCurvePointError,
     FileInputError,
@@ -993,7 +994,7 @@ class Aggregation(BaseAggregation):
         return agg
 
     @staticmethod
-    def save_agg_to_h5(h5_fpath, out_fpath, aggregation):
+    def save_agg_to_h5(h5_fpath, out_fpath, aggregation, config_file=None):
         """
         Save aggregated data to disc in .h5 format
 
@@ -1003,6 +1004,10 @@ class Aggregation(BaseAggregation):
             Output .h5 file path
         aggregation : dict
             Aggregated values for each aggregation dataset
+        config_file : str, optional
+            Path to config file used for this aggregation run
+            (if applicable). This is used to store information about the
+            run in the output file attrs. By default, ``None``.
         """
         agg_out = aggregation.copy()
         meta = agg_out.pop("meta").reset_index()
@@ -1021,6 +1026,7 @@ class Aggregation(BaseAggregation):
 
         __, hsds = check_res_file(h5_fpath)
         with Resource(h5_fpath, hsds=hsds) as f:
+            global_attrs = f.get_attrs()
             for dset, data in agg_out.items():
                 dsets.append(dset)
                 shape = data.shape
@@ -1035,6 +1041,10 @@ class Aggregation(BaseAggregation):
                 chunks[dset] = chunk
                 dtypes[dset] = dtype
 
+        global_attrs = add_to_run_attrs(run_attrs=global_attrs,
+                                        config_file=config_file,
+                                        module="aggregation")
+
         Outputs.init_h5(
             out_fpath,
             dsets,
@@ -1044,6 +1054,7 @@ class Aggregation(BaseAggregation):
             dtypes,
             meta,
             time_index=time_index,
+            run_attrs=global_attrs,
         )
 
         with Outputs(out_fpath, mode="a") as out:
@@ -1068,6 +1079,7 @@ class Aggregation(BaseAggregation):
         max_workers=None,
         sites_per_worker=100,
         out_fpath=None,
+        config_file=None
     ):
         """Get the supply curve points aggregation summary.
 
@@ -1123,6 +1135,10 @@ class Aggregation(BaseAggregation):
             by default 100
         out_fpath : str, optional
             Output .h5 file path, by default None
+        config_file : str, optional
+            Path to config file used for this aggregation run
+            (if applicable). This is used to store information about the
+            run in the output file attrs. By default, ``None``.
 
         Returns
         -------
@@ -1151,6 +1167,7 @@ class Aggregation(BaseAggregation):
         )
 
         if out_fpath is not None:
-            agg.save_agg_to_h5(h5_fpath, out_fpath, aggregation)
+            agg.save_agg_to_h5(h5_fpath, out_fpath, aggregation,
+                               config_file=config_file)
 
         return aggregation

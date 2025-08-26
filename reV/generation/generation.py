@@ -455,6 +455,7 @@ class Gen(BaseGen):
         self._sam_module = self.OPTIONS[self.tech]
         self._run_attrs["sam_module"] = self._sam_module.MODULE
         self._run_attrs["res_file"] = resource_file
+        self._run_attrs["low_res_resource_file"] = str(low_res_resource_file)
 
         self._multi_h5_res, self._hsds = check_res_file(resource_file)
         self._gid_map = self._parse_gid_map(gid_map)
@@ -1043,7 +1044,8 @@ class Gen(BaseGen):
 
         return kwargs
 
-    def run(self, out_fpath=None, max_workers=1, timeout=1800, pool_size=None):
+    def run(self, out_fpath=None, max_workers=1, timeout=1800, pool_size=None,
+            config_file=None):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -1067,6 +1069,10 @@ class Gen(BaseGen):
             Number of futures to submit to a single process pool for
             parallel futures. If ``None``, the pool size is set to
             ``os.cpu_count() * 2``. By default, ``None``.
+        config_file : str, optional
+            Path to config file used for this generation run (if
+            applicable). This is used to store information about the run
+            in the output file attrs. By default, ``None``.
 
         Returns
         -------
@@ -1076,7 +1082,7 @@ class Gen(BaseGen):
         """
         # initialize output file
         self._init_fpath(out_fpath, module=ModuleName.GENERATION)
-        self._init_h5()
+        self._init_h5(config_file=config_file, module=ModuleName.GENERATION)
         self._init_out_arrays()
         if pool_size is None:
             pool_size = os.cpu_count() * 2

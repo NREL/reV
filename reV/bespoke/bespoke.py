@@ -41,6 +41,7 @@ from reV.utilities import (
     SupplyCurveField,
     log_versions,
 )
+from reV.utilities.cli_functions import add_to_run_attrs
 from reV.utilities.exceptions import EmptySupplyCurvePointError, FileInputError
 
 logger = logging.getLogger(__name__)
@@ -2381,7 +2382,7 @@ class BespokeWindPlants(BaseAggregation):
         )
         return site_sys_inputs
 
-    def _init_fout(self, out_fpath, sample):
+    def _init_fout(self, out_fpath, sample, config_file=None):
         """Initialize the bespoke output h5 file with meta and time index dsets
 
         Parameters
@@ -2392,12 +2393,21 @@ class BespokeWindPlants(BaseAggregation):
         sample : dict
             A single sample BespokeSinglePlant output dict that has been run
             and has output data.
+        config_file : str, optional
+            Path to config file used for this bespoke run (if
+            applicable). This is used to store information about the run
+            in the output file attrs. By default, ``None``.
         """
         out_dir = os.path.dirname(out_fpath)
         if not os.path.exists(out_dir):
             create_dirs(out_dir)
 
+        global_attrs = add_to_run_attrs(config_file=config_file,
+                                        module=ModuleName.BESPOKE)
+
         with Outputs(out_fpath, mode="w") as f:
+            for key, value in global_attrs.items():
+                f.h5.attrs[key] = value
             f._set_meta("meta", self.meta, attrs={})
             ti_dsets = [
                 d for d in sample.keys() if d.startswith("time_index-")
@@ -2459,7 +2469,7 @@ class BespokeWindPlants(BaseAggregation):
 
         return full_arr
 
-    def save_outputs(self, out_fpath):
+    def save_outputs(self, out_fpath, config_file=None):
         """Save Bespoke Wind Plant optimization outputs to disk.
 
         Parameters
@@ -2467,6 +2477,10 @@ class BespokeWindPlants(BaseAggregation):
         out_fpath : str
             Full filepath to an output .h5 file to save Bespoke data to. The
             parent directories will be created if they do not already exist.
+        config_file : str, optional
+            Path to config file used for this bespoke run (if
+            applicable). This is used to store information about the run
+            in the output file attrs. By default, ``None``.
 
         Returns
         -------
@@ -2491,7 +2505,7 @@ class BespokeWindPlants(BaseAggregation):
             return out_fpath
 
         sample = self.outputs[self.completed_gids[0]]
-        self._init_fout(out_fpath, sample)
+        self._init_fout(out_fpath, sample, config_file=config_file)
 
         dsets = [
             d
@@ -2725,7 +2739,7 @@ class BespokeWindPlants(BaseAggregation):
 
         return out
 
-    def run(self, out_fpath=None, max_workers=None):
+    def run(self, out_fpath=None, max_workers=None, config_file=None):
         """Run the bespoke wind plant optimization in serial or parallel.
 
         Parameters
@@ -2738,6 +2752,10 @@ class BespokeWindPlants(BaseAggregation):
         max_workers : int, optional
             Number of local workers to run on. If ``None``, uses all
             available cores (typically 36). By default, ``None``.
+        config_file : str, optional
+            Path to config file used for this bespoke run (if
+            applicable). This is used to store information about the run
+            in the output file attrs. By default, ``None``.
 
         Returns
         -------
@@ -2800,6 +2818,6 @@ class BespokeWindPlants(BaseAggregation):
             self._outputs = self.run_parallel(max_workers=max_workers)
 
         if out_fpath is not None:
-            out_fpath = self.save_outputs(out_fpath)
+            out_fpath = self.save_outputs(out_fpath, config_file=config_file)
 
         return out_fpath

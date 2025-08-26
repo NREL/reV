@@ -12,6 +12,7 @@ import os
 import shutil
 import tempfile
 import traceback
+from pathlib import Path
 
 import h5py
 import numpy as np
@@ -230,6 +231,12 @@ def test_econ_from_config(runner, clear_loggers):
             lcoe = f['lcoe_fcr']
             for output in LCOE_REQUIRED_OUTPUTS:
                 assert output in f.datasets
+
+            assert "econ_config_fp" in f.h5.attrs
+            assert "econ_config" in f.h5.attrs
+            config_fp = Path(config_path).expanduser().resolve()
+            assert Path(f.h5.attrs['econ_config_fp']) == config_fp
+            assert f.h5.attrs['econ_config'] == json.dumps(config)
 
         with h5py.File(r1f, mode='r') as f:
             r1_lcoe = f['pv']['lcoefcr'][0, 0:10] * 1000

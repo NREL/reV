@@ -28,6 +28,7 @@ from reV.utilities.exceptions import (
     OutputWarning,
     ParallelExecutionWarning,
 )
+from reV.utilities.cli_functions import add_to_run_attrs
 
 logger = logging.getLogger(__name__)
 
@@ -994,7 +995,8 @@ class BaseGen(ABC):
         self._out_fpath = os.path.join(project_dir, out_fn)
         self._run_attrs["out_fpath"] = out_fpath
 
-    def _init_h5(self, mode="w"):
+    def _init_h5(self, mode="w", config_file=None,
+                 module=ModuleName.GENERATION):
         """Initialize the single h5 output file with all output requests.
 
         Parameters
@@ -1048,6 +1050,9 @@ class BaseGen(ABC):
         else:
             ti = None
 
+        run_attrs = add_to_run_attrs(run_attrs=self.run_attrs,
+                                     config_file=config_file, module=module)
+
         Outputs.init_h5(
             self._out_fpath,
             self.output_request,
@@ -1058,7 +1063,7 @@ class BaseGen(ABC):
             self.meta,
             time_index=ti,
             configs=self.sam_metas,
-            run_attrs=self.run_attrs,
+            run_attrs=run_attrs,
             mode=mode,
         )
 
