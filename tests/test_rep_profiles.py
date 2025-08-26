@@ -418,8 +418,8 @@ def test_rep_profiles_cli(runner, clear_loggers):
 
             assert res.h5.attrs["gen_fpath"] == GEN_FPATH
 
-            config_fp = str(Path(config_path).expanduser().resolve())
-            assert res.h5.attrs["rep-profiles_config_fp"] == config_fp
+            config_fp = Path(config_path).expanduser().resolve()
+            assert Path(res.h5.attrs["rep-profiles_config_fp"]) == config_fp
             assert json.loads(res.h5.attrs["rep-profiles_config"]) == config
 
         assert np.issubdtype(dtype, np.integer)

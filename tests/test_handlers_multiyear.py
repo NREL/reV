@@ -209,8 +209,8 @@ def test_cli(runner, clear_loggers):
             assert "multi-year_config_fp" in res.h5.attrs
             assert "multi-year_config" in res.h5.attrs
 
-            config_fp = str(Path(fp_config).expanduser().resolve())
-            assert res.h5.attrs["multi-year_config_fp"] == config_fp
+            config_fp = Path(fp_config).expanduser().resolve()
+            assert Path(res.h5.attrs["multi-year_config_fp"]) == config_fp
             assert res.h5.attrs["multi-year_config"] == json.dumps(config)
 
             assert "multi-year_source_files" in res.h5.attrs
@@ -283,8 +283,8 @@ def test_cli_single_file(runner, clear_loggers):
             assert "multi-year_config_fp" in res.h5.attrs
             assert "multi-year_config" in res.h5.attrs
 
-            config_fp = str(Path(fp_config).expanduser().resolve())
-            assert res.h5.attrs["multi-year_config_fp"] == config_fp
+            config_fp = Path(fp_config).expanduser().resolve()
+            assert Path(res.h5.attrs["multi-year_config_fp"]) == config_fp
             assert res.h5.attrs["multi-year_config"] == json.dumps(config)
 
             assert "multi-year_source_files" in res.h5.attrs

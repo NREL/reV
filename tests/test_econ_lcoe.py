@@ -234,8 +234,8 @@ def test_econ_from_config(runner, clear_loggers):
 
             assert "econ_config_fp" in f.h5.attrs
             assert "econ_config" in f.h5.attrs
-            config_fp = str(Path(config_path).expanduser().resolve())
-            assert f.h5.attrs['econ_config_fp'] == config_fp
+            config_fp = Path(config_path).expanduser().resolve()
+            assert Path(f.h5.attrs['econ_config_fp']) == config_fp
             assert f.h5.attrs['econ_config'] == json.dumps(config)
 
         with h5py.File(r1f, mode='r') as f:

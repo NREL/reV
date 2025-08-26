@@ -821,8 +821,8 @@ def test_hybrids_cli_from_config(
             assert f.h5.attrs["solar_fpath"] == sfp
             assert f.h5.attrs["wind_fpath"] == wfp
 
-            config_fp = str(Path(config_path).expanduser().resolve())
-            assert f.h5.attrs["hybrids_config_fp"] == config_fp
+            config_fp = Path(config_path).expanduser().resolve()
+            assert Path(f.h5.attrs["hybrids_config_fp"]) == config_fp
             assert json.loads(f.h5.attrs["hybrids_config"]) == config
 
         clear_loggers()

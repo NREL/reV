@@ -1754,8 +1754,8 @@ def test_cli(runner, clear_loggers):
             assert "bespoke_config_fp" in f.h5.attrs
             assert "bespoke_config" in f.h5.attrs
 
-            config_fp = str(Path(config_path).expanduser().resolve())
-            assert f.h5.attrs["bespoke_config_fp"] == config_fp
+            config_fp = Path(config_path).expanduser().resolve()
+            assert Path(f.h5.attrs["bespoke_config_fp"]) == config_fp
             assert f.h5.attrs["bespoke_config"] == json.dumps(config)
 
         clear_loggers()

@@ -116,8 +116,9 @@ def test_gen_from_config(runner, tech, clear_loggers):
 
                     assert "generation_config_fp" in cf.h5.attrs
                     assert "generation_config" in cf.h5.attrs
-                    config_fp = str(Path(config_path).expanduser().resolve())
-                    assert cf.h5.attrs["generation_config_fp"] == config_fp
+                    config_fp = Path(config_path).expanduser().resolve()
+                    assert (Path(cf.h5.attrs["generation_config_fp"])
+                            == config_fp)
                     assert (json.loads(cf.h5.attrs["generation_config"])
                             == config)
 
