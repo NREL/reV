@@ -160,6 +160,8 @@ to assist with data preparation and analysis:
 - `reVX <https://nrel.github.io/reVX/>`_ - Collection of helper methods to pre- and post- process geospatial reV data (e.g. setback layers, inclusion masks, etc.)
 - `rex <https://nrel.github.io/rex/>`_ - Library to assist with reV-style data I/O, especially resource data
 - reVRt (Coming soon!) - reV routing tool used to compute transmission costs
+- `NRWAL <https://nrel.github.io/NRWAL/>`_ - Equation Library for detailed cost analysis (offshore, hydrogen, etc.)
+- reVeal (Coming soon!) - reV extension for load analysis and land characterization
 - `reVReports <https://github.com/NREL/reVReports>`_ - Tool for generating publication-ready maps of reV supply curve outputs
 - `reView <https://github.com/NREL/reView>`_ - Dashboard for interactive visualization of reV supply curve outputs
 - `reV tutorial <https://github.com/NREL/reV-tutorial>`_ - Collection of tutorials for learning how to use reV
