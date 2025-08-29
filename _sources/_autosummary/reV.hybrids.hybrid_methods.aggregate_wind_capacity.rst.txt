@@ -1,0 +1,6 @@
+reV.hybrids.hybrid\_methods.aggregate\_wind\_capacity
+=====================================================
+
+.. currentmodule:: reV.hybrids.hybrid_methods
+
+.. autofunction:: aggregate_wind_capacity

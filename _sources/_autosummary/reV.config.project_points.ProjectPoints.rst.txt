@@ -1,0 +1,47 @@
+reV.config.project\_points.ProjectPoints
+========================================
+
+.. currentmodule:: reV.config.project_points
+
+.. autoclass:: ProjectPoints
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ProjectPoints.get_sites_from_config
+      ~ProjectPoints.get_sites_from_curtailment
+      ~ProjectPoints.index
+      ~ProjectPoints.join_df
+      ~ProjectPoints.lat_lon_coords
+      ~ProjectPoints.regions
+      ~ProjectPoints.split
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ProjectPoints.all_sam_input_keys
+      ~ProjectPoints.curtailment
+      ~ProjectPoints.d
+      ~ProjectPoints.df
+      ~ProjectPoints.gids
+      ~ProjectPoints.h
+      ~ProjectPoints.sam_config_ids
+      ~ProjectPoints.sam_config_obj
+      ~ProjectPoints.sam_inputs
+      ~ProjectPoints.sites
+      ~ProjectPoints.sites_as_slice
+      ~ProjectPoints.tech
+   
+   

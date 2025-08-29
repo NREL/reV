@@ -1,0 +1,59 @@
+reV.config.curtailment.Curtailment
+==================================
+
+.. currentmodule:: reV.config.curtailment
+
+.. autoclass:: Curtailment
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Curtailment.check_files
+      ~Curtailment.check_overwrite_keys
+      ~Curtailment.clear
+      ~Curtailment.copy
+      ~Curtailment.fromkeys
+      ~Curtailment.get
+      ~Curtailment.items
+      ~Curtailment.keys
+      ~Curtailment.pop
+      ~Curtailment.popitem
+      ~Curtailment.resolve_path
+      ~Curtailment.set_self_dict
+      ~Curtailment.setdefault
+      ~Curtailment.str_replace_and_resolve
+      ~Curtailment.update
+      ~Curtailment.values
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Curtailment.REQUIREMENTS
+      ~Curtailment.STR_REP
+      ~Curtailment.config_dir
+      ~Curtailment.config_keys
+      ~Curtailment.date_range
+      ~Curtailment.dawn_dusk
+      ~Curtailment.equation
+      ~Curtailment.log_level
+      ~Curtailment.months
+      ~Curtailment.name
+      ~Curtailment.precipitation
+      ~Curtailment.probability
+      ~Curtailment.random_seed
+      ~Curtailment.temperature
+      ~Curtailment.wind_speed
+   
+   

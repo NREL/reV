@@ -1,0 +1,87 @@
+reV.utilities.ResourceMetaField
+===============================
+
+.. currentmodule:: reV.utilities
+
+.. autoclass:: ResourceMetaField
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ResourceMetaField.map_to
+      ~ResourceMetaField.map_from
+      ~ResourceMetaField.encode
+      ~ResourceMetaField.replace
+      ~ResourceMetaField.split
+      ~ResourceMetaField.rsplit
+      ~ResourceMetaField.join
+      ~ResourceMetaField.capitalize
+      ~ResourceMetaField.casefold
+      ~ResourceMetaField.title
+      ~ResourceMetaField.center
+      ~ResourceMetaField.count
+      ~ResourceMetaField.expandtabs
+      ~ResourceMetaField.find
+      ~ResourceMetaField.partition
+      ~ResourceMetaField.index
+      ~ResourceMetaField.ljust
+      ~ResourceMetaField.lower
+      ~ResourceMetaField.lstrip
+      ~ResourceMetaField.rfind
+      ~ResourceMetaField.rindex
+      ~ResourceMetaField.rjust
+      ~ResourceMetaField.rstrip
+      ~ResourceMetaField.rpartition
+      ~ResourceMetaField.splitlines
+      ~ResourceMetaField.strip
+      ~ResourceMetaField.swapcase
+      ~ResourceMetaField.translate
+      ~ResourceMetaField.upper
+      ~ResourceMetaField.startswith
+      ~ResourceMetaField.endswith
+      ~ResourceMetaField.removeprefix
+      ~ResourceMetaField.removesuffix
+      ~ResourceMetaField.isascii
+      ~ResourceMetaField.islower
+      ~ResourceMetaField.isupper
+      ~ResourceMetaField.istitle
+      ~ResourceMetaField.isspace
+      ~ResourceMetaField.isdecimal
+      ~ResourceMetaField.isdigit
+      ~ResourceMetaField.isnumeric
+      ~ResourceMetaField.isalpha
+      ~ResourceMetaField.isalnum
+      ~ResourceMetaField.isidentifier
+      ~ResourceMetaField.isprintable
+      ~ResourceMetaField.zfill
+      ~ResourceMetaField.format
+      ~ResourceMetaField.format_map
+      ~ResourceMetaField.maketrans
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ResourceMetaField.description
+      ~ResourceMetaField.GID
+      ~ResourceMetaField.LATITUDE
+      ~ResourceMetaField.LONGITUDE
+      ~ResourceMetaField.ELEVATION
+      ~ResourceMetaField.TIMEZONE
+      ~ResourceMetaField.COUNTY
+      ~ResourceMetaField.STATE
+      ~ResourceMetaField.COUNTRY
+      ~ResourceMetaField.OFFSHORE
+   
+   

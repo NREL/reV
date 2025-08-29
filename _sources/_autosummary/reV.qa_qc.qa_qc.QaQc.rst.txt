@@ -1,0 +1,33 @@
+reV.qa\_qc.qa\_qc.QaQc
+======================
+
+.. currentmodule:: reV.qa_qc.qa_qc
+
+.. autoclass:: QaQc
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~QaQc.create_scatter_plots
+      ~QaQc.exclusions_mask
+      ~QaQc.h5
+      ~QaQc.supply_curve
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~QaQc.out_dir
+   
+   

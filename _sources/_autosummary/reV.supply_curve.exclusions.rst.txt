@@ -1,0 +1,34 @@
+reV.supply\_curve.exclusions
+============================
+
+.. automodule:: reV.supply_curve.exclusions
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      ExclusionMask
+      ExclusionMaskFromDict
+      FrictionMask
+      LayerMask
+   
+   
+
+   
+   
+   
+
+
+
