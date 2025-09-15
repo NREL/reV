@@ -8,7 +8,6 @@ import json
 import logging
 import os
 from itertools import chain
-from copy import deepcopy
 from warnings import warn
 
 import numpy as np
@@ -16,6 +15,7 @@ import pandas as pd
 from rex import Resource
 from rex.utilities import SpawnProcessPool, parse_table
 
+from reV.handlers.transmission import POIFeatures as PF
 from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
@@ -23,7 +23,6 @@ from reV.utilities import SupplyCurveField, log_versions
 from reV.utilities.exceptions import SupplyCurveError, SupplyCurveInputError
 
 logger = logging.getLogger(__name__)
-
 
 # map is column name to relative order in which it should appear in output file
 _REQUIRED_COMPUTE_AND_OUTPUT_COLS = {
@@ -56,7 +55,8 @@ class SupplyCurve:
 
     def __init__(self, sc_points, trans_table, sc_features=None,
                  # str() to fix docs
-                 sc_capacity_col=str(SupplyCurveField.CAPACITY_AC_MW)):
+                 sc_capacity_col=str(SupplyCurveField.CAPACITY_AC_MW),
+                 poi_info=None):
         """ReV LCOT calculation and SupplyCurve sorting class.
 
         ``reV`` supply curve computes the transmission costs associated
@@ -115,6 +115,19 @@ class SupplyCurve:
             e.g., size transmission lines based on solar AC capacity (
             ``sc_capacity_col="capacity_ac"``). By default,
             ``"capacity"``.
+        poi_info : str | pandas.DataFrame, optional
+            Path to CSV or DataFrame containing POI point connection
+            summary. This table should have at least the following
+            columns:
+
+                - "POI_limit" *or* "ac_cap": POI connection capacity (MW)
+                - "POI_name": String identifier for the POI used to
+                              merge with the ``"end"`` column from the
+                              `trans_table` input
+                - "POI_cost_MW": Connection cost for this POI, in $/MW.
+
+            This input is required if you are running ``poi_sort``.
+            By default, ``None``.
 
         Examples
         --------
@@ -158,14 +171,16 @@ class SupplyCurve:
         logger.info("Transmission table input: {}".format(trans_table))
         logger.info("Supply curve capacity column: {}".format(sc_capacity_col))
 
+        self._poi_info = self._parse_poi_info(poi_info)
         self._sc_capacity_col = sc_capacity_col
-        self._sc_points = self._parse_sc_points(
-            sc_points, sc_features=sc_features
-        )
-        self._trans_table = self._map_tables(
-            self._sc_points, trans_table, sc_capacity_col=sc_capacity_col
-        )
-        self._sc_gids, self._mask = self._parse_sc_gids(self._trans_table)
+        self._sc_points = self._parse_sc_points(sc_points,
+                                                sc_features=sc_features)
+        self._trans_table = self._map_tables(self._sc_points,
+                                             trans_table,
+                                             sc_capacity_col=sc_capacity_col,
+                                             poi_info=self._poi_info)
+        self._sc_gids, self._sc_capacities = self._parse_sc_gids(
+            self._trans_table)
 
     def __repr__(self):
         msg = "{} with {} points".format(self.__class__.__name__, len(self))
@@ -184,6 +199,19 @@ class SupplyCurve:
         i = self._sc_gids.index(gid)
 
         return self._sc_points.iloc[i]
+
+    @staticmethod
+    def _parse_poi_info(poi_info=None):
+        """Parse and format user POI input"""
+        if poi_info is None:
+            return None
+
+        poi_info = parse_table(poi_info)
+        poi_info.index.name = SupplyCurveField.TRANS_GID
+        poi_info = poi_info.reset_index()
+        poi_info = poi_info.rename(columns={"POI_limit": "ac_cap"})
+        poi_info[SupplyCurveField.TRANS_TYPE] = "loadcen"
+        return poi_info
 
     @staticmethod
     def _parse_sc_points(sc_points, sc_features=None):
@@ -520,7 +548,7 @@ class SupplyCurve:
             logger.warning(msg)
             warn(msg)
 
-        if not any(trans_sc_gids) or not any(sc_gids):
+        if not trans_sc_gids or not sc_gids:
             msg = (
                 "Merging of sc points table and transmission features "
                 "table failed with {} original sc gids and {} transmission "
@@ -639,7 +667,8 @@ class SupplyCurve:
                              SupplyCurveField.CAPACITY_AC_MW,
                              SupplyCurveField.MEAN_CF_AC,
                              SupplyCurveField.MEAN_LCOE),
-                    sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW):
+                    sc_capacity_col=SupplyCurveField.CAPACITY_AC_MW,
+                    poi_info=None):
         """
         Map supply curve points to transmission features
 
@@ -666,6 +695,19 @@ class SupplyCurve:
             "capacity" must also be included in `trans_sc_table` since
             those values match the "mean_cf" data (which is used to
             calculate LCOT and Total LCOE). By default, ``"capacity"``.
+        poi_info : str | pandas.DataFrame, optional
+            Path to CSV or DataFrame containing POI point connection
+            summary. This table should have at least the following
+            columns:
+
+                - "POI_limit" *or* "ac_cap": POI connection capacity (MW)
+                - "POI_name": String identifier for the POI used to
+                              merge with the ``"end"`` column from the
+                              `trans_table` input
+                - "POI_cost_MW": Connection cost for this POI, in $/MW.
+
+            This input is only required if you are performing a "poi"
+            connection sort. by default, ``None``.
 
         Returns
         -------
@@ -677,6 +719,10 @@ class SupplyCurve:
         trans_sc_table = cls._merge_sc_trans_tables(
             sc_points, trans_table, sc_cols=sc_cols, sc_capacity_col=scc
         )
+        gid_missing = SupplyCurveField.TRANS_GID not in trans_sc_table.columns
+        if gid_missing and poi_info is not None:
+            trans_sc_table = cls._pull_trans_gid_from_poi(trans_sc_table,
+                                                          poi_info)
 
         if "max_cap" in trans_sc_table:
             trans_sc_table = cls._map_trans_capacity(
@@ -690,6 +736,14 @@ class SupplyCurve:
         cls._check_sc_trans_table(sc_points, trans_sc_table)
 
         return trans_sc_table
+
+    @staticmethod
+    def _pull_trans_gid_from_poi(trans_sc_table, poi_info):
+        """Extract trans gid from POI table"""
+        trans_sc_table = trans_sc_table.rename(columns={"end": "POI_name"})
+        merge_data = poi_info[["POI_name", SupplyCurveField.TRANS_GID,
+                               SupplyCurveField.TRANS_TYPE, "ac_cap"]]
+        return trans_sc_table.merge(merge_data, on="POI_name")
 
     @staticmethod
     def _create_handler(trans_table, trans_costs=None, avail_cap_frac=1):
@@ -729,7 +783,7 @@ class SupplyCurve:
 
     @staticmethod
     def _parse_sc_gids(trans_table, gid_key=SupplyCurveField.SC_GID):
-        """Extract unique sc gids, make bool mask from tranmission table
+        """Extract unique sc gids, make float SC cap from transmission table
 
         Parameters
         ----------
@@ -743,15 +797,16 @@ class SupplyCurve:
         -------
         sc_gids : list
             List of unique integer supply curve gids (non-nan)
-        mask : np.ndarray
-            Boolean array initialized as true. Length is equal to the maximum
-            SC gid so that the SC gids can be used to index the mask directly.
+        sc_capacities : np.ndarray
+            Float array initialized as all zeros. Length is equal to the
+            maximum SC gid so that the SC gids can be used to index the
+            SC capacity directly.
         """
         sc_gids = list(np.sort(trans_table[gid_key].unique()))
         sc_gids = [int(gid) for gid in sc_gids]
-        mask = np.ones(int(1 + max(sc_gids)), dtype=bool)
+        sc_capacities = np.zeros(int(1 + max(sc_gids)), dtype=np.float32)
 
-        return sc_gids, mask
+        return sc_gids, sc_capacities
 
     @staticmethod
     def _get_capacity(sc_gid, sc_table, connectable=True,
@@ -928,6 +983,7 @@ class SupplyCurve:
         connectable=True,
         max_workers=None,
         consider_friction=True,
+        trans_table=None,
     ):
         """
         Compute LCOT and total LCOE for all sc point to transmission feature
@@ -956,14 +1012,21 @@ class SupplyCurve:
         consider_friction : bool, optional
             Flag to consider friction layer on LCOE when "mean_lcoe_friction"
             is in the sc points input, by default True
+        trans_table : pd.DataFrame, optional
+            Optional transmission table to compute costs for. If no table
+            is provided, the object's `_trans_table` attribute is used
+            instead. By default, ``None``.
         """
+        if trans_table is None:
+            trans_table = self._trans_table
+
         tcc_per_mw_col = SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW
-        if tcc_per_mw_col in self._trans_table:
-            cost = self._trans_table[tcc_per_mw_col].values.copy()
-        elif "trans_cap_cost" not in self._trans_table:
+        if tcc_per_mw_col in trans_table:
+            cost = trans_table[tcc_per_mw_col].values.copy()
+        elif "trans_cap_cost" not in trans_table:
             scc = self._sc_capacity_col
             cost = self._compute_trans_cap_cost(
-                self._trans_table,
+                trans_table,
                 trans_costs=transmission_costs,
                 avail_cap_frac=avail_cap_frac,
                 line_limited=line_limited,
@@ -971,68 +1034,73 @@ class SupplyCurve:
                 max_workers=max_workers,
                 sc_capacity_col=scc,
             )
-            self._trans_table[tcc_per_mw_col] = cost  # $/MW
+            trans_table[tcc_per_mw_col] = cost  # $/MW
         else:
-            cost = self._trans_table["trans_cap_cost"].values.copy()  # $
-            cost /= self._trans_table[SupplyCurveField.CAPACITY_AC_MW]  # $/MW
-            self._trans_table[tcc_per_mw_col] = cost
+            cost = trans_table["trans_cap_cost"].values.copy()  # $
+            cost /= trans_table[SupplyCurveField.CAPACITY_AC_MW]  # $/MW
+            trans_table[tcc_per_mw_col] = cost
 
-        self._trans_table[tcc_per_mw_col] = (
-            self._trans_table[tcc_per_mw_col].astype("float32")
+        trans_table[tcc_per_mw_col] = (
+            trans_table[tcc_per_mw_col].astype("float32")
         )
         cost = cost.astype("float32")
-        cf_mean_arr = self._trans_table[SupplyCurveField.MEAN_CF_AC]
+        cf_mean_arr = trans_table[SupplyCurveField.MEAN_CF_AC]
         cf_mean_arr = cf_mean_arr.values.astype("float32")
-        resource_lcoe = self._trans_table[SupplyCurveField.MEAN_LCOE]
+        resource_lcoe = trans_table[SupplyCurveField.MEAN_LCOE]
         resource_lcoe = resource_lcoe.values.astype("float32")
 
-        if 'reinforcement_cost_floored_per_mw' in self._trans_table:
+        if 'reinforcement_cost_floored_per_mw' in trans_table:
             logger.info("'reinforcement_cost_floored_per_mw' column found in "
                         "transmission table. Adding floored reinforcement "
                         "cost LCOE as sorting option.")
-            fr_cost = (self._trans_table['reinforcement_cost_floored_per_mw']
+            fr_cost = (trans_table['reinforcement_cost_floored_per_mw']
                        .values.copy())
 
             lcot_fr = ((cost + fr_cost) * fcr) / (cf_mean_arr * 8760)
             lcoe_fr = lcot_fr + resource_lcoe
-            self._trans_table['lcot_floored_reinforcement'] = lcot_fr
-            self._trans_table['lcoe_floored_reinforcement'] = lcoe_fr
+            trans_table['lcot_floored_reinforcement'] = lcot_fr
+            trans_table['lcoe_floored_reinforcement'] = lcoe_fr
 
-        if SupplyCurveField.REINFORCEMENT_COST_PER_MW in self._trans_table:
+        rcpmw = SupplyCurveField.REINFORCEMENT_COST_PER_MW
+        if (rcpmw in trans_table and not trans_table[rcpmw].isna().all()):
             logger.info("%s column found in transmission table. Adding "
                         "reinforcement costs to total LCOE.",
                         SupplyCurveField.REINFORCEMENT_COST_PER_MW)
             lcot_nr = (cost * fcr) / (cf_mean_arr * 8760)
             lcoe_nr = lcot_nr + resource_lcoe
-            self._trans_table['lcot_no_reinforcement'] = lcot_nr
-            self._trans_table['lcoe_no_reinforcement'] = lcoe_nr
+            trans_table['lcot_no_reinforcement'] = lcot_nr
+            trans_table['lcoe_no_reinforcement'] = lcoe_nr
 
             col_name = SupplyCurveField.REINFORCEMENT_COST_PER_MW
-            r_cost = self._trans_table[col_name].astype("float32")
+            r_cost = trans_table[col_name].astype("float32")
             r_cost = r_cost.values.copy()
-            self._trans_table[tcc_per_mw_col] += r_cost
+            trans_table[tcc_per_mw_col] += r_cost
             cost += r_cost  # $/MW
 
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
-        self._trans_table[SupplyCurveField.LCOT] = lcot
-        self._trans_table[SupplyCurveField.TOTAL_LCOE] = lcot + resource_lcoe
+        trans_table[SupplyCurveField.LCOT] = lcot
+        trans_table[SupplyCurveField.TOTAL_LCOE] = lcot + resource_lcoe
 
         if consider_friction:
-            self._calculate_total_lcoe_friction()
+            trans_table = self._calculate_total_lcoe_friction(trans_table)
 
-    def _calculate_total_lcoe_friction(self):
+        return trans_table
+
+    def _calculate_total_lcoe_friction(self, trans_table):
         """Look for site mean LCOE with friction in the trans table and if
         found make a total LCOE column with friction."""
 
-        if SupplyCurveField.MEAN_LCOE_FRICTION in self._trans_table:
+        if SupplyCurveField.MEAN_LCOE_FRICTION in trans_table:
             lcoe_friction = (
-                self._trans_table[SupplyCurveField.LCOT]
-                + self._trans_table[SupplyCurveField.MEAN_LCOE_FRICTION])
-            self._trans_table[SupplyCurveField.TOTAL_LCOE_FRICTION] = (
+                trans_table[SupplyCurveField.LCOT]
+                + trans_table[SupplyCurveField.MEAN_LCOE_FRICTION])
+            trans_table[SupplyCurveField.TOTAL_LCOE_FRICTION] = (
                 lcoe_friction
             )
             logger.info('Found mean LCOE with friction. Adding key '
                         '"total_lcoe_friction" to trans table.')
+
+        return trans_table
 
     def _exclude_noncompetitive_wind_farms(
         self, comp_wind_dirs, sc_gid, downwind=False
@@ -1068,11 +1136,11 @@ class SupplyCurve:
                     if check:
                         sc_gids = comp_wind_dirs[SupplyCurveField.SC_GID, n]
                         for sc_id in sc_gids:
-                            if self._mask[sc_id]:
+                            if self._sc_capacities[sc_id] > 0:
                                 logger.debug(
                                     "Excluding sc_gid {}".format(sc_id)
                                 )
-                                self._mask[sc_id] = False
+                                self._sc_capacities[sc_id] = 0
 
         return comp_wind_dirs
 
@@ -1119,10 +1187,9 @@ class SupplyCurve:
     def _full_sort(  # noqa: C901
         self,
         trans_table,
-        trans_costs=None,
-        avail_cap_frac=1,
+        trans_features,
+        fcr,
         comp_wind_dirs=None,
-        total_lcoe_fric=None,
         sort_on=SupplyCurveField.TOTAL_LCOE,
         columns=(
             SupplyCurveField.TRANS_GID,
@@ -1134,6 +1201,10 @@ class SupplyCurve:
             SupplyCurveField.TOTAL_LCOE,
         ),
         downwind=False,
+        max_cap_tie_in_cost_per_mw=None,
+        scale_with_capacity=False,
+        connection_upper_limit=None,
+        **kwargs
     ):
         """
         Internal method to handle full supply curve sorting
@@ -1141,18 +1212,14 @@ class SupplyCurve:
         Parameters
         ----------
         trans_table : pandas.DataFrame
-            Supply Curve Tranmission table to sort on
-        trans_costs : str | dict, optional
-            Transmission feature costs to use with TransmissionFeatures
-            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
-            center_tie_in_cost, sink_tie_in_cost, by default None
-        avail_cap_frac : int, optional
-            Fraction of transmissions features capacity 'ac_cap' to make
-            available for connection to supply curve points, by default 1
+            Supply Curve Transmission table to sort on
+        trans_features : TransmissionFeatures
+            TransmissionFeatures handler instance to get transmission
+            cost information.
+        fcr : float
+            Fixed charge rate, used to compute LCOT
         comp_wind_dirs : CompetitiveWindFarms, optional
-            Pre-initilized CompetitiveWindFarms instance, by default None
-        total_lcoe_fric : ndarray, optional
-            Vector of lcoe friction values, by default None
+            Pre-initialized CompetitiveWindFarms instance, by default None
         sort_on : str, optional
             Column label to sort the Supply Curve table on. This affects the
             build priority - connections with the lowest value in this column
@@ -1165,6 +1232,27 @@ class SupplyCurve:
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors,
             by default False
+        max_cap_tie_in_cost_per_mw : int | float, optional
+            Cost ($/MW) to tie into transmission features *after* they
+            have reached maximum capacity. If ``None``, then connections
+            after reaching max transmission feature capacity are
+            disallowed. By default, ``None``.
+        scale_with_capacity : bool, default=False
+            Option to scale the costs as capacity changes. If ``False``,
+            costs are only computed once at the beginning of the sort.
+            If ``True``, costs are re-computed as parts of a plant are
+            connected, leaving the remainder of the plant capacity with
+            higher connection costs (since new lines have to be built
+            for a smaller amount of capacity). By default, ``False``.
+        connection_upper_limit : int | float, optional
+            Optional upper limit for total capacity (MW). If specified,
+            the sort will stop when this amount of capacity has been
+            connected. By default, ``None`` which does not impose any
+            limits.
+        **kwargs
+            Extra keyword-value pair arguments to pass to
+            :meth:`SupplyCurve.compute_total_lcoe`. Should **NOT**
+            include ``trans_table``.
 
         Returns
         -------
@@ -1172,101 +1260,38 @@ class SupplyCurve:
             Updated sc_points table with transmission connections, LCOT
             and LCOE+LCOT based on full supply curve connections
         """
-        trans_features = self._create_handler(
-            self._trans_table,
-            trans_costs=trans_costs,
-            avail_cap_frac=avail_cap_frac,
-        )
-        init_list = [np.nan] * int(1 + np.max(self._sc_gids))
-        columns = list(columns)
-        if sort_on not in columns:
-            columns.append(sort_on)
+        all_cols = _get_connection_cols(columns, sort_on)
+        self._reset_sc_capacities()
 
-        conn_lists = {k: deepcopy(init_list) for k in columns}
+        if scale_with_capacity:
+            conn_lists = self._connect_while_cap_available(
+                trans_table, trans_features, all_cols, comp_wind_dirs,
+                downwind, sort_on, fcr, connection_upper_limit, **kwargs)
+        else:
+            conn_lists = self._connect_while_cap_available_no_scale(
+                trans_table, trans_features, all_cols, comp_wind_dirs,
+                downwind, connection_upper_limit)
 
-        trans_sc_gids = trans_table[SupplyCurveField.SC_GID].values.astype(int)
+        if max_cap_tie_in_cost_per_mw:
+            conn_lists = self._connect_at_max_cap(conn_lists, all_cols,
+                                                  comp_wind_dirs,
+                                                  downwind, fcr, sort_on,
+                                                  max_cap_tie_in_cost_per_mw,
+                                                  scale_with_capacity,
+                                                  connection_upper_limit,
+                                                  **kwargs)
 
-        # syntax is final_key: source_key (source from trans_table)
-        all_cols = list(columns)
-        essentials = [SupplyCurveField.TRANS_GID,
-                      SupplyCurveField.TRANS_CAPACITY,
-                      SupplyCurveField.TRANS_TYPE,
-                      SupplyCurveField.DIST_SPUR_KM,
-                      SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
-                      SupplyCurveField.LCOT,
-                      SupplyCurveField.TOTAL_LCOE]
+        _warn_about_unconnected_gids(self._sc_capacities)
 
-        for col in essentials:
-            if col not in all_cols:
-                all_cols.append(col)
+        return self._merge_sc_with_connections(columns, conn_lists, sort_on)
 
-        arrays = {col: trans_table[col].values for col in all_cols}
-
-        sc_capacities = trans_table[self._sc_capacity_col].values
-
-        connected = 0
-        progress = 0
-        for i in range(len(trans_table)):
-            sc_gid = trans_sc_gids[i]
-            if self._mask[sc_gid]:
-                connect = trans_features.connect(
-                    arrays[SupplyCurveField.TRANS_GID][i], sc_capacities[i]
-                )
-                if connect:
-                    connected += 1
-                    logger.debug("Connecting sc gid {}".format(sc_gid))
-                    self._mask[sc_gid] = False
-
-                    for col_name, data_arr in arrays.items():
-                        conn_lists[col_name][sc_gid] = data_arr[i]
-
-                    if total_lcoe_fric is not None:
-                        col_name = SupplyCurveField.TOTAL_LCOE_FRICTION
-                        conn_lists[col_name][sc_gid] = total_lcoe_fric[i]
-
-                    current_prog = connected // (len(self) / 100)
-                    if current_prog > progress:
-                        progress = current_prog
-                        logger.info(
-                            "{} % of supply curve points connected".format(
-                                progress
-                            )
-                        )
-
-                    if comp_wind_dirs is not None:
-                        comp_wind_dirs = (
-                            self._exclude_noncompetitive_wind_farms(
-                                comp_wind_dirs, sc_gid, downwind=downwind
-                            )
-                        )
-
-        index = range(0, int(1 + np.max(self._sc_gids)))
-        connections = pd.DataFrame(conn_lists, index=index)
-        connections.index.name = SupplyCurveField.SC_GID
-        connections = connections.dropna(subset=[sort_on])
-        connections = connections[columns].reset_index()
-
-        sc_gids = self._sc_points[SupplyCurveField.SC_GID].values
-        connected = connections[SupplyCurveField.SC_GID].values
-        logger.debug('Connected gids {} out of total supply curve gids {}'
-                     .format(len(connected), len(sc_gids)))
-        unconnected = ~np.isin(sc_gids, connected)
-        unconnected = sc_gids[unconnected].tolist()
-
-        if unconnected:
-            msg = (
-                "{} supply curve points were not connected to tranmission! "
-                "Unconnected sc_gid's: {}".format(
-                    len(unconnected), unconnected
-                )
-            )
-            logger.warning(msg)
-            warn(msg)
-
-        supply_curve = self._sc_points.merge(
-            connections, on=SupplyCurveField.SC_GID)
-
-        return supply_curve.reset_index(drop=True)
+    def _reset_sc_capacities(self):
+        """Reset SC caps to have max SC point capacities for each SC GID"""
+        self._sc_capacities[:] = 0
+        sc_pt_capacities = self._sc_points.set_index(SupplyCurveField.SC_GID)
+        sc_pt_capacities = sc_pt_capacities[self._sc_capacity_col]
+        for gid, cap in sc_pt_capacities.to_dict().items():
+            self._sc_capacities[gid] = cap
 
     def _check_feature_capacity(self, avail_cap_frac=1):
         """
@@ -1278,6 +1303,265 @@ class SupplyCurve:
             fc = TF.feature_capacity(self._trans_table, **kwargs)
             self._trans_table = self._trans_table.merge(
                 fc, on=SupplyCurveField.TRANS_GID)
+
+    def _connect_while_cap_available(self, trans_table, trans_features,
+                                     all_cols, comp_wind_dirs, downwind,
+                                     sort_on, fcr,
+                                     connection_upper_limit=None, **kwargs):
+        """Connect SC points to trans features that have available capacity"""
+        connected = 0
+        progress = 0
+        conn_lists = {k: [] for k in all_cols}
+        conn_lists[self._sc_capacity_col] = []
+
+        i = 0
+        while self._sc_capacities.any() and len(trans_table) > 0:
+            logger.debug("Entering while loop with {:,.2f} MW of capacity "
+                         "still to connect and {:,d} possible connections"
+                         .format(self._sc_capacities.sum(), len(trans_table)))
+            i += 1
+            if i > 1e7:
+                raise RuntimeError("Too many iterations while connecting "
+                                   "supply curve points!")
+
+            trans_table, row, sc_gid, trans_gid = _best_connection(
+                trans_table, sort_on)
+
+            if not trans_features.check_availability(trans_gid):
+                trans_table = _remove_trans_gid(trans_table, trans_gid)
+                continue
+
+            cap_remaining = self._determine_cap_to_connect(
+                conn_lists, sc_gid, connection_upper_limit)
+
+            if cap_remaining < 0:
+                logger.info("Total capacity limit of %.2f MW reached, "
+                            "stopping connection procedure",
+                            connection_upper_limit)
+                break
+            elif np.isclose(cap_remaining, 0):
+                logger.debug("No remaining capacity found for sc_gid %d",
+                             sc_gid)
+                mask = trans_table[SupplyCurveField.SC_GID] != sc_gid
+                trans_table = trans_table[mask].copy()
+                continue
+
+            logger.debug("Examining SC GID {} connected to Transmission GID {}"
+                         .format(sc_gid, trans_gid))
+
+            cap_connected = trans_features.connect(trans_gid, cap_remaining)
+            if cap_connected <= 0:
+                continue
+
+            connected += 1
+            logger.debug("Connecting sc gid {} to trans gid {}: {:.2f} MW"
+                         .format(sc_gid, trans_gid, cap_connected))
+            self._sc_capacities[sc_gid] -= cap_connected
+
+            self._track_connection(all_cols, conn_lists, row, sc_gid,
+                                   cap_connected, downwind, comp_wind_dirs)
+
+            current_prog = connected // (len(self) / 100)
+            if current_prog > progress:
+                progress = current_prog
+                logger.info("{} % of supply curve points connected"
+                            .format(progress))
+
+            if self._sc_capacities[sc_gid] <= 0:
+                trans_table = _remove_sc_gid(trans_table, sc_gid)
+
+            trans_table = self._update_costs_new_capacity(
+                trans_table, sc_gid, trans_gid, cap_connected,
+                fcr, **kwargs)
+
+        return conn_lists
+
+    def _update_costs_new_capacity(self, trans_table, sc_gid, trans_gid,
+                                   cap_connected, fcr, **kwargs):
+        """Update TX costs based on remaining capacity to connect"""
+        mask = ((trans_table[SupplyCurveField.TRANS_GID] == trans_gid)
+                | (trans_table[SupplyCurveField.SC_GID] == sc_gid))
+        new_tt = trans_table[mask].copy()
+
+        new_tt = _update_remaining_cap_trans_feature(new_tt, trans_gid,
+                                                     cap_connected)
+
+        new_tt = _update_remaining_cap_sc_gid(new_tt, sc_gid,
+                                              self._sc_capacities[sc_gid],
+                                              self._sc_capacity_col)
+
+        if self._poi_info is not None:
+            new_tt = _add_tcc_mw_for_poi(new_tt, self._poi_info)
+        elif "trans_cap_cost" in trans_table:
+            tcc_per_mw_col = SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW
+            new_tt = new_tt.drop(columns=tcc_per_mw_col, errors="ignore")
+        else:  # originally had trans cap cost per MW input, so don't scale
+            return trans_table
+
+        new_costs = self.compute_total_lcoe(fcr=fcr, trans_table=new_tt,
+                                            **kwargs)
+        return pd.concat([trans_table[~mask], new_costs])
+
+    def _connect_at_max_cap(self, conn_lists, all_cols,
+                            comp_wind_dirs, downwind, fcr, sort_on,
+                            max_cap_tie_in_cost_per_mw=None,
+                            scale_with_capacity=False,
+                            connection_upper_limit=None,
+                            **kwargs):
+        """Connect SC points to trans features beyond max capacity"""
+        if not self._sc_capacities.any():
+            return conn_lists
+
+        tt = self._get_max_cap_tt(scale_with_capacity=scale_with_capacity)
+        tt = max_tcc_per_mw_for_poi(tt, max_cap_tie_in_cost_per_mw)
+        tt = self.compute_total_lcoe(fcr=fcr, trans_table=tt, **kwargs)
+        tt = tt.sort_values(sort_on)
+        zero_cap_gids = set()
+        for ind, (__, row) in enumerate(tt.iterrows()):
+            sc_gid = row[SupplyCurveField.SC_GID]
+            if sc_gid in zero_cap_gids:
+                continue
+
+            cap_remaining = self._determine_cap_to_connect(
+                conn_lists, sc_gid, connection_upper_limit)
+
+            if cap_remaining < 0:
+                logger.info("Total capacity limit of %.2f MW reached, "
+                            "stopping connection procedure",
+                            connection_upper_limit)
+                break
+            elif np.isclose(cap_remaining, 0):
+                logger.debug("No remaining capacity found for sc_gid %d",
+                             sc_gid)
+                zero_cap_gids.add(sc_gid)
+                continue
+
+            if sc_gid not in self._sc_gids:
+                logger.debug("SC GID {} (capacity {:.2f}) has no possible "
+                             "connections; cannot connect at max-capacity "
+                             "cost value"
+                             .format(sc_gid, cap_remaining))
+                continue
+
+            logger.debug("Connecting SC GID {} at max cap ({:,d}/{:,d})"
+                         .format(sc_gid, ind + 1, len(self._trans_table)))
+            mask = tt[SupplyCurveField.SC_GID] == sc_gid
+            sc_tt = tt[mask].copy()
+
+            row = sc_tt.iloc[sc_tt[sort_on].argmin(skipna=True)]
+            self._sc_capacities[sc_gid] = 0
+
+            self._track_connection(all_cols, conn_lists, row, sc_gid,
+                                   cap_remaining, downwind, comp_wind_dirs)
+
+        return conn_lists
+
+    def _connect_while_cap_available_no_scale(self, trans_table,
+                                              trans_features, all_cols,
+                                              comp_wind_dirs, downwind,
+                                              connection_upper_limit=None):
+        """Connect SC points to trans features that have available capacity"""
+        connected = 0
+        progress = 0
+        conn_lists = {k: [] for k in all_cols}
+        conn_lists[self._sc_capacity_col] = []
+
+        for __, row in trans_table.iterrows():
+            sc_gid = row[SupplyCurveField.SC_GID]
+            cap_remaining = self._determine_cap_to_connect(
+                conn_lists, sc_gid, connection_upper_limit)
+
+            if cap_remaining < 0:
+                logger.info("Total capacity limit of %.2f MW reached, "
+                            "stopping connection procedure",
+                            connection_upper_limit)
+                break
+            elif np.isclose(cap_remaining, 0):
+                logger.debug("No remaining capacity found for sc_gid %d",
+                             sc_gid)
+                continue
+
+            trans_gid = row[SupplyCurveField.TRANS_GID]
+            cap_connected = trans_features.connect(trans_gid, cap_remaining)
+            if cap_connected <= 0:
+                continue
+
+            connected += 1
+            logger.debug("Connecting sc gid {} to trans gid {}: {:.2f} MW"
+                         .format(sc_gid, trans_gid, cap_connected))
+            self._sc_capacities[sc_gid] -= cap_connected
+
+            self._track_connection(all_cols, conn_lists, row, sc_gid,
+                                   cap_connected, downwind, comp_wind_dirs)
+
+            current_prog = connected // (len(self) / 100)
+            if current_prog > progress:
+                progress = current_prog
+                logger.info("{} % of supply curve points connected"
+                            .format(progress))
+
+        return conn_lists
+
+    def _track_connection(self, all_cols, conn_lists, row, sc_gid,
+                          cap_connected, downwind, comp_wind_dirs):
+        """Add and track information about connected capacity"""
+        for col in all_cols:
+            conn_lists[col].append(row[col])
+
+        conn_lists[self._sc_capacity_col].append(cap_connected)
+
+        if comp_wind_dirs is not None:
+            comp_wind_dirs = (
+                self._exclude_noncompetitive_wind_farms(
+                    comp_wind_dirs, sc_gid, downwind=downwind
+                )
+            )
+
+    def _get_max_cap_tt(self, scale_with_capacity):
+        """Get transmission table for max capacity connections"""
+        tt = self._trans_table.copy()
+        if scale_with_capacity:
+            logger.debug("Scaling cost with remaining capacities...")
+            sc_gids = np.where(self._sc_capacities)[0].tolist()
+            for sc_gid in sc_gids:
+                cap_remaining = self._sc_capacities[sc_gid]
+                mask = tt[SupplyCurveField.SC_GID] == sc_gid
+                tt.loc[mask, SupplyCurveField.CAPACITY_AC_MW] = cap_remaining
+        return tt
+
+    def _determine_cap_to_connect(self, conn_lists, sc_gid,
+                                  connection_upper_limit=None):
+        """Determine how much of the points capacity is left to connect"""
+
+        if not connection_upper_limit:
+            return max(0, self._sc_capacities[sc_gid])
+
+        connected_cap = sum(conn_lists[self._sc_capacity_col])
+        if connected_cap >= connection_upper_limit:
+            return -1
+
+        cap_remaining = min(self._sc_capacities[sc_gid],
+                            connection_upper_limit - connected_cap)
+        return max(0, cap_remaining)
+
+    def _merge_sc_with_connections(self, columns, conn_lists, sort_on):
+        """Merge connections and SC for output"""
+        connections = pd.DataFrame(conn_lists).dropna(subset=[sort_on])
+
+        keep_for_merge_cols = list(columns)
+        if self._sc_capacity_col not in keep_for_merge_cols:
+            keep_for_merge_cols.append(self._sc_capacity_col)
+
+        to_drop = [str(col) for col in keep_for_merge_cols
+                   if col in self._sc_points.columns]
+        sc_points = self._sc_points.drop(columns=to_drop)
+
+        if SupplyCurveField.SC_GID not in keep_for_merge_cols:
+            keep_for_merge_cols.append(SupplyCurveField.SC_GID)
+
+        supply_curve = sc_points.merge(connections[keep_for_merge_cols],
+                                       on=SupplyCurveField.SC_GID)
+        return supply_curve.reset_index(drop=True)
 
     def _adjust_output_columns(self, columns, consider_friction):
         """Add extra output columns, if needed."""
@@ -1360,7 +1644,7 @@ class SupplyCurve:
             Flag to have substation connection is limited by maximum capacity
             of the attached lines, legacy method, by default False
         connectable : bool, optional
-            Flag to only compute tranmission capital cost if transmission
+            Flag to only compute transmission capital cost if transmission
             feature has enough available capacity, by default True
         max_workers : int | NoneType, optional
             Number of workers to use to compute lcot, if > 1 run in parallel.
@@ -1421,12 +1705,6 @@ class SupplyCurve:
             [sort_on, SupplyCurveField.TRANS_GID]
         )
 
-        total_lcoe_fric = None
-        col_in_table = SupplyCurveField.MEAN_LCOE_FRICTION in trans_table
-        if consider_friction and col_in_table:
-            total_lcoe_fric = \
-                trans_table[SupplyCurveField.TOTAL_LCOE_FRICTION].values
-
         comp_wind_dirs = None
         if wind_dirs is not None:
             msg = "Excluding {} upwind".format(n_dirs)
@@ -1446,15 +1724,134 @@ class SupplyCurve:
                 offshore=offshore_compete,
             )
 
-        supply_curve = self._full_sort(
-            trans_table,
+        trans_features = self._create_handler(
+            self._trans_table,
             trans_costs=transmission_costs,
             avail_cap_frac=avail_cap_frac,
+        )
+
+        supply_curve = self._full_sort(
+            trans_table,
+            trans_features,
+            fcr,
             comp_wind_dirs=comp_wind_dirs,
-            total_lcoe_fric=total_lcoe_fric,
             sort_on=sort_on,
             columns=columns,
             downwind=downwind,
+            transmission_costs=transmission_costs,
+            avail_cap_frac=avail_cap_frac,
+            line_limited=line_limited,
+            connectable=connectable,
+            max_workers=max_workers,
+            consider_friction=consider_friction,
+            max_cap_tie_in_cost_per_mw=None,  # no conns after max cap
+        )
+
+        return supply_curve
+
+    def poi_sort(
+        self,
+        fcr,
+        max_cap_tie_in_cost_per_mw=None,
+        consider_friction=True,
+        sort_on=None,
+        scale_with_capacity=False,
+        connection_upper_limit=None,
+        columns=(
+            SupplyCurveField.TRANS_GID,
+            SupplyCurveField.TRANS_CAPACITY,
+            SupplyCurveField.TRANS_TYPE,
+            SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
+            SupplyCurveField.DIST_SPUR_KM,
+            SupplyCurveField.LCOT,
+            SupplyCurveField.TOTAL_LCOE,
+        ),
+    ):
+        """
+        run POI-based supply curve sorting
+
+        Parameters
+        ----------
+        fcr : float
+            Fixed charge rate, used to compute LCOT
+        max_cap_tie_in_cost_per_mw : float, optional
+            Cost to tie into a POI after it has reached maximum
+            capacity. If you don't want to allow connections after the
+            POI capacity is reached, leave this input unspecified.
+            By default, ``None``.
+        consider_friction : bool, optional
+            Flag to consider friction layer on LCOE when
+            ``"mean_lcoe_friction"`` is in the sc points input.
+            By default, ``True``.
+        sort_on : str, optional
+            Column label to sort the Supply Curve table on. This affects
+            the build priority - connections with the lowest value in
+            this column will be built first. By default, ``None``, which
+            will use total LCOE without any reinforcement costs as the
+            sort value.
+        scale_with_capacity : bool, default=False
+            Option to scale the costs as capacity changes. If ``False``,
+            costs are only computed once at the beginning of the sort.
+            If ``True``, costs are re-computed as parts of a plant are
+            connected, leaving the remainder of the plant capacity with
+            higher connection costs (since new lines have to be built
+            for a smaller amount of capacity). By default, ``False``.
+        connection_upper_limit : int | float, optional
+            Optional upper limit for total capacity (MW). If specified,
+            the sort will stop when this amount of capacity has been
+            connected. By default, ``None`` which does not impose any
+            limits.
+        columns : list | tuple, optional
+            Columns to preserve in output connections dataframe,
+            by default ('trans_gid', 'trans_capacity', 'trans_type',
+            'trans_cap_cost_per_mw', 'dist_km', 'lcot', 'total_lcoe')
+
+        Returns
+        -------
+        supply_curve : pandas.DataFrame
+            Updated sc_points table with POI transmission connections,
+            LCOT and LCOE+LCOT based on POI supply curve connections.
+        """
+        logger.info("Starting POI-based supply curve sort.")
+
+        msg = "Must set poi_info before running poi_sort"
+        assert self._poi_info is not None, msg
+        self._trans_table = _add_tcc_mw_for_poi(self._trans_table,
+                                                self._poi_info)
+
+        self.compute_total_lcoe(fcr)
+
+        self._trans_table = self._trans_table.rename(
+            columns={"length_km": SupplyCurveField.DIST_SPUR_KM})
+        self._check_feature_capacity()
+
+        if isinstance(columns, tuple):
+            columns = list(columns)
+
+        columns = self._adjust_output_columns(columns, consider_friction)
+        sort_on = self._determine_sort_on(sort_on)
+        trans_table = self._trans_table.copy()
+
+        no_lcot_mask = trans_table[SupplyCurveField.LCOT].isnull()
+        no_ac_cap_mask = trans_table["ac_cap"] <= 0
+        final_mask = ~(no_lcot_mask | no_ac_cap_mask)
+        trans_table = trans_table.loc[final_mask].sort_values(
+            [sort_on, SupplyCurveField.TRANS_GID]
+        )
+
+        trans_features = PF(self._poi_info)
+
+        supply_curve = self._full_sort(
+            trans_table,
+            trans_features,
+            fcr,
+            sort_on=sort_on,
+            columns=columns,
+            comp_wind_dirs=None,
+            downwind=False,
+            max_cap_tie_in_cost_per_mw=max_cap_tie_in_cost_per_mw,
+            scale_with_capacity=scale_with_capacity,
+            connection_upper_limit=connection_upper_limit,
         )
 
         return supply_curve
@@ -1563,6 +1960,107 @@ class SupplyCurve:
 
         return supply_curve
 
+    def run_poi(
+        self,
+        out_fpath,
+        fixed_charge_rate,
+        max_cap_tie_in_cost_per_mw=None,
+        scale_with_capacity=False,
+        consider_friction=True,
+        sort_on=None,
+        columns=DEFAULT_COLUMNS,
+        competition=None,
+    ):
+        """Run POI Supply Curve sort calculations
+
+        Run full POI-base supply curve transmission sort taking into
+        account available capacity of transmission features and POI's
+        when making connections.
+
+        Parameters
+        ----------
+        out_fpath : str
+            Full path to output CSV file. Does not need to include file
+            ending - it will be added automatically if missing.
+        fixed_charge_rate : float
+            Fixed charge rate, (in decimal form: 5% = 0.05). This value
+            is used to compute LCOT.
+        max_cap_tie_in_cost_per_mw : float, optional
+            Cost to tie into a POI after it has reached maximum
+            capacity. If you don't want to allow connections after the
+            POI capacity is reached, leave this input unspecified.
+            By default, ``None``.
+        scale_with_capacity : bool, default=False
+            Option to scale the costs as capacity changes. If ``False``,
+            costs are only computed once at the beginning of the sort.
+            If ``True``, costs are re-computed as parts of a plant are
+            connected, leaving the remainder of the plant capacity with
+            higher connection costs (since new lines have to be built
+            for a smaller amount of capacity). By default, ``False``.
+        consider_friction : bool, optional
+            Flag to add a new ``"total_lcoe_friction"`` column to the
+            supply curve output that contains the sum of the computed
+            ``"total_lcoe"`` value and the input
+            ``"mean_lcoe_friction"`` values. If ``"mean_lcoe_friction"``
+            is not in the `sc_points` input, this option is ignored.
+            By default, ``True``.
+        sort_on : str, optional
+            Column label to sort the supply curve table on. This affects
+            the build priority when doing a "full" sort - connections
+            with the lowest value in this column will be built first.
+            For a "simple" sort, only connections with the lowest value
+            in this column will be considered. If ``None``, the sort is
+            performed on the total LCOE *without* any reinforcement
+            costs added (this is typically what you want - it avoids
+            unrealistically long spur-line connections).
+            By default ``None``.
+        columns : list | tuple, optional
+            Columns to preserve in output supply curve dataframe.
+            By default, :obj:`DEFAULT_COLUMNS`.
+        competition : dict, optional
+            Optional dictionary of arguments for competitive wind farm
+            exclusions, which removes supply curve points upwind (and
+            optionally downwind) of the lowest LCOE supply curves.
+            If ``None``, no competition is applied. Otherwise, this
+            dictionary can have up to four keys:
+
+                - ``wind_dirs`` (required) : A path to a CSV file or
+                  :py:class:`reVX ProminentWindDirections
+                  <reVX.wind_dirs.prominent_wind_dirs.ProminentWindDirections>`
+                  output with the neighboring supply curve point gids
+                  and power-rose values at each cardinal direction.
+                - ``n_dirs`` (optional) : An integer representing the
+                  number of prominent directions to use during wind farm
+                  competition. By default, ``2``.
+                - ``downwind`` (optional) : A flag indicating that
+                  downwind neighbors should be removed in addition to
+                  upwind neighbors during wind farm competition.
+                  By default, ``False``.
+                - ``offshore_compete`` (optional) : A flag indicating
+                  that offshore farms should be included during wind
+                  farm competition. By default, ``False``.
+
+            By default ``None``.
+
+        Returns
+        -------
+        str
+            Path to output supply curve.
+        """
+        kwargs = {
+            "fcr": fixed_charge_rate,
+            "consider_friction": consider_friction,
+            "sort_on": sort_on,
+            "columns": columns,
+            "scale_with_capacity": scale_with_capacity,
+            "max_cap_tie_in_cost_per_mw": max_cap_tie_in_cost_per_mw,
+        }
+        kwargs.update(competition or {})
+        supply_curve = self.poi_sort(**kwargs)
+        out_fpath = _format_sc_out_fpath(out_fpath)
+        supply_curve.to_csv(out_fpath, index=False)
+        return out_fpath
+
     def run(
         self,
         out_fpath,
@@ -1580,7 +2078,7 @@ class SupplyCurve:
         """Run Supply Curve Transmission calculations.
 
         Run full supply curve taking into account available capacity of
-        tranmission features when making connections.
+        transmission features when making connections.
 
         Parameters
         ----------
@@ -1706,6 +2204,7 @@ def _format_sc_out_fpath(out_fpath):
 
     project_dir, out_fn = os.path.split(out_fpath)
     out_fn = out_fn.replace("supply_curve", "supply-curve")
+    out_fn = out_fn.replace("poi_sort", "poi-sort")
     return os.path.join(project_dir, out_fn)
 
 
@@ -1718,3 +2217,111 @@ def _column_sort_key(col):
         col_value = 1e6
 
     return col_value, str(col)
+
+
+def _get_connection_cols(columns, sort_on):
+    """Get user cols + essential connection output columns"""
+    all_cols = list(columns)
+    essentials = [SupplyCurveField.SC_GID,
+                  SupplyCurveField.TRANS_GID,
+                  SupplyCurveField.TRANS_CAPACITY,
+                  SupplyCurveField.TRANS_TYPE,
+                  SupplyCurveField.DIST_SPUR_KM,
+                  SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW,
+                  SupplyCurveField.LCOT,
+                  SupplyCurveField.TOTAL_LCOE,
+                  sort_on]
+
+    for col in essentials:
+        if col not in all_cols:
+            all_cols.append(col)
+
+    return list(map(str, all_cols))
+
+
+def _warn_about_unconnected_gids(remaining_capacities):
+    """If any values in `remaining_capacities` are non-zero, throw warning"""
+    unconnected_sc_gids = np.where(remaining_capacities)[0].tolist()
+    if unconnected_sc_gids:
+        msg = (
+            "{} supply curve points were not fully connected to transmission! "
+            "Unconnected sc_gid's: {}".format(
+                len(unconnected_sc_gids), unconnected_sc_gids
+            )
+        )
+        logger.warning(msg)
+        warn(msg)
+
+
+def _add_tcc_mw_for_poi(trans_table, poi_info):
+    """Add transmission capital cost per MW using POI info"""
+    connectable_capacity = np.minimum(
+        trans_table[SupplyCurveField.CAPACITY_AC_MW], trans_table["ac_cap"])
+    tie_line_cost_per_mw = trans_table["cost"] / connectable_capacity
+
+    tie_in_cost_per_mw = (
+        trans_table[[SupplyCurveField.TRANS_GID]].merge(
+            poi_info[[SupplyCurveField.TRANS_GID, "POI_cost_MW"]],
+            on=SupplyCurveField.TRANS_GID
+        )["POI_cost_MW"])
+
+    tcc_per_mw_col = SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW
+    trans_table[tcc_per_mw_col] = (tie_line_cost_per_mw.to_numpy()
+                                   + tie_in_cost_per_mw.to_numpy())
+    return trans_table
+
+
+def max_tcc_per_mw_for_poi(trans_table, max_cap_tie_in_cost_per_mw):
+    """Add transmission capital cost per MW at max capacity using POI info"""
+    logger.debug("Adding extra connections at max capacity for "
+                 "{:,.2f} $/MW".format(max_cap_tie_in_cost_per_mw))
+
+    extra_conns = (trans_table.sort_values("cost")
+                   .groupby(SupplyCurveField.SC_GID).first()
+                   .reset_index())
+
+    tie_line_cost_per_mw = (extra_conns["cost"]
+                            / extra_conns[SupplyCurveField.CAPACITY_AC_MW])
+
+    tcc_per_mw_col = SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW
+    extra_conns[tcc_per_mw_col] = (tie_line_cost_per_mw
+                                   + max_cap_tie_in_cost_per_mw)
+    return extra_conns
+
+
+def _update_remaining_cap_trans_feature(trans_table, trans_gid, cap_connected):
+    """Update remaining capacity for transmission feature after connection"""
+    conn_mask = trans_table[SupplyCurveField.TRANS_GID] == trans_gid
+    trans_table["ac_cap"] = trans_table["ac_cap"].astype("float32")
+    trans_table.loc[conn_mask, "ac_cap"] -= cap_connected
+    trans_table.loc[conn_mask, "ac_cap"] = np.maximum(
+        0, trans_table.loc[conn_mask, "ac_cap"])
+    return trans_table
+
+
+def _update_remaining_cap_sc_gid(trans_table, sc_gid, remaining_cap, cap_col):
+    """Update remaining capacity for sc_gid feature after connection"""
+    sc_mask = trans_table[SupplyCurveField.SC_GID] == sc_gid
+    trans_table.loc[sc_mask, cap_col] = remaining_cap
+    return trans_table
+
+
+def _best_connection(trans_table, sort_on):
+    """Get row with best connection based on `sort_on` input"""
+    row = trans_table.iloc[trans_table[sort_on].argmin(skipna=True)]
+    trans_table = trans_table.drop(index=row.name)
+    sc_gid = row[SupplyCurveField.SC_GID]
+    trans_gid = row[SupplyCurveField.TRANS_GID]
+    return trans_table, row, sc_gid, trans_gid
+
+
+def _remove_trans_gid(trans_table, trans_gid):
+    """Remove a trans_gid from the transmission table"""
+    mask = trans_table[SupplyCurveField.TRANS_GID] != trans_gid
+    return trans_table[mask].copy()
+
+
+def _remove_sc_gid(trans_table, sc_gid):
+    """Remove an sc_gid from the transmission table"""
+    mask = trans_table[SupplyCurveField.SC_GID] != sc_gid
+    return trans_table[mask].copy()

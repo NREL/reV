@@ -192,6 +192,7 @@ class TransmissionFeatures:
         cap_frac = self._avail_cap_frac
         if "ac_cap" not in trans_table:
             trans_table["ac_cap"] = -1
+        trans_table['ac_cap'] = trans_table['ac_cap'].astype(np.float32)
         trans_features = trans_table.groupby(SupplyCurveField.TRANS_GID)
         trans_features = trans_features.first()
 
@@ -369,7 +370,7 @@ class TransmissionFeatures:
             Feature gid to check
         """
         avail_cap = self.available_capacity(gid)
-        if avail_cap == 0:
+        if avail_cap is not None and avail_cap <= 0:
             self._available_mask[gid] = False
 
     def check_availability(self, gid):
@@ -504,7 +505,7 @@ class TransmissionFeatures:
         Parameters
         ----------
         gid : int
-            Unique id of feature of intereset
+            Unique id of feature of interest
         capacity : float
             Capacity needed in MW
         apply : bool
@@ -513,15 +514,15 @@ class TransmissionFeatures:
 
         Returns
         -------
-        connected : bool
-            Flag as to whether connection is possible or not
+        connected : float
+            Amount of capacity possible to connect
         """
         if self.check_availability(gid):
             avail_cap = self.available_capacity(gid)
             if avail_cap is not None and capacity > avail_cap:
-                connected = False
+                connected = 0
             else:
-                connected = True
+                connected = capacity
                 if apply:
                     feature_type = self[gid]['type']
                     if feature_type == 'transline':
@@ -534,7 +535,7 @@ class TransmissionFeatures:
 
                     self._update_availability(gid)
         else:
-            connected = False
+            connected = 0
 
         return connected
 
@@ -622,6 +623,99 @@ class TransmissionFeatures:
         feature_cap = feature_cap.to_frame().reset_index()
 
         return feature_cap
+
+
+class POIFeatures(TransmissionFeatures):
+    """Class that allows incremental connections to POI's"""
+
+    def __init__(self, trans_table):
+        """
+
+        Parameters
+        ----------
+        trans_table : str | pandas.DataFrame
+            Path to .csv or config file or DataFrame with supply curve
+            transmission mapping. This table is only used to track
+            remaining available capacity for connecting to POI's. Must
+            have the following columns:
+
+                - "trans_gid": Unique ID for every transmission feature
+                - "ac_cap": Available capacity for connection (in MW)
+
+
+        """
+        super().__init__(trans_table, line_tie_in_cost=0, line_cost=0,
+                         station_tie_in_cost=0, center_tie_in_cost=0,
+                         sink_tie_in_cost=0, avail_cap_frac=1,
+                         line_limited=False)
+
+    def _features_from_table(self, trans_table):
+        """
+        Extract features and their capacity from supply curve transmission
+        mapping table
+
+        Parameters
+        ----------
+        trans_table : pandas.DataFrame
+            DataFrame of transmission features
+
+        Returns
+        -------
+        features : dict of dicts
+            Nested dictionary of trans_gid -> poi capacity info.
+        """
+
+        features = {}
+        trans_table['ac_cap'] = trans_table['ac_cap'].astype(np.float32)
+        trans_features = trans_table.groupby(SupplyCurveField.TRANS_GID)
+        trans_features = trans_features.first()
+
+        for gid, feature in trans_features.iterrows():
+            feature_dict = {'type': "poi",
+                            SupplyCurveField.TRANS_CAPACITY: feature['ac_cap']}
+
+            features[gid] = feature_dict
+
+        return features
+
+    def connect(self, gid, capacity):
+        """
+        Check if you can connect to given feature
+        If apply, update internal dictionary accordingly
+
+        Parameters
+        ----------
+        gid : int
+            Unique id of feature of interest
+        capacity : float
+            Capacity needed in MW
+        apply : bool
+            Apply capacity to feature with given gid and update
+            internal dictionary
+
+        Returns
+        -------
+        connected : bool
+            Flag as to whether connection is possible or not
+        """
+        if not self.check_availability(gid):
+            return 0
+
+        avail_cap = self.available_capacity(gid)
+        if avail_cap is None:
+            return 0
+
+        connect_capacity = min(capacity, avail_cap)
+        self._connect(gid, connect_capacity)
+        self._update_availability(gid)
+        return connect_capacity
+
+    def cost(self, *__, **___):
+        raise NotImplementedError("Cost computation not supported for POIs")
+
+    @staticmethod
+    def _calc_cost(*__, **___):
+        raise NotImplementedError("Cost computation not supported for POIs")
 
 
 class TransmissionCosts(TransmissionFeatures):
