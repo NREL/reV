@@ -1421,15 +1421,7 @@ class SupplyCurve:
         if not self._sc_capacities.any():
             return conn_lists
 
-        tt = self._trans_table.copy()
-        if scale_with_capacity:
-            logger.debug("Scaling cost with remaining capacities...")
-            sc_gids = np.where(self._sc_capacities)[0].tolist()
-            for sc_gid in sc_gids:
-                cap_remaining = self._sc_capacities[sc_gid]
-                mask = tt[SupplyCurveField.SC_GID] == sc_gid
-                tt.loc[mask, SupplyCurveField.CAPACITY_AC_MW] = cap_remaining
-
+        tt = self._get_max_cap_tt(scale_with_capacity=scale_with_capacity)
         tt = max_tcc_per_mw_for_poi(tt, max_cap_tie_in_cost_per_mw)
         tt = self.compute_total_lcoe(fcr=fcr, trans_table=tt, **kwargs)
         tt = tt.sort_values(sort_on)
@@ -1468,17 +1460,8 @@ class SupplyCurve:
             row = sc_tt.iloc[sc_tt[sort_on].argmin(skipna=True)]
             self._sc_capacities[sc_gid] = 0
 
-            for col in all_cols:
-                conn_lists[col].append(row[col])
-
-            conn_lists[self._sc_capacity_col].append(cap_remaining)
-
-            if comp_wind_dirs is not None:
-                comp_wind_dirs = (
-                    self._exclude_noncompetitive_wind_farms(
-                        comp_wind_dirs, sc_gid, downwind=downwind
-                    )
-                )
+            self._track_connection(all_cols, conn_lists, row, sc_gid,
+                                   cap_remaining, downwind, comp_wind_dirs)
 
         return conn_lists
 
@@ -1517,10 +1500,8 @@ class SupplyCurve:
                          .format(sc_gid, trans_gid, cap_connected))
             self._sc_capacities[sc_gid] -= cap_connected
 
-            for col in all_cols:
-                conn_lists[col].append(row[col])
-
-            conn_lists[self._sc_capacity_col].append(cap_connected)
+            self._track_connection(all_cols, conn_lists, row, sc_gid,
+                                   cap_connected, downwind, comp_wind_dirs)
 
             current_prog = connected // (len(self) / 100)
             if current_prog > progress:
@@ -1528,14 +1509,34 @@ class SupplyCurve:
                 logger.info("{} % of supply curve points connected"
                             .format(progress))
 
-            if comp_wind_dirs is not None:
-                comp_wind_dirs = (
-                    self._exclude_noncompetitive_wind_farms(
-                        comp_wind_dirs, sc_gid, downwind=downwind
-                    )
-                )
-
         return conn_lists
+
+    def _track_connection(self, all_cols, conn_lists, row, sc_gid,
+                          cap_connected, downwind, comp_wind_dirs):
+        """Add and track information about connected capacity"""
+        for col in all_cols:
+            conn_lists[col].append(row[col])
+
+        conn_lists[self._sc_capacity_col].append(cap_connected)
+
+        if comp_wind_dirs is not None:
+            comp_wind_dirs = (
+                self._exclude_noncompetitive_wind_farms(
+                    comp_wind_dirs, sc_gid, downwind=downwind
+                )
+            )
+
+    def _get_max_cap_tt(self, scale_with_capacity):
+        """Get transmission table for max capacity connections"""
+        tt = self._trans_table.copy()
+        if scale_with_capacity:
+            logger.debug("Scaling cost with remaining capacities...")
+            sc_gids = np.where(self._sc_capacities)[0].tolist()
+            for sc_gid in sc_gids:
+                cap_remaining = self._sc_capacities[sc_gid]
+                mask = tt[SupplyCurveField.SC_GID] == sc_gid
+                tt.loc[mask, SupplyCurveField.CAPACITY_AC_MW] = cap_remaining
+        return tt
 
     def _determine_cap_to_connect(self, conn_lists, sc_gid,
                                   connection_upper_limit=None):
