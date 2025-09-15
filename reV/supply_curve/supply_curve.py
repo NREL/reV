@@ -1358,23 +1358,14 @@ class SupplyCurve:
                          .format(sc_gid, trans_gid, cap_connected))
             self._sc_capacities[sc_gid] -= cap_connected
 
-            for col in all_cols:
-                conn_lists[col].append(row[col])
-
-            conn_lists[self._sc_capacity_col].append(cap_connected)
+            self._track_connection(all_cols, conn_lists, row, sc_gid,
+                                   cap_connected, downwind, comp_wind_dirs)
 
             current_prog = connected // (len(self) / 100)
             if current_prog > progress:
                 progress = current_prog
                 logger.info("{} % of supply curve points connected"
                             .format(progress))
-
-            if comp_wind_dirs is not None:
-                comp_wind_dirs = (
-                    self._exclude_noncompetitive_wind_farms(
-                        comp_wind_dirs, sc_gid, downwind=downwind
-                    )
-                )
 
             if self._sc_capacities[sc_gid] <= 0:
                 trans_table = _remove_sc_gid(trans_table, sc_gid)
