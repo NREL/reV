@@ -1839,8 +1839,11 @@ class SupplyCurve:
         columns = self._adjust_output_columns(columns, consider_friction)
         sort_on = self._determine_sort_on(sort_on)
         trans_table = self._trans_table.copy()
-        pos = trans_table[SupplyCurveField.LCOT].isnull()
-        trans_table = trans_table.loc[~pos].sort_values(
+
+        no_lcot_mask = trans_table[SupplyCurveField.LCOT].isnull()
+        no_ac_cap_mask = trans_table["ac_cap"] <= 0
+        final_mask = ~(no_lcot_mask | no_ac_cap_mask)
+        trans_table = trans_table.loc[final_mask].sort_values(
             [sort_on, SupplyCurveField.TRANS_GID]
         )
 
