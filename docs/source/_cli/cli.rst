@@ -17,6 +17,7 @@ Command Line Interfaces (CLIs)
    reV multi-year
    reV supply-curve-aggregation
    reV supply-curve
+   reV poi-sort
    reV rep-profiles
    reV hybrids
    reV nrwal
