@@ -1,0 +1,39 @@
+reV.supply\_curve.competitive\_wind\_farms.CompetitiveWindFarms
+===============================================================
+
+.. currentmodule:: reV.supply_curve.competitive_wind_farms
+
+.. autoclass:: CompetitiveWindFarms
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CompetitiveWindFarms.check_sc_gid
+      ~CompetitiveWindFarms.exclude_sc_point_gid
+      ~CompetitiveWindFarms.map_downwind
+      ~CompetitiveWindFarms.map_sc_gid_to_sc_point_gid
+      ~CompetitiveWindFarms.map_sc_point_gid_to_sc_gid
+      ~CompetitiveWindFarms.map_upwind
+      ~CompetitiveWindFarms.remove_noncompetitive_farm
+      ~CompetitiveWindFarms.run
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CompetitiveWindFarms.mask
+      ~CompetitiveWindFarms.sc_gids
+      ~CompetitiveWindFarms.sc_point_gids
+   
+   

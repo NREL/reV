@@ -1,0 +1,1817 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>reV.losses.power_curve &mdash; reV 0.14.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c64b94d8"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/installation_usage.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-recommended-for-analysts">Option 1: Install from PIP (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#rev-ecosystem">reV Ecosystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#rev-command-line-tools">reV command line tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#recommended-citation">Recommended Citation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.marine_energy.html">reV Marine Energy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.marine_energy.html#plots-of-the-example-marine-energy-output">Plots of the Example Marine Energy Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#plots-of-the-example-offshore-output">Plots of the Example Offshore Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.rev_losses.html">reV Losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.rev_losses.html#power-curve-losses-wind-only">Power Curve Losses (Wind only)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.rev_losses.html#power-curve-losses-for-a-single-site">Power Curve Losses for a single site</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.rev_losses.html#outage-losses-wind-and-solar">Outage Losses (Wind and Solar)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html">Running reV on an AWS Parallel Cluster</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#setting-up-an-aws-parallel-cluster">Setting up an AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#notes-on-running-rev-in-the-aws-parallel-cluster">Notes on Running reV in the AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#using-rev-directly-with-s3-files">Using reV Directly with S3 Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#setting-up-hsds-local-servers-on-your-compute-cluster">Setting up HSDS Local Servers on your Compute Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#setting-up-an-hsds-kubernetes-service">Setting up an HSDS Kubernetes Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#setting-up-an-hsds-lambda-service">Setting up an HSDS Lambda Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#simple-h5pyd-test">Simple H5PYD Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#compute-cost-estimates">Compute Cost Estimates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/reV.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.SAM.html">reV.SAM</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.SAM.html">reV.SAM.SAM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.SAM.RevPySam.html">reV.SAM.SAM.RevPySam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.SAM.Sam.html">reV.SAM.SAM.Sam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.SAM.SamResourceRetriever.html">reV.SAM.SAM.SamResourceRetriever</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.html">reV.SAM.defaults</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.AbstractDefaultFromConfigFile.html">reV.SAM.defaults.AbstractDefaultFromConfigFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultGeothermal.html">reV.SAM.defaults.DefaultGeothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultLCOE.html">reV.SAM.defaults.DefaultLCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultLinearFresnelDsgIph.html">reV.SAM.defaults.DefaultLinearFresnelDsgIph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultMhkWave.html">reV.SAM.defaults.DefaultMhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultPvSamv1.html">reV.SAM.defaults.DefaultPvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultPvWattsv5.html">reV.SAM.defaults.DefaultPvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultPvWattsv8.html">reV.SAM.defaults.DefaultPvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultSingleOwner.html">reV.SAM.defaults.DefaultSingleOwner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultSwh.html">reV.SAM.defaults.DefaultSwh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultTcsMoltenSalt.html">reV.SAM.defaults.DefaultTcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultWindPower.html">reV.SAM.defaults.DefaultWindPower</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.econ.html">reV.SAM.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.econ.Economic.html">reV.SAM.econ.Economic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.econ.LCOE.html">reV.SAM.econ.LCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.econ.SingleOwner.html">reV.SAM.econ.SingleOwner</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.html">reV.SAM.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.AbstractSamGeneration.html">reV.SAM.generation.AbstractSamGeneration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.AbstractSamGenerationFromWeatherFile.html">reV.SAM.generation.AbstractSamGenerationFromWeatherFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.AbstractSamPv.html">reV.SAM.generation.AbstractSamPv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.AbstractSamSolar.html">reV.SAM.generation.AbstractSamSolar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.AbstractSamWind.html">reV.SAM.generation.AbstractSamWind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.Geothermal.html">reV.SAM.generation.Geothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.LinearDirectSteam.html">reV.SAM.generation.LinearDirectSteam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.MhkWave.html">reV.SAM.generation.MhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.PvSamv1.html">reV.SAM.generation.PvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.PvWattsv5.html">reV.SAM.generation.PvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.PvWattsv7.html">reV.SAM.generation.PvWattsv7</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.PvWattsv8.html">reV.SAM.generation.PvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.SolarWaterHeat.html">reV.SAM.generation.SolarWaterHeat</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.TcsMoltenSalt.html">reV.SAM.generation.TcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.WindPower.html">reV.SAM.generation.WindPower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.WindPowerPD.html">reV.SAM.generation.WindPowerPD</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.version_checker.html">reV.SAM.version_checker</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.version_checker.PySamVersionChecker.html">reV.SAM.version_checker.PySamVersionChecker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.windbos.html">reV.SAM.windbos</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.windbos.WindBos.html">reV.SAM.windbos.WindBos</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.bespoke.html">reV.bespoke</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.bespoke.bespoke.html">reV.bespoke.bespoke</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.bespoke.BespokeMultiPlantData.html">reV.bespoke.bespoke.BespokeMultiPlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.bespoke.BespokeSinglePlant.html">reV.bespoke.bespoke.BespokeSinglePlant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.bespoke.BespokeSinglePlantData.html">reV.bespoke.bespoke.BespokeSinglePlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.bespoke.BespokeWindPlants.html">reV.bespoke.bespoke.BespokeWindPlants</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.bespoke.cli_bespoke.html">reV.bespoke.cli_bespoke</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.bespoke.gradient_free.html">reV.bespoke.gradient_free</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.gradient_free.GeneticAlgorithm.html">reV.bespoke.gradient_free.GeneticAlgorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.bespoke.pack_turbs.html">reV.bespoke.pack_turbs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.pack_turbs.get_xy.html">reV.bespoke.pack_turbs.get_xy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.pack_turbs.PackTurbines.html">reV.bespoke.pack_turbs.PackTurbines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.bespoke.place_turbines.html">reV.bespoke.place_turbines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.place_turbines.none_until_optimized.html">reV.bespoke.place_turbines.none_until_optimized</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.place_turbines.PlaceTurbines.html">reV.bespoke.place_turbines.PlaceTurbines</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.cli.html">reV.cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.config.html">reV.config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.base_analysis_config.html">reV.config.base_analysis_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.base_analysis_config.AnalysisConfig.html">reV.config.base_analysis_config.AnalysisConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.base_config.html">reV.config.base_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.base_config.BaseConfig.html">reV.config.base_config.BaseConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.cli_project_points.html">reV.config.cli_project_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.curtailment.html">reV.config.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.curtailment.Curtailment.html">reV.config.curtailment.Curtailment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.execution.html">reV.config.execution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.execution.BaseExecutionConfig.html">reV.config.execution.BaseExecutionConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.execution.HPCConfig.html">reV.config.execution.HPCConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.execution.SlurmConfig.html">reV.config.execution.SlurmConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.output_request.html">reV.config.output_request</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.output_request.OutputRequest.html">reV.config.output_request.OutputRequest</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.output_request.SAMOutputRequest.html">reV.config.output_request.SAMOutputRequest</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.project_points.html">reV.config.project_points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.project_points.PointsControl.html">reV.config.project_points.PointsControl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.project_points.ProjectPoints.html">reV.config.project_points.ProjectPoints</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.sam_config.html">reV.config.sam_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.sam_config.SAMConfig.html">reV.config.sam_config.SAMConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.sam_config.SAMInputsChecker.html">reV.config.sam_config.SAMInputsChecker</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.econ.html">reV.econ</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.econ.cli_econ.html">reV.econ.cli_econ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.econ.econ.html">reV.econ.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.econ.econ.Econ.html">reV.econ.econ.Econ</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.econ.economies_of_scale.html">reV.econ.economies_of_scale</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.econ.economies_of_scale.EconomiesOfScale.html">reV.econ.economies_of_scale.EconomiesOfScale</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.econ.utilities.html">reV.econ.utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.econ.utilities.lcoe_fcr.html">reV.econ.utilities.lcoe_fcr</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.generation.html">reV.generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.generation.base.html">reV.generation.base</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.generation.base.LCOE_REQUIRED_OUTPUTS.html">reV.generation.base.LCOE_REQUIRED_OUTPUTS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.generation.base.BaseGen.html">reV.generation.base.BaseGen</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.generation.cli_gen.html">reV.generation.cli_gen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.generation.generation.html">reV.generation.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.generation.generation.Gen.html">reV.generation.generation.Gen</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.handlers.html">reV.handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.cli_collect.html">reV.handlers.cli_collect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.cli_multi_year.html">reV.handlers.cli_multi_year</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.exclusions.html">reV.handlers.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.exclusions.ExclusionLayers.html">reV.handlers.exclusions.ExclusionLayers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.multi_year.html">reV.handlers.multi_year</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.multi_year.my_collect_groups.html">reV.handlers.multi_year.my_collect_groups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.multi_year.MultiYear.html">reV.handlers.multi_year.MultiYear</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.multi_year.MultiYearGroup.html">reV.handlers.multi_year.MultiYearGroup</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.outputs.html">reV.handlers.outputs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.outputs.Outputs.html">reV.handlers.outputs.Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.transmission.html">reV.handlers.transmission</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.transmission.POIFeatures.html">reV.handlers.transmission.POIFeatures</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.transmission.TransmissionCosts.html">reV.handlers.transmission.TransmissionCosts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.transmission.TransmissionFeatures.html">reV.handlers.transmission.TransmissionFeatures</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.hybrids.html">reV.hybrids</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.hybrids.cli_hybrids.html">reV.hybrids.cli_hybrids</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrid_methods.html">reV.hybrids.hybrid_methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrid_methods.aggregate_capacity.html">reV.hybrids.hybrid_methods.aggregate_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrid_methods.aggregate_capacity_factor.html">reV.hybrids.hybrid_methods.aggregate_capacity_factor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrid_methods.aggregate_solar_capacity.html">reV.hybrids.hybrid_methods.aggregate_solar_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrid_methods.aggregate_wind_capacity.html">reV.hybrids.hybrid_methods.aggregate_wind_capacity</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.html">reV.hybrids.hybrids</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.ColNameFormatter.html">reV.hybrids.hybrids.ColNameFormatter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.Hybridization.html">reV.hybrids.hybrids.Hybridization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.HybridsData.html">reV.hybrids.hybrids.HybridsData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.MetaHybridizer.html">reV.hybrids.hybrids.MetaHybridizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.RatioColumns.html">reV.hybrids.hybrids.RatioColumns</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.losses.html">reV.losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.html">reV.losses.power_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.TRANSFORMATIONS.html">reV.losses.power_curve.TRANSFORMATIONS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.adjust_power_curve.html">reV.losses.power_curve.adjust_power_curve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.AbstractPowerCurveTransformation.html">reV.losses.power_curve.AbstractPowerCurveTransformation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.ExponentialStretching.html">reV.losses.power_curve.ExponentialStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.HorizontalTranslation.html">reV.losses.power_curve.HorizontalTranslation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.LinearStretching.html">reV.losses.power_curve.LinearStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.PowerCurve.html">reV.losses.power_curve.PowerCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLosses.html">reV.losses.power_curve.PowerCurveLosses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLossesInput.html">reV.losses.power_curve.PowerCurveLossesInput</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLossesMixin.html">reV.losses.power_curve.PowerCurveLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.PowerCurveWindResource.html">reV.losses.power_curve.PowerCurveWindResource</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.losses.scheduled.html">reV.losses.scheduled</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.scheduled.Outage.html">reV.losses.scheduled.Outage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.scheduled.OutageScheduler.html">reV.losses.scheduled.OutageScheduler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.scheduled.ScheduledLossesMixin.html">reV.losses.scheduled.ScheduledLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.scheduled.SingleOutageScheduler.html">reV.losses.scheduled.SingleOutageScheduler</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.html">reV.losses.utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.convert_to_full_month_names.html">reV.losses.utils.convert_to_full_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.filter_unknown_month_names.html">reV.losses.utils.filter_unknown_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.format_month_name.html">reV.losses.utils.format_month_name</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.full_month_name_from_abbr.html">reV.losses.utils.full_month_name_from_abbr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.hourly_indices_for_months.html">reV.losses.utils.hourly_indices_for_months</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.month_index.html">reV.losses.utils.month_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.month_indices.html">reV.losses.utils.month_indices</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.nrwal.html">reV.nrwal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.nrwal.cli_nrwal.html">reV.nrwal.cli_nrwal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.nrwal.nrwal.html">reV.nrwal.nrwal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.nrwal.nrwal.RevNrwal.html">reV.nrwal.nrwal.RevNrwal</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.html">reV.qa_qc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.cli_qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc.cli_qa_qc</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.qa_qc.html">reV.qa_qc.qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.qa_qc.QaQc.html">reV.qa_qc.qa_qc.QaQc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.qa_qc.QaQcModule.html">reV.qa_qc.qa_qc.QaQcModule</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.html">reV.qa_qc.summary</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.ExclusionsMask.html">reV.qa_qc.summary.ExclusionsMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.PlotBase.html">reV.qa_qc.summary.PlotBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.SummarizeH5.html">reV.qa_qc.summary.SummarizeH5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.SummarizeSupplyCurve.html">reV.qa_qc.summary.SummarizeSupplyCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.SummaryPlots.html">reV.qa_qc.summary.SummaryPlots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.SupplyCurvePlot.html">reV.qa_qc.summary.SupplyCurvePlot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.html">reV.rep_profiles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.cli_rep_profiles.html">reV.rep_profiles.cli_rep_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.rep_profiles.html">reV.rep_profiles.rep_profiles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.rep_profiles.RegionRepProfile.html">reV.rep_profiles.rep_profiles.RegionRepProfile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.rep_profiles.RepProfiles.html">reV.rep_profiles.rep_profiles.RepProfiles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.rep_profiles.RepProfilesBase.html">reV.rep_profiles.rep_profiles.RepProfilesBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.rep_profiles.RepresentativeMethods.html">reV.rep_profiles.rep_profiles.RepresentativeMethods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.html">reV.supply_curve</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.aggregation.html">reV.supply_curve.aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.aggregation.AbstractAggFileHandler.html">reV.supply_curve.aggregation.AbstractAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.aggregation.AggFileHandler.html">reV.supply_curve.aggregation.AggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.aggregation.Aggregation.html">reV.supply_curve.aggregation.Aggregation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.aggregation.BaseAggregation.html">reV.supply_curve.aggregation.BaseAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.cli_sc_aggregation.html">reV.supply_curve.cli_sc_aggregation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.cli_supply_curve.html">reV.supply_curve.cli_supply_curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.cli_tech_mapping.html">reV.supply_curve.cli_tech_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.competitive_wind_farms.html">reV.supply_curve.competitive_wind_farms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.html">reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.exclusions.html">reV.supply_curve.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.exclusions.ExclusionMask.html">reV.supply_curve.exclusions.ExclusionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.exclusions.ExclusionMaskFromDict.html">reV.supply_curve.exclusions.ExclusionMaskFromDict</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.exclusions.FrictionMask.html">reV.supply_curve.exclusions.FrictionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.exclusions.LayerMask.html">reV.supply_curve.exclusions.LayerMask</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.extent.html">reV.supply_curve.extent</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.extent.SupplyCurveExtent.html">reV.supply_curve.extent.SupplyCurveExtent</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.points.html">reV.supply_curve.points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.points.AbstractSupplyCurvePoint.html">reV.supply_curve.points.AbstractSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.points.AggregationSupplyCurvePoint.html">reV.supply_curve.points.AggregationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.points.GenerationSupplyCurvePoint.html">reV.supply_curve.points.GenerationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.points.SupplyCurvePoint.html">reV.supply_curve.points.SupplyCurvePoint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.sc_aggregation.html">reV.supply_curve.sc_aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.html">reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.sc_aggregation.SupplyCurveAggregation.html">reV.supply_curve.sc_aggregation.SupplyCurveAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.supply_curve.html">reV.supply_curve.supply_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.supply_curve.DEFAULT_COLUMNS.html">reV.supply_curve.supply_curve.DEFAULT_COLUMNS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi.html">reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.supply_curve.SupplyCurve.html">reV.supply_curve.supply_curve.SupplyCurve</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.tech_mapping.html">reV.supply_curve.tech_mapping</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.tech_mapping.TechMapping.html">reV.supply_curve.tech_mapping.TechMapping</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.utilities.html">reV.utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.log_versions.html">reV.utilities.log_versions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.log_versions.html#reV.utilities.log_versions"><code class="docutils literal notranslate"><span class="pre">log_versions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.DocEnum.html">reV.utilities.DocEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.DocEnum.html#reV.utilities.DocEnum"><code class="docutils literal notranslate"><span class="pre">DocEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.FieldEnum.html">reV.utilities.FieldEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.FieldEnum.html#reV.utilities.FieldEnum"><code class="docutils literal notranslate"><span class="pre">FieldEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.ModuleName.html">reV.utilities.ModuleName</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.ModuleName.html#reV.utilities.ModuleName"><code class="docutils literal notranslate"><span class="pre">ModuleName</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.ResourceMetaField.html">reV.utilities.ResourceMetaField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.ResourceMetaField.html#reV.utilities.ResourceMetaField"><code class="docutils literal notranslate"><span class="pre">ResourceMetaField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.SiteDataField.html">reV.utilities.SiteDataField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.SiteDataField.html#reV.utilities.SiteDataField"><code class="docutils literal notranslate"><span class="pre">SiteDataField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.SupplyCurveField.html">reV.utilities.SupplyCurveField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.SupplyCurveField.html#reV.utilities.SupplyCurveField"><code class="docutils literal notranslate"><span class="pre">SupplyCurveField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.html">reV.utilities.cli_functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.add_to_run_attrs.html">reV.utilities.cli_functions.add_to_run_attrs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.compile_descriptions.html">reV.utilities.cli_functions.compile_descriptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.format_analysis_years.html">reV.utilities.cli_functions.format_analysis_years</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.init_cli_logging.html">reV.utilities.cli_functions.init_cli_logging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.parse_from_pipeline.html">reV.utilities.cli_functions.parse_from_pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.curtailment.html">reV.utilities.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.curtailment.curtail.html">reV.utilities.curtailment.curtail</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.html">reV.utilities.exceptions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.CollectionRuntimeError.html">reV.utilities.exceptions.CollectionRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.CollectionValueError.html">reV.utilities.exceptions.CollectionValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.CollectionWarning.html">reV.utilities.exceptions.CollectionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ConfigError.html">reV.utilities.exceptions.ConfigError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ConfigWarning.html">reV.utilities.exceptions.ConfigWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.DataShapeError.html">reV.utilities.exceptions.DataShapeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.EmptySupplyCurvePointError.html">reV.utilities.exceptions.EmptySupplyCurvePointError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ExclusionLayerError.html">reV.utilities.exceptions.ExclusionLayerError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ExecutionError.html">reV.utilities.exceptions.ExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ExtrapolationWarning.html">reV.utilities.exceptions.ExtrapolationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.FileInputError.html">reV.utilities.exceptions.FileInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.FileInputWarning.html">reV.utilities.exceptions.FileInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.HandlerKeyError.html">reV.utilities.exceptions.HandlerKeyError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.HandlerRuntimeError.html">reV.utilities.exceptions.HandlerRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.HandlerValueError.html">reV.utilities.exceptions.HandlerValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.HandlerWarning.html">reV.utilities.exceptions.HandlerWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.InputError.html">reV.utilities.exceptions.InputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.InputWarning.html">reV.utilities.exceptions.InputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.JSONError.html">reV.utilities.exceptions.JSONError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.MultiFileExclusionError.html">reV.utilities.exceptions.MultiFileExclusionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.NearestNeighborError.html">reV.utilities.exceptions.NearestNeighborError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.OffshoreWindInputError.html">reV.utilities.exceptions.OffshoreWindInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.OffshoreWindInputWarning.html">reV.utilities.exceptions.OffshoreWindInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.OutputWarning.html">reV.utilities.exceptions.OutputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ParallelExecutionWarning.html">reV.utilities.exceptions.ParallelExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.PipelineError.html">reV.utilities.exceptions.PipelineError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ProjectPointsValueError.html">reV.utilities.exceptions.ProjectPointsValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.PySAMVersionError.html">reV.utilities.exceptions.PySAMVersionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.PySAMVersionWarning.html">reV.utilities.exceptions.PySAMVersionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ResourceError.html">reV.utilities.exceptions.ResourceError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SAMExecutionError.html">reV.utilities.exceptions.SAMExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SAMExecutionWarning.html">reV.utilities.exceptions.SAMExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SAMInputError.html">reV.utilities.exceptions.SAMInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SAMInputWarning.html">reV.utilities.exceptions.SAMInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SlurmWarning.html">reV.utilities.exceptions.SlurmWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SupplyCurveError.html">reV.utilities.exceptions.SupplyCurveError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SupplyCurveInputError.html">reV.utilities.exceptions.SupplyCurveInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.WhileLoopPackingError.html">reV.utilities.exceptions.WhileLoopPackingError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.reVDeprecationWarning.html">reV.utilities.exceptions.reVDeprecationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.reVError.html">reV.utilities.exceptions.reVError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.reVLossesValueError.html">reV.utilities.exceptions.reVLossesValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.reVLossesWarning.html">reV.utilities.exceptions.reVLossesWarning</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.pytest_utils.html">reV.utilities.pytest_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.pytest_utils.make_fake_h5_chunks.html">reV.utilities.pytest_utils.make_fake_h5_chunks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.pytest_utils.pd_date_range.html">reV.utilities.pytest_utils.pd_date_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.pytest_utils.write_chunk.html">reV.utilities.pytest_utils.write_chunk</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.slots.html">reV.utilities.slots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.slots.SlottedDict.html">reV.utilities.slots.SlottedDict</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.version.html">reV.version</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_cli/cli.html">CLI reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV.html">reV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20template-configs.html">reV template-configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20batch.html">reV batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20pipeline.html">reV pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20project-points.html">reV project-points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_cli/reV%20project-points.html#rev-project-points-from-lat-lons">from-lat-lons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_cli/reV%20project-points.html#rev-project-points-from-regions">from-regions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20bespoke.html">reV bespoke</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20generation.html">reV generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20econ.html">reV econ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20collect.html">reV collect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20multi-year.html">reV multi-year</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20supply-curve-aggregation.html">reV supply-curve-aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20supply-curve.html">reV supply-curve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20poi-sort.html">reV poi-sort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20rep-profiles.html">reV rep-profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20hybrids.html">reV hybrids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20nrwal.html">reV nrwal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20qa-qc.html">reV qa-qc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20script.html">reV script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20status.html">reV status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20reset-status.html">reV reset-status</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">reV.losses.power_curve</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for reV.losses.power_curve</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;reV power curve losses module.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize_scalar</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">reV.utilities.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">reVLossesValueError</span><span class="p">,</span> <span class="n">reVLossesWarning</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">reV.losses.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_validate_arrays_not_empty</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="PowerCurve">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurve.html#reV.losses.power_curve.PowerCurve">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PowerCurve</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A turbine power curve.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    wind_speed : :obj:`numpy.array`</span>
+<span class="sd">        An array containing the wind speeds corresponding to the values</span>
+<span class="sd">        in the :attr:`generation` array.</span>
+<span class="sd">    generation : :obj:`numpy.array`</span>
+<span class="sd">        An array containing the generated power in kW at the corresponding</span>
+<span class="sd">        wind speed in the :attr:`wind_speed` array. This input must have</span>
+<span class="sd">        at least one positive value, and if a cutoff speed is detected</span>
+<span class="sd">        (see `Warnings` section below), then all values above that wind</span>
+<span class="sd">        speed must be set to 0.</span>
+
+<span class="sd">    Warnings</span>
+<span class="sd">    --------</span>
+<span class="sd">    This class will attempt to infer a cutoff speed from the</span>
+<span class="sd">    ``generation`` input. Specifically, it will look for a transition</span>
+<span class="sd">    from the highest rated power down to zero in a single ``wind_speed``</span>
+<span class="sd">    step of the power curve. If such a transition is detected, the wind</span>
+<span class="sd">    speed corresponding to the zero value will be set as the cutoff</span>
+<span class="sd">    speed, and all calculated power curves will be clipped at this</span>
+<span class="sd">    speed. If your input power curve contains a cutoff speed, ensure</span>
+<span class="sd">    that it adheres to the expected pattern of dropping from max rated</span>
+<span class="sd">    power to zero power in a single wind speed step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wind_speed</span><span class="p">,</span> <span class="n">generation</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wind_speed : array_like</span>
+<span class="sd">            An iterable containing the wind speeds corresponding to the</span>
+<span class="sd">            generated power values in ``generation`` input. The input</span>
+<span class="sd">            values should all be non-zero.</span>
+<span class="sd">        generation : array_like</span>
+<span class="sd">            An iterable containing the generated power in kW at the</span>
+<span class="sd">            corresponding wind speed in the ``wind_speed`` input. This</span>
+<span class="sd">            input must have at least one positive value, and if a cutoff</span>
+<span class="sd">            speed is detected (see `Warnings` section below), then all</span>
+<span class="sd">            values above that wind speed must be set to 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_speed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wind_speed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">generation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cutoff_wind_speed</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cutin_wind_speed</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i_cutoff</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">_validate_arrays_not_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                   <span class="n">array_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;wind_speed&#39;</span><span class="p">,</span> <span class="s1">&#39;generation&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_wind_speed</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_generation</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_wind_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that the input wind speed is non-negative. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_speed</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Invalid wind speed input: Contains negative values! - </span><span class="si">{}</span><span class="s2">&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_generation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate the input generation. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Invalid generation input: Found no positive values! - </span><span class="si">{}</span><span class="s2">&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff_wind_speed</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">wind_speeds_above_cutoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_speed</span>
+                                                <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">)</span>
+            <span class="n">cutoff_wind_speed_ind</span> <span class="o">=</span> <span class="n">wind_speeds_above_cutoff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">[</span><span class="n">cutoff_wind_speed_ind</span><span class="p">:])</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Invalid generation input: Found non-zero values above &quot;</span>
+                       <span class="s2">&quot;cutoff! - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cutin_wind_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The detected cut-in wind speed at which power generation begins</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">        float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cutin_wind_speed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">ind</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cutin_wind_speed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">[</span><span class="n">ind</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cutin_wind_speed</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cutin_wind_speed</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cutoff_wind_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The detected cutoff wind speed at which the power generation is zero</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">        float | np.inf</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cutoff_wind_speed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># pylint: disable=chained-comparison</span>
+            <span class="k">if</span> <span class="n">ind</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">[</span><span class="o">-</span><span class="n">ind</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">i_cutoff</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">)</span> <span class="o">-</span> <span class="n">ind</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cutoff_wind_speed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">[</span><span class="o">-</span><span class="n">ind</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cutoff_wind_speed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cutoff_wind_speed</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rated_power</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the rated power (max power) of the turbine power curve. The</span>
+<span class="sd">        units are dependent on the input power curve but this is typically in</span>
+<span class="sd">        units of kW.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">&lt;</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">&lt;=</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">&gt;</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">&gt;=</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+<div class="viewcode-block" id="PowerCurve.__call__">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurve.html#reV.losses.power_curve.PowerCurve.__call__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wind_speed</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the power curve value for the given ``wind_speed``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wind_speed : int | float | list | array_like</span>
+<span class="sd">            Wind speed value corresponding to the desired power curve</span>
+<span class="sd">            value.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float | :obj:`numpy.array`</span>
+<span class="sd">            The power curve value(s) for the input wind speed(s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wind_speed</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">wind_speed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">wind_speed</span><span class="p">])</span>
+        <span class="n">power_generated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">wind_speed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">:</span>
+            <span class="n">power_generated</span><span class="p">[</span><span class="n">wind_speed</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">power_generated</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PowerCurveLosses">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLosses.html#reV.losses.power_curve.PowerCurveLosses">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PowerCurveLosses</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A converter between annual losses and power curve transformation.</span>
+
+<span class="sd">    Given a target annual loss value, this class facilitates the</span>
+<span class="sd">    calculation of a power curve transformation such that the annual</span>
+<span class="sd">    generation losses incurred by using the transformed power curve when</span>
+<span class="sd">    compared to the original (non-transformed) power curve match the</span>
+<span class="sd">    target loss as close as possible.</span>
+
+<span class="sd">    The underlying assumption for this approach is that some types of</span>
+<span class="sd">    losses can be realized by a transformation of the power curve (see</span>
+<span class="sd">    the values of :obj:`TRANSFORMATIONS` for details on all of the</span>
+<span class="sd">    power curve transformations that have been implemented).</span>
+
+<span class="sd">    The advantage of this approach is that, unlike haircut losses (where</span>
+<span class="sd">    a single loss value is applied across the board to all generation),</span>
+<span class="sd">    the losses are distributed non-uniformly across the power curve. For</span>
+<span class="sd">    example, even in the overly simplified case of a horizontal</span>
+<span class="sd">    translation of the power curve (which is only physically realistic</span>
+<span class="sd">    for certain types of losses like blade degradation), the losses are</span>
+<span class="sd">    distributed primarily across region 2 of the power curve (the steep,</span>
+<span class="sd">    almost linear, portion where the generation rapidly increases). This</span>
+<span class="sd">    means that, unlike with haircut losses, generation is able to reach</span>
+<span class="sd">    max rated power (albeit at a greater wind speed).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    power_curve : :obj:`PowerCurve`</span>
+<span class="sd">        The original Power Curve.</span>
+<span class="sd">    wind_resource : :obj:`numpy.array`</span>
+<span class="sd">        An array containing the wind speeds (i.e. wind speed</span>
+<span class="sd">        distribution) for the site at which the power curve will be</span>
+<span class="sd">        used. This distribution is used to calculate the annual</span>
+<span class="sd">        generation of the original power curve as well as any additional</span>
+<span class="sd">        calculated power curves. The generation values are then compared</span>
+<span class="sd">        in order to calculate the loss resulting from a transformed</span>
+<span class="sd">        power curve.</span>
+<span class="sd">    weights : :obj:`numpy.array`</span>
+<span class="sd">        An array of the same length as ``wind_resource`` containing</span>
+<span class="sd">        weights to apply to each generation value calculated for the</span>
+<span class="sd">        corresponding wind speed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">power_curve</span><span class="p">,</span> <span class="n">wind_resource</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        power_curve : :obj:`PowerCurve`</span>
+<span class="sd">            The &quot;original&quot; power curve to be adjusted.</span>
+<span class="sd">        wind_resource : array_like</span>
+<span class="sd">            An iterable containing the wind speeds measured at the site</span>
+<span class="sd">            where this power curve will be applied to calculate</span>
+<span class="sd">            generation. These values are used to calculate the loss</span>
+<span class="sd">            resulting from a transformed power curve compared to the</span>
+<span class="sd">            generation of the original power curve. The input</span>
+<span class="sd">            values should all be non-zero, and the units of</span>
+<span class="sd">            should match the units of the ``power_curve`` input</span>
+<span class="sd">            (typically, m/s).</span>
+<span class="sd">        weights : array_like, optional</span>
+<span class="sd">            An iterable of the same length as ``wind_resource``</span>
+<span class="sd">            containing weights to apply to each generation value</span>
+<span class="sd">            calculated for the corresponding wind speed.</span>
+<span class="sd">        site : int | str, optional</span>
+<span class="sd">            Site number (gid) for debugging and logging.</span>
+<span class="sd">            By default, ``None``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span> <span class="o">=</span> <span class="n">power_curve</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_resource</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wind_resource</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_resource</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_power_gen</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="s2">&quot;[unknown]&quot;</span> <span class="k">if</span> <span class="n">site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">site</span>
+
+        <span class="n">_validate_arrays_not_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                   <span class="n">array_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;wind_resource&#39;</span><span class="p">,</span> <span class="s1">&#39;weights&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_wind_resource</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_weights</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_wind_resource</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that the input wind resource is non-negative. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_resource</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Invalid wind resource input for site </span><span class="si">{}</span><span class="s2">: Contains &quot;</span>
+                   <span class="s2">&quot;negative values! - </span><span class="si">{}</span><span class="s2">&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_resource</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_resource</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that the input weights size matches the wind resource. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_resource</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Invalid weights input: Does not match size of wind &quot;</span>
+                   <span class="s2">&quot;resource for site </span><span class="si">{}</span><span class="s2">! - </span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2">&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">wind_resource</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PowerCurveLosses.annual_losses_with_transformed_power_curve">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLosses.html#reV.losses.power_curve.PowerCurveLosses.annual_losses_with_transformed_power_curve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">annual_losses_with_transformed_power_curve</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">transformed_power_curve</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the annual losses from a transformed power curve.</span>
+
+<span class="sd">        This function uses the wind resource data that the object was</span>
+<span class="sd">        initialized with to calculate the total annual power generation</span>
+<span class="sd">        with a transformed power curve. This generation is compared with</span>
+<span class="sd">        the generation of the original (non-transformed) power curve to</span>
+<span class="sd">        compute the total annual losses as a result of the</span>
+<span class="sd">        transformation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transformed_power_curve : :obj:`PowerCurve`</span>
+<span class="sd">            A transformed power curve. The power generated with this</span>
+<span class="sd">            power curve will be compared with the power generated by the</span>
+<span class="sd">            &quot;original&quot; power curve to calculate annual losses.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Total losses (%) as a result of a the power curve</span>
+<span class="sd">            transformation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">power_gen_with_losses</span> <span class="o">=</span> <span class="n">transformed_power_curve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_resource</span><span class="p">)</span>
+        <span class="n">power_gen_with_losses</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
+        <span class="n">power_gen_with_losses</span> <span class="o">=</span> <span class="n">power_gen_with_losses</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">power_gen_with_losses</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_gen_no_losses</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transformation_variable</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">transformation</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Objective function: |output - target|.&quot;&quot;&quot;</span>
+        <span class="n">new_power_curve</span> <span class="o">=</span> <span class="n">transformation</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">transformation_variable</span><span class="p">)</span>
+        <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annual_losses_with_transformed_power_curve</span><span class="p">(</span>
+            <span class="n">new_power_curve</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">losses</span> <span class="o">-</span> <span class="n">target</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PowerCurveLosses.fit">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLosses.html#reV.losses.power_curve.PowerCurveLosses.fit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">transformation</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit a power curve transformation.</span>
+
+<span class="sd">        This function fits a transformation to the input power curve</span>
+<span class="sd">        (the one used to initialize the object) to generate an annual</span>
+<span class="sd">        loss percentage closest to the ``target``. The losses are</span>
+<span class="sd">        computed w.r.t the generation of the original (non-transformed)</span>
+<span class="sd">        power curve.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : float</span>
+<span class="sd">            Target value for annual generation losses (%).</span>
+<span class="sd">        transformation : PowerCurveTransformation</span>
+<span class="sd">            A PowerCurveTransformation class representing the power</span>
+<span class="sd">            curve transformation to use.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`numpy.array`</span>
+<span class="sd">            An array containing a transformed power curve that most</span>
+<span class="sd">            closely yields the ``target`` annual generation losses.</span>
+
+<span class="sd">        Warns</span>
+<span class="sd">        -----</span>
+<span class="sd">        reVLossesWarning</span>
+<span class="sd">            If the fit did not meet the target annual losses to within</span>
+<span class="sd">            1%.</span>
+
+<span class="sd">        Warnings</span>
+<span class="sd">        --------</span>
+<span class="sd">        This function attempts to find an optimal transformation for the</span>
+<span class="sd">        power curve such that the annual generation losses match the</span>
+<span class="sd">        ``target`` value, but there is no guarantee that a close match</span>
+<span class="sd">        can be found, if it even exists. Therefore, it is possible that</span>
+<span class="sd">        the losses resulting from the transformed power curve will not</span>
+<span class="sd">        match the ``target``. This is especially likely if the</span>
+<span class="sd">        ``target`` is large or if the input power curve and/or wind</span>
+<span class="sd">        resource is abnormal.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">transformation</span> <span class="o">=</span> <span class="n">transformation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="p">)</span>
+        <span class="n">fit_var</span> <span class="o">=</span> <span class="n">minimize_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span>
+                                  <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">transformation</span><span class="p">),</span>
+                                  <span class="n">bounds</span><span class="o">=</span><span class="n">transformation</span><span class="o">.</span><span class="n">optm_bounds</span><span class="p">,</span>
+                                  <span class="n">method</span><span class="o">=</span><span class="s1">&#39;bounded&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">x</span>
+
+        <span class="k">if</span> <span class="n">fit_var</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">transformation</span><span class="o">.</span><span class="n">bounds</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Transformation &quot;</span><span class="si">{}</span><span class="s1">&quot; for site </span><span class="si">{}</span><span class="s1"> resulted in fit parameter &#39;</span>
+                   <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> greater than the max bound of </span><span class="si">{}</span><span class="s1">. Limiting to the max &#39;</span>
+                   <span class="s1">&#39;bound, but the applied losses may not be correct.&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">transformation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">fit_var</span><span class="p">,</span>
+                           <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">transformation</span><span class="o">.</span><span class="n">bounds</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">reVLossesWarning</span><span class="p">)</span>
+            <span class="n">fit_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">transformation</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fit_var</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">transformation</span><span class="o">.</span><span class="n">bounds</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Transformation &quot;</span><span class="si">{}</span><span class="s1">&quot; for site </span><span class="si">{}</span><span class="s1"> resulted in fit parameter &#39;</span>
+                   <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> less than the min bound of </span><span class="si">{}</span><span class="s1">. Limiting to the min &#39;</span>
+                   <span class="s1">&#39;bound, but the applied losses may not be correct.&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">transformation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">fit_var</span><span class="p">,</span>
+                           <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">transformation</span><span class="o">.</span><span class="n">bounds</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">reVLossesWarning</span><span class="p">)</span>
+            <span class="n">fit_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">transformation</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+
+        <span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">(</span><span class="n">fit_var</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">transformation</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">new_power_curve</span> <span class="o">=</span> <span class="n">transformation</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">fit_var</span><span class="p">)</span>
+            <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annual_losses_with_transformed_power_curve</span><span class="p">(</span>
+                <span class="n">new_power_curve</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Unable to find a transformation for site </span><span class="si">{}</span><span class="s2"> such that the &quot;</span>
+                   <span class="s2">&quot;losses meet the target within 1%! Obtained fit with loss &quot;</span>
+                   <span class="s2">&quot;percentage </span><span class="si">{}</span><span class="s2">% when target was </span><span class="si">{}</span><span class="s2">%. Consider using a &quot;</span>
+                   <span class="s2">&quot;different transformation or reducing the target losses!&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">losses</span><span class="p">,</span> <span class="n">target</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">reVLossesWarning</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">transformation</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">fit_var</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">power_gen_no_losses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;float: Total power generation from original power curve.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_gen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_power_gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_resource</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_power_gen</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_power_gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_gen</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_gen</span></div>
+
+
+
+<div class="viewcode-block" id="PowerCurveLossesInput">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLossesInput.html#reV.losses.power_curve.PowerCurveLossesInput">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PowerCurveLossesInput</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Power curve losses specification.</span>
+
+<span class="sd">    This class stores and validates information about the desired losses</span>
+<span class="sd">    from a given type of power curve transformation. In particular, the</span>
+<span class="sd">    target loss percentage must be provided. This input is then</span>
+<span class="sd">    validated to be used power curve transformation fitting.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">REQUIRED_KEYS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;target_losses_percent&#39;</span><span class="p">}</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Required keys in the input specification dictionary.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        specs : dict</span>
+<span class="sd">            A dictionary containing specifications for the power curve</span>
+<span class="sd">            losses. This dictionary must contain the following keys:</span>
+
+<span class="sd">                - ``target_losses_percent``</span>
+<span class="sd">                   An integer or float value representing the</span>
+<span class="sd">                   total percentage of annual energy production that</span>
+<span class="sd">                   should be lost due to the power curve transformation.</span>
+<span class="sd">                   This value must be in the range [0, 100].</span>
+
+<span class="sd">            The input dictionary can also provide the following optional</span>
+<span class="sd">            keys:</span>
+
+<span class="sd">                - ``transformation`` - by default, ``horizontal_translation``</span>
+<span class="sd">                  A string representing the type of transformation to</span>
+<span class="sd">                  apply to the power curve. This sting must be one of</span>
+<span class="sd">                  the keys of :obj:`TRANSFORMATIONS`. See the relevant</span>
+<span class="sd">                  transformation class documentation for detailed</span>
+<span class="sd">                  information on that type of power curve</span>
+<span class="sd">                  transformation.</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span> <span class="o">=</span> <span class="n">specs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transformation_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;transformation&#39;</span><span class="p">,</span>
+                                                    <span class="s1">&#39;exponential_stretching&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate the input specs.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_required_keys_exist</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_transformation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_percentage</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_required_keys_exist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Raise an error if any required keys are missing.&quot;&quot;&quot;</span>
+        <span class="n">missing_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">REQUIRED_KEYS</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">missing_keys</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;The following required keys are missing from the power &quot;</span>
+                   <span class="s2">&quot;curve losses specification: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing_keys</span><span class="p">)))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_transformation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that the transformation exists in TRANSFORMATIONS. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transformation_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TRANSFORMATIONS</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Transformation </span><span class="si">{!r}</span><span class="s2"> not understood! &quot;</span>
+                   <span class="s2">&quot;Input must be one of: </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transformation_name</span><span class="p">,</span>
+                           <span class="nb">list</span><span class="p">(</span><span class="n">TRANSFORMATIONS</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_percentage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that the percentage is in the range [0, 100]. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Percentage of annual energy production loss to be &quot;</span>
+                   <span class="s2">&quot;attributed to the power curve transformation must be in &quot;</span>
+                   <span class="s2">&quot;the range [0, 100], but got </span><span class="si">{}</span><span class="s2"> for transformation </span><span class="si">{!r}</span><span class="s2">&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transformation_name</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">specs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">specs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;transformation&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transformation_name</span><span class="p">})</span>
+        <span class="n">specs_as_str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">=</span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                                  <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">specs</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+        <span class="k">return</span> <span class="s2">&quot;PowerCurveLossesInput(</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">specs_as_str</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;int or float: Target loss percentage due to transformation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">[</span><span class="s1">&#39;target_losses_percent&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transformation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;PowerCurveTransformation: Power curve transformation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TRANSFORMATIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_transformation_name</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="PowerCurveWindResource">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurveWindResource.html#reV.losses.power_curve.PowerCurveWindResource">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PowerCurveWindResource</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wind resource data for calculating power curve shift.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">wind_speed</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Power Curve Wind Resource.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array_like</span>
+<span class="sd">            An iterable representing the temperatures at a single site</span>
+<span class="sd">            (in C). Must be the same length as the `pressure` and</span>
+<span class="sd">            `wind_speed` inputs.</span>
+<span class="sd">        pressure : array_like</span>
+<span class="sd">            An iterable representing the pressures at a single site</span>
+<span class="sd">            (in PA or ATM). Must be the same length as the `temperature`</span>
+<span class="sd">            and `wind_speed` inputs.</span>
+<span class="sd">        wind_speed : array_like</span>
+<span class="sd">            An iterable representing the wind speeds at a single site</span>
+<span class="sd">            (in m/s). Must be the same length as the `temperature` and</span>
+<span class="sd">            `pressure` inputs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_temperatures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pressures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pressure</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wind_speeds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wind_speed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_speed_weights</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="PowerCurveWindResource.wind_resource_for_site">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurveWindResource.html#reV.losses.power_curve.PowerCurveWindResource.wind_resource_for_site">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wind_resource_for_site</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract scaled wind speeds at the resource site.</span>
+
+<span class="sd">        Get the wind speeds for this site, accounting for the scaling</span>
+<span class="sd">        done in SAM [1]_ based on air pressure [2]_. These wind speeds</span>
+<span class="sd">        can then be used to sample the power curve and obtain generation</span>
+<span class="sd">        values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array-like</span>
+<span class="sd">            Array of scaled wind speeds.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [1] Scaling done in SAM: https://tinyurl.com/2uzjawpe</span>
+<span class="sd">        .. [2] SAM Wind Power Reference Manual for explanations on</span>
+<span class="sd">           generation and air density calculations (pp. 18):</span>
+<span class="sd">           https://tinyurl.com/2p8fjba6</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pressures</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># units are ATM</span>
+            <span class="n">pressures_pascal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pressures</span> <span class="o">*</span> <span class="mf">101325.027383</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pressures</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">1e4</span><span class="p">:</span>  <span class="c1"># units are PA</span>
+            <span class="n">pressures_pascal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pressures</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Unable to determine pressure units: pressure values &quot;</span>
+                   <span class="s2">&quot;found in the range </span><span class="si">{:.2f}</span><span class="s2"> to </span><span class="si">{:.2f}</span><span class="s2">. Please make &quot;</span>
+                   <span class="s2">&quot;sure input pressures are in units of PA or ATM&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pressures</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pressures</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">temperatures_K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temperatures</span> <span class="o">+</span> <span class="mf">273.15</span>  <span class="c1"># originally in celsius</span>
+        <span class="n">specific_gas_constant_dry_air</span> <span class="o">=</span> <span class="mf">287.058</span>  <span class="c1"># units: J / kg / K</span>
+        <span class="n">sea_level_air_density</span> <span class="o">=</span> <span class="mf">1.225</span>  <span class="c1"># units: kg/m**3 at 15 degrees celsius</span>
+
+        <span class="n">site_air_densities</span> <span class="o">=</span> <span class="n">pressures_pascal</span> <span class="o">/</span> <span class="p">(</span><span class="n">specific_gas_constant_dry_air</span>
+                                                 <span class="o">*</span> <span class="n">temperatures_K</span><span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="p">(</span><span class="n">sea_level_air_density</span> <span class="o">/</span> <span class="n">site_air_densities</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wind_speeds</span> <span class="o">/</span> <span class="n">weights</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wind_speeds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;:obj:`numpy.array`: Array of adjusted wind speeds. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_resource_for_site</span><span class="p">()</span></div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_PowerCurveWindDistribution</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;`PowerCurveWindResource` interface mocker for wind distributions. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">speeds</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Power Curve Wind Resource for Wind Distributions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        speeds : array_like</span>
+<span class="sd">            An iterable representing the wind speeds at a single site</span>
+<span class="sd">            (in m/s). Must be the same length as the `weights` input.</span>
+<span class="sd">        weights : array_like</span>
+<span class="sd">            An iterable representing the wind speed weights at a single</span>
+<span class="sd">            site. Must be the same length as the `speeds` input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_speeds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">speeds</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_speed_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="adjust_power_curve">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.adjust_power_curve.html#reV.losses.power_curve.adjust_power_curve">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">adjust_power_curve</span><span class="p">(</span><span class="n">power_curve</span><span class="p">,</span> <span class="n">resource_data</span><span class="p">,</span> <span class="n">target_losses</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust power curve to account for losses.</span>
+
+<span class="sd">    This function computes a new power curve that accounts for the</span>
+<span class="sd">    loss percentage specified from the target loss.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    power_curve : :obj:`PowerCurve`</span>
+<span class="sd">        Power curve to be adjusted to match target losses.</span>
+<span class="sd">    resource_data : :obj:`PowerCurveWindResource`</span>
+<span class="sd">        Resource data for the site being investigated.</span>
+<span class="sd">    target_losses : :obj:`PowerCurveLossesInput`</span>
+<span class="sd">        Target loss and power curve shift info.</span>
+<span class="sd">    site : int | str, optional</span>
+<span class="sd">        Site number (gid) for debugging and logging.</span>
+<span class="sd">        By default, ``None``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :obj:`PowerCurve`</span>
+<span class="sd">        Power Curve shifted to meet the target losses. Power Curve is</span>
+<span class="sd">        not adjusted if all wind speeds are above the cutout or below</span>
+<span class="sd">        the cutin speed.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :obj:`PowerCurveLosses` : Power curve re-calculation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">site</span> <span class="o">=</span> <span class="s2">&quot;[unknown]&quot;</span> <span class="k">if</span> <span class="n">site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">site</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">resource_data</span><span class="o">.</span><span class="n">wind_speeds</span> <span class="o">&lt;=</span> <span class="n">power_curve</span><span class="o">.</span><span class="n">cutin_wind_speed</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;All wind speeds for site </span><span class="si">{}</span><span class="s2"> are below the wind speed &quot;</span>
+               <span class="s2">&quot;cutin (</span><span class="si">{}</span><span class="s2"> m/s). No power curve adjustments made!&quot;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">power_curve</span><span class="o">.</span><span class="n">cutin_wind_speed</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">reVLossesWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">power_curve</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">resource_data</span><span class="o">.</span><span class="n">wind_speeds</span> <span class="o">&gt;=</span> <span class="n">power_curve</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;All wind speeds for site </span><span class="si">{}</span><span class="s2"> are above the wind speed &quot;</span>
+               <span class="s2">&quot;cutoff (</span><span class="si">{}</span><span class="s2"> m/s). No power curve adjustments made!&quot;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">power_curve</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">reVLossesWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">power_curve</span>
+
+    <span class="n">pc_losses</span> <span class="o">=</span> <span class="n">PowerCurveLosses</span><span class="p">(</span><span class="n">power_curve</span><span class="p">,</span> <span class="n">resource_data</span><span class="o">.</span><span class="n">wind_speeds</span><span class="p">,</span>
+                                 <span class="n">resource_data</span><span class="o">.</span><span class="n">wind_speed_weights</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Transforming power curve using the </span><span class="si">{}</span><span class="s2"> transformation to &quot;</span>
+                 <span class="s2">&quot;meet </span><span class="si">{}% lo</span><span class="s2">ss target...&quot;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_losses</span><span class="o">.</span><span class="n">transformation</span><span class="p">,</span> <span class="n">target_losses</span><span class="o">.</span><span class="n">target</span><span class="p">))</span>
+
+    <span class="n">new_curve</span> <span class="o">=</span> <span class="n">pc_losses</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">target_losses</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+                              <span class="n">target_losses</span><span class="o">.</span><span class="n">transformation</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Transformed power curve: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">new_curve</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">new_curve</span></div>
+
+
+
+<div class="viewcode-block" id="PowerCurveLossesMixin">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLossesMixin.html#reV.losses.power_curve.PowerCurveLossesMixin">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PowerCurveLossesMixin</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin class for :class:`reV.SAM.generation.AbstractSamWind`.</span>
+
+<span class="sd">    Warnings</span>
+<span class="sd">    --------</span>
+<span class="sd">    Using this class for anything except as a mixin for</span>
+<span class="sd">    :class:`~reV.SAM.generation.AbstractSamWind` may result in</span>
+<span class="sd">    unexpected results and/or errors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">POWER_CURVE_CONFIG_KEY</span> <span class="o">=</span> <span class="s1">&#39;reV_power_curve_losses&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Specify power curve loss target in the config file using this key.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PowerCurveLossesMixin.add_power_curve_losses">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLossesMixin.html#reV.losses.power_curve.PowerCurveLossesMixin.add_power_curve_losses">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_power_curve_losses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjust power curve in SAM config file to account for losses.</span>
+
+<span class="sd">        This function reads the information in the</span>
+<span class="sd">        ``reV_power_curve_losses`` key of the ``sam_sys_inputs``</span>
+<span class="sd">        dictionary and computes a new power curve that accounts for the</span>
+<span class="sd">        loss percentage specified from that input. If no power curve</span>
+<span class="sd">        loss info is specified in ``sam_sys_inputs``, the power curve</span>
+<span class="sd">        will not be adjusted.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :func:`adjust_power_curve` : Power curve shift calculation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loss_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_power_curve_input</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">loss_input</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">resource</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_resource_from_input</span><span class="p">()</span>
+        <span class="n">site</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;site&#39;</span><span class="p">,</span> <span class="s2">&quot;[unknown]&quot;</span><span class="p">)</span>
+        <span class="n">new_curve</span> <span class="o">=</span> <span class="n">adjust_power_curve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_power_curve</span><span class="p">,</span> <span class="n">resource</span><span class="p">,</span>
+                                       <span class="n">loss_input</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="p">[</span><span class="s1">&#39;wind_turbine_powercurve_powerout&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_curve</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_user_power_curve_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get power curve loss info from config. &quot;&quot;&quot;</span>
+        <span class="n">power_curve_losses_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">POWER_CURVE_CONFIG_KEY</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">power_curve_losses_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># site-specific info is input as str</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">power_curve_losses_info</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">power_curve_losses_info</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">power_curve_losses_info</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Applying power curve losses using the following input:&quot;</span>
+                    <span class="s2">&quot;</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">power_curve_losses_info</span><span class="p">))</span>
+
+        <span class="n">loss_input</span> <span class="o">=</span> <span class="n">PowerCurveLossesInput</span><span class="p">(</span><span class="n">power_curve_losses_info</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">loss_input</span><span class="o">.</span><span class="n">target</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Power curve target loss is 0. Skipping power curve &quot;</span>
+                         <span class="s2">&quot;transformation.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">return</span> <span class="n">loss_input</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">input_power_curve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;:obj:`PowerCurve`: Original power curve for site. &quot;&quot;&quot;</span>
+        <span class="n">wind_speed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="p">[</span><span class="s1">&#39;wind_turbine_powercurve_windspeeds&#39;</span><span class="p">]</span>
+        <span class="n">generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="p">[</span><span class="s1">&#39;wind_turbine_powercurve_powerout&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">PowerCurve</span><span class="p">(</span><span class="n">wind_speed</span><span class="p">,</span> <span class="n">generation</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PowerCurveLossesMixin.wind_resource_from_input">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLossesMixin.html#reV.losses.power_curve.PowerCurveLossesMixin.wind_resource_from_input">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wind_resource_from_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collect wind resource and weights from inputs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`PowerCurveWindResource`</span>
+<span class="sd">            Wind resource used to compute power curve shift.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        reVLossesValueError</span>
+<span class="sd">            If power curve losses are not compatible with the</span>
+<span class="sd">            &#39;wind_resource_model_choice&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;wind_resource_model_choice&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">temperatures</span><span class="p">,</span> <span class="n">pressures</span><span class="p">,</span> <span class="n">wind_speeds</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;wind_resource_data&#39;</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">PowerCurveWindResource</span><span class="p">(</span><span class="n">temperatures</span><span class="p">,</span> <span class="n">pressures</span><span class="p">,</span> <span class="n">wind_speeds</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;wind_resource_model_choice&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">wrd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;wind_resource_distribution&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">_PowerCurveWindDistribution</span><span class="p">(</span><span class="n">wrd</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">wrd</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;reV power curve losses cannot be used with &quot;</span>
+                   <span class="s2">&quot;&#39;wind_resource_model_choice&#39; = </span><span class="si">{}</span><span class="s2">&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;wind_resource_model_choice&#39;</span><span class="p">]))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AbstractPowerCurveTransformation">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.AbstractPowerCurveTransformation.html#reV.losses.power_curve.AbstractPowerCurveTransformation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbstractPowerCurveTransformation</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for power curve transformations.</span>
+
+<span class="sd">    **This class is not meant to be instantiated**.</span>
+
+<span class="sd">    This class provides an interface for power curve transformations,</span>
+<span class="sd">    which are meant to more realistically represent certain types of</span>
+<span class="sd">    losses when compared to simple haircut losses (i.e. constant loss</span>
+<span class="sd">    value applied at all points on the power curve).</span>
+
+<span class="sd">    If you would like to implement your own power curve transformation,</span>
+<span class="sd">    you should subclass this class and implement the :meth:`apply`</span>
+<span class="sd">    method and the :attr:`bounds` property. See the documentation for</span>
+<span class="sd">    each of these below for more details.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    power_curve : :obj:`PowerCurve`</span>
+<span class="sd">        The &quot;original&quot; input power curve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">power_curve</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Abstract Power Curve Transformation class.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        power_curve : :obj:`PowerCurve`</span>
+<span class="sd">            The turbine power curve. This input is treated as the</span>
+<span class="sd">            &quot;original&quot; power curve.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span> <span class="o">=</span> <span class="n">power_curve</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transformed_generation</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_non_zero_generation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_curve</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure new power curve has some non-zero generation.&quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span>
+                <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">)</span>
+        <span class="n">min_expected_power_gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">new_curve</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">min_expected_power_gen</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Calculated power curve is invalid. No power generation &quot;</span>
+                   <span class="s2">&quot;below the cutoff wind speed (</span><span class="si">{}</span><span class="s2"> m/s) detected. Target &quot;</span>
+                   <span class="s2">&quot;loss percentage  may be too large! Please try again with &quot;</span>
+                   <span class="s2">&quot;a lower target value.&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_same_cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_curve</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that the new power curve has the same high-wind cutout as</span>
+<span class="sd">        the original curve.&quot;&quot;&quot;</span>
+        <span class="n">old_cut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">cutoff_wind_speed</span>
+        <span class="n">new_cut</span> <span class="o">=</span> <span class="n">new_curve</span><span class="o">.</span><span class="n">cutoff_wind_speed</span>
+        <span class="k">if</span> <span class="n">old_cut</span> <span class="o">!=</span> <span class="n">new_cut</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Original power curve windspeed cutout is </span><span class="si">{}</span><span class="s1">m/s and new &#39;</span>
+                   <span class="s1">&#39;curve cutout is </span><span class="si">{}</span><span class="s1">m/s. Something went wrong!&#39;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_cut</span><span class="p">,</span> <span class="n">new_cut</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">reVLossesValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AbstractPowerCurveTransformation.apply">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.AbstractPowerCurveTransformation.html#reV.losses.power_curve.AbstractPowerCurveTransformation.apply">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transformation_var</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply a transformation to the original power curve.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transformation_var : : float</span>
+<span class="sd">            A single variable controlling the &quot;strength&quot; of the</span>
+<span class="sd">            transformation. The :obj:`PowerCurveLosses` object will</span>
+<span class="sd">            run an optimization using this variable to fit the target</span>
+<span class="sd">            annual losses incurred with the transformed power curve</span>
+<span class="sd">            compared to the original power curve using the given wind</span>
+<span class="sd">            resource distribution.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`PowerCurve`</span>
+<span class="sd">            An new power curve containing the generation values from the</span>
+<span class="sd">            transformed power curve.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            If the transformation implementation did not set the</span>
+<span class="sd">            ``_transformed_generation`` attribute.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        When implementing a new transformation, override this method and</span>
+<span class="sd">        set the ``_transformed_generation`` protected attribute to be</span>
+<span class="sd">        the generation corresponding to the transformed power curve.</span>
+<span class="sd">        Then, call ``super().apply(transformation_var)`` in order to</span>
+<span class="sd">        apply cutout speed curtailment and validation for the</span>
+<span class="sd">        transformed power curve. For example, here is the implementation</span>
+<span class="sd">        for a transformation that shifts the power curve horizontally::</span>
+
+<span class="sd">            self._transformed_generation = self.power_curve(</span>
+<span class="sd">                self.power_curve.wind_speed - transformation_var</span>
+<span class="sd">            )</span>
+<span class="sd">            return super().apply(transformation_var)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transformed_generation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Transformation implementation for </span><span class="si">{}</span><span class="s2">.apply did not set &quot;</span>
+                   <span class="s2">&quot;the `_transformed_generation` attribute.&quot;</span>
+                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span>
+                    <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_transformed_generation</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">new_curve</span> <span class="o">=</span> <span class="n">PowerCurve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">_transformed_generation</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_non_zero_generation</span><span class="p">(</span><span class="n">new_curve</span><span class="p">)</span>
+
+            <span class="n">i_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transformed_generation</span><span class="p">)</span>
+            <span class="n">i_cutoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">i_cutoff</span>
+            <span class="n">rated_power</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">rated_power</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_transformed_generation</span><span class="p">[</span><span class="n">i_max</span><span class="p">:</span><span class="n">i_cutoff</span><span class="p">]</span> <span class="o">=</span> <span class="n">rated_power</span>
+
+        <span class="n">new_curve</span> <span class="o">=</span> <span class="n">PowerCurve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_transformed_generation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_non_zero_generation</span><span class="p">(</span><span class="n">new_curve</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_same_cutoff</span><span class="p">(</span><span class="n">new_curve</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_curve</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;tuple: true Bounds on the ``transformation_var``.&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optm_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bounds for scipy optimization, sometimes more generous than the</span>
+<span class="sd">        actual fit parameter bounds which are enforced after the</span>
+<span class="sd">        optimization.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span></div>
+
+
+
+<div class="viewcode-block" id="HorizontalTranslation">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.HorizontalTranslation.html#reV.losses.power_curve.HorizontalTranslation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HorizontalTranslation</span><span class="p">(</span><span class="n">AbstractPowerCurveTransformation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility for applying horizontal power curve translations.</span>
+
+<span class="sd">    The mathematical representation of this transformation is:</span>
+
+<span class="sd">    .. math:: P_{transformed}(u) = P_{original}(u - t),</span>
+
+<span class="sd">    where :math:`P_{transformed}` is the transformed power curve,</span>
+<span class="sd">    :math:`P_{original}` is the original power curve, :math:`u` is</span>
+<span class="sd">    the wind speed, and :math:`t` is the transformation variable</span>
+<span class="sd">    (horizontal translation amount).</span>
+
+<span class="sd">    This kind of power curve transformation is simplistic, and should</span>
+<span class="sd">    only be used for a small handful of applicable turbine losses</span>
+<span class="sd">    (i.e. blade degradation). See ``Warnings`` for more details.</span>
+
+<span class="sd">    The losses in this type of transformation are distributed primarily</span>
+<span class="sd">    across region 2 of the power curve (the steep, almost linear,</span>
+<span class="sd">    portion where the generation rapidly increases):</span>
+
+<span class="sd">    .. image:: ../../../examples/rev_losses/horizontal_translation.png</span>
+<span class="sd">       :align: center</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    power_curve : :obj:`PowerCurve`</span>
+<span class="sd">        The &quot;original&quot; input power curve.</span>
+
+<span class="sd">    Warnings</span>
+<span class="sd">    --------</span>
+<span class="sd">    This kind of power curve translation is not generally realistic.</span>
+<span class="sd">    Using this transformation as a primary source of losses (i.e. many</span>
+<span class="sd">    different kinds of losses bundled together) is extremely likely to</span>
+<span class="sd">    yield unrealistic results!</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HorizontalTranslation.apply">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.HorizontalTranslation.html#reV.losses.power_curve.HorizontalTranslation.apply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transformation_var</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply a horizontal translation to the original power curve.</span>
+
+<span class="sd">        This function shifts the original power curve horizontally,</span>
+<span class="sd">        along the &quot;wind speed&quot; (x) axis, by the given amount. Any power</span>
+<span class="sd">        above the cutoff speed (if one was detected) is truncated after</span>
+<span class="sd">        the transformation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transformation_var : float</span>
+<span class="sd">            The amount to shift the original power curve by, in wind</span>
+<span class="sd">            speed units (typically, m/s).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`PowerCurve`</span>
+<span class="sd">            An new power curve containing the generation values from the</span>
+<span class="sd">            shifted power curve.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transformed_generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span> <span class="o">-</span> <span class="n">transformation_var</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">transformation_var</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;tuple: true Bounds on the power curve shift (different from the</span>
+<span class="sd">        optimization boundaries)&quot;&quot;&quot;</span>
+        <span class="n">min_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">max_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">max_shift</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">[</span><span class="o">-</span><span class="n">max_ind</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                     <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">[</span><span class="n">min_ind</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_shift</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="LinearStretching">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.LinearStretching.html#reV.losses.power_curve.LinearStretching">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearStretching</span><span class="p">(</span><span class="n">AbstractPowerCurveTransformation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility for applying a linear stretch to the power curve.</span>
+
+<span class="sd">    The mathematical representation of this transformation is:</span>
+
+<span class="sd">    .. math:: P_{transformed}(u) = P_{original}(u/t),</span>
+
+<span class="sd">    where :math:`P_{transformed}` is the transformed power curve,</span>
+<span class="sd">    :math:`P_{original}` is the original power curve, :math:`u` is</span>
+<span class="sd">    the wind speed, and :math:`t` is the transformation variable</span>
+<span class="sd">    (wind speed multiplier).</span>
+
+<span class="sd">    The losses in this type of transformation are distributed primarily</span>
+<span class="sd">    across regions 2 and 3 of the power curve. In particular, losses are</span>
+<span class="sd">    smaller for wind speeds closer to the cut-in speed, and larger for</span>
+<span class="sd">    speeds close to rated power:</span>
+
+<span class="sd">    .. image:: ../../../examples/rev_losses/linear_stretching.png</span>
+<span class="sd">       :align: center</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    power_curve : :obj:`PowerCurve`</span>
+<span class="sd">        The &quot;original&quot; input power curve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LinearStretching.apply">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.LinearStretching.html#reV.losses.power_curve.LinearStretching.apply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transformation_var</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply a linear stretch to the original power curve.</span>
+
+<span class="sd">        This function stretches the original power curve along the</span>
+<span class="sd">        &quot;wind speed&quot; (x) axis. Any power above the cutoff speed (if one</span>
+<span class="sd">        was detected) is truncated after the transformation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transformation_var : float</span>
+<span class="sd">            The linear multiplier of the wind speed scaling.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`PowerCurve`</span>
+<span class="sd">            An new power curve containing the generation values from the</span>
+<span class="sd">            shifted power curve.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transformed_generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span> <span class="o">/</span> <span class="n">transformation_var</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">transformation_var</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;tuple: true Bounds on the wind speed multiplier (different from the</span>
+<span class="sd">        optimization boundaries)&quot;&quot;&quot;</span>
+        <span class="n">min_ind_pc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">min_ind_ws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">min_ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">min_ind_pc</span><span class="p">,</span> <span class="n">min_ind_ws</span><span class="p">)]</span>
+        <span class="n">max_ws</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">)</span>
+        <span class="n">max_multiplier</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">max_ws</span> <span class="o">/</span> <span class="n">min_ws</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_multiplier</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ExponentialStretching">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.ExponentialStretching.html#reV.losses.power_curve.ExponentialStretching">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExponentialStretching</span><span class="p">(</span><span class="n">AbstractPowerCurveTransformation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility for applying an exponential stretch to the power curve.</span>
+
+<span class="sd">    The mathematical representation of this transformation is:</span>
+
+<span class="sd">    .. math:: P_{transformed}(u) = P_{original}(u^{1/t}),</span>
+
+<span class="sd">    where :math:`P_{transformed}` is the transformed power curve,</span>
+<span class="sd">    :math:`P_{original}` is the original power curve, :math:`u` is</span>
+<span class="sd">    the wind speed, and :math:`t` is the transformation variable</span>
+<span class="sd">    (wind speed exponent).</span>
+
+<span class="sd">    The losses in this type of transformation are distributed primarily</span>
+<span class="sd">    across regions 2 and 3 of the power curve. In particular, losses are</span>
+<span class="sd">    smaller for wind speeds closer to the cut-in speed, and larger for</span>
+<span class="sd">    speeds close to rated power:</span>
+
+<span class="sd">    .. image:: ../../../examples/rev_losses/exponential_stretching.png</span>
+<span class="sd">       :align: center</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    power_curve : :obj:`PowerCurve`</span>
+<span class="sd">        The &quot;original&quot; input power curve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ExponentialStretching.apply">
+<a class="viewcode-back" href="../../../_autosummary/reV.losses.power_curve.ExponentialStretching.html#reV.losses.power_curve.ExponentialStretching.apply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transformation_var</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply an exponential stretch to the original power curve.</span>
+
+<span class="sd">        This function stretches the original power curve along the</span>
+<span class="sd">        &quot;wind speed&quot; (x) axis. Any power above the cutoff speed (if one</span>
+<span class="sd">        was detected) is truncated after the transformation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transformation_var : float</span>
+<span class="sd">            The exponent of the wind speed scaling.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`PowerCurve`</span>
+<span class="sd">            An new power curve containing the generation values from the</span>
+<span class="sd">            shifted power curve.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transformed_generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">transformation_var</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">transformation_var</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;tuple: Bounds on the wind speed exponent.&quot;&quot;&quot;</span>
+        <span class="n">min_ind_pc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">min_ind_ws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">min_ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">min_ind_pc</span><span class="p">,</span> <span class="n">min_ind_ws</span><span class="p">)]</span>
+        <span class="n">max_ws</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">wind_speed</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">power_curve</span><span class="o">.</span><span class="n">cutoff_wind_speed</span><span class="p">)</span>
+        <span class="n">max_exponent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">max_ws</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">min_ws</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_exponent</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optm_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bounds for scipy optimization, sometimes more generous than the</span>
+<span class="sd">        actual fit parameter bounds which are enforced after the</span>
+<span class="sd">        optimization.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+
+
+
+<span class="n">TRANSFORMATIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;horizontal_translation&#39;</span><span class="p">:</span> <span class="n">HorizontalTranslation</span><span class="p">,</span>
+    <span class="s1">&#39;linear_stretching&#39;</span><span class="p">:</span> <span class="n">LinearStretching</span><span class="p">,</span>
+    <span class="s1">&#39;exponential_stretching&#39;</span><span class="p">:</span> <span class="n">ExponentialStretching</span>
+<span class="p">}</span>
+<span class="sd">&quot;&quot;&quot;Implemented power curve transformations.&quot;&quot;&quot;</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Alliance for Sustainable Energy, LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

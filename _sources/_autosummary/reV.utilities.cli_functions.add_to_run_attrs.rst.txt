@@ -1,0 +1,6 @@
+reV.utilities.cli\_functions.add\_to\_run\_attrs
+================================================
+
+.. currentmodule:: reV.utilities.cli_functions
+
+.. autofunction:: add_to_run_attrs

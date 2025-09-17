@@ -1,0 +1,40 @@
+reV.config.output\_request.SAMOutputRequest
+===========================================
+
+.. currentmodule:: reV.config.output_request
+
+.. autoclass:: SAMOutputRequest
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SAMOutputRequest.append
+      ~SAMOutputRequest.clear
+      ~SAMOutputRequest.copy
+      ~SAMOutputRequest.count
+      ~SAMOutputRequest.extend
+      ~SAMOutputRequest.index
+      ~SAMOutputRequest.insert
+      ~SAMOutputRequest.pop
+      ~SAMOutputRequest.remove
+      ~SAMOutputRequest.reverse
+      ~SAMOutputRequest.sort
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SAMOutputRequest.CORRECTIONS
+   
+   

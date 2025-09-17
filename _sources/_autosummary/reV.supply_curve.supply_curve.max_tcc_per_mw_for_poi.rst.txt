@@ -1,0 +1,6 @@
+reV.supply\_curve.supply\_curve.max\_tcc\_per\_mw\_for\_poi
+===========================================================
+
+.. currentmodule:: reV.supply_curve.supply_curve
+
+.. autofunction:: max_tcc_per_mw_for_poi

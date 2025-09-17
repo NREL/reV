@@ -1,0 +1,1348 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>reV.bespoke.place_turbines &mdash; reV 0.14.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=c64b94d8"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/installation_usage.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-1-install-from-pip-recommended-for-analysts">Option 1: Install from PIP (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#rev-ecosystem">reV Ecosystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#rev-command-line-tools">reV command line tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#recommended-citation">Recommended Citation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../misc/examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.marine_energy.html">reV Marine Energy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.marine_energy.html#plots-of-the-example-marine-energy-output">Plots of the Example Marine Energy Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.offshore_wind.html#plots-of-the-example-offshore-output">Plots of the Example Offshore Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.rev_losses.html">reV Losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.rev_losses.html#power-curve-losses-wind-only">Power Curve Losses (Wind only)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.rev_losses.html#power-curve-losses-for-a-single-site">Power Curve Losses for a single site</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.rev_losses.html#outage-losses-wind-and-solar">Outage Losses (Wind and Solar)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html">Running reV on an AWS Parallel Cluster</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#setting-up-an-aws-parallel-cluster">Setting up an AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#notes-on-running-rev-in-the-aws-parallel-cluster">Notes on Running reV in the AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#using-rev-directly-with-s3-files">Using reV Directly with S3 Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#setting-up-hsds-local-servers-on-your-compute-cluster">Setting up HSDS Local Servers on your Compute Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#setting-up-an-hsds-kubernetes-service">Setting up an HSDS Kubernetes Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#setting-up-an-hsds-lambda-service">Setting up an HSDS Lambda Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#simple-h5pyd-test">Simple H5PYD Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.aws_pcluster.html#compute-cost-estimates">Compute Cost Estimates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/reV.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.SAM.html">reV.SAM</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.SAM.html">reV.SAM.SAM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.SAM.RevPySam.html">reV.SAM.SAM.RevPySam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.SAM.Sam.html">reV.SAM.SAM.Sam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.SAM.SamResourceRetriever.html">reV.SAM.SAM.SamResourceRetriever</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.html">reV.SAM.defaults</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.AbstractDefaultFromConfigFile.html">reV.SAM.defaults.AbstractDefaultFromConfigFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultGeothermal.html">reV.SAM.defaults.DefaultGeothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultLCOE.html">reV.SAM.defaults.DefaultLCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultLinearFresnelDsgIph.html">reV.SAM.defaults.DefaultLinearFresnelDsgIph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultMhkWave.html">reV.SAM.defaults.DefaultMhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultPvSamv1.html">reV.SAM.defaults.DefaultPvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultPvWattsv5.html">reV.SAM.defaults.DefaultPvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultPvWattsv8.html">reV.SAM.defaults.DefaultPvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultSingleOwner.html">reV.SAM.defaults.DefaultSingleOwner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultSwh.html">reV.SAM.defaults.DefaultSwh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultTcsMoltenSalt.html">reV.SAM.defaults.DefaultTcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.defaults.DefaultWindPower.html">reV.SAM.defaults.DefaultWindPower</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.econ.html">reV.SAM.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.econ.Economic.html">reV.SAM.econ.Economic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.econ.LCOE.html">reV.SAM.econ.LCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.econ.SingleOwner.html">reV.SAM.econ.SingleOwner</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.html">reV.SAM.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.AbstractSamGeneration.html">reV.SAM.generation.AbstractSamGeneration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.AbstractSamGenerationFromWeatherFile.html">reV.SAM.generation.AbstractSamGenerationFromWeatherFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.AbstractSamPv.html">reV.SAM.generation.AbstractSamPv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.AbstractSamSolar.html">reV.SAM.generation.AbstractSamSolar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.AbstractSamWind.html">reV.SAM.generation.AbstractSamWind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.Geothermal.html">reV.SAM.generation.Geothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.LinearDirectSteam.html">reV.SAM.generation.LinearDirectSteam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.MhkWave.html">reV.SAM.generation.MhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.PvSamv1.html">reV.SAM.generation.PvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.PvWattsv5.html">reV.SAM.generation.PvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.PvWattsv7.html">reV.SAM.generation.PvWattsv7</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.PvWattsv8.html">reV.SAM.generation.PvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.SolarWaterHeat.html">reV.SAM.generation.SolarWaterHeat</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.TcsMoltenSalt.html">reV.SAM.generation.TcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.WindPower.html">reV.SAM.generation.WindPower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.generation.WindPowerPD.html">reV.SAM.generation.WindPowerPD</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.version_checker.html">reV.SAM.version_checker</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.version_checker.PySamVersionChecker.html">reV.SAM.version_checker.PySamVersionChecker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.SAM.windbos.html">reV.SAM.windbos</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.SAM.windbos.WindBos.html">reV.SAM.windbos.WindBos</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.bespoke.html">reV.bespoke</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.bespoke.bespoke.html">reV.bespoke.bespoke</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.bespoke.BespokeMultiPlantData.html">reV.bespoke.bespoke.BespokeMultiPlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.bespoke.BespokeSinglePlant.html">reV.bespoke.bespoke.BespokeSinglePlant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.bespoke.BespokeSinglePlantData.html">reV.bespoke.bespoke.BespokeSinglePlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.bespoke.BespokeWindPlants.html">reV.bespoke.bespoke.BespokeWindPlants</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.bespoke.cli_bespoke.html">reV.bespoke.cli_bespoke</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.bespoke.gradient_free.html">reV.bespoke.gradient_free</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.gradient_free.GeneticAlgorithm.html">reV.bespoke.gradient_free.GeneticAlgorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.bespoke.pack_turbs.html">reV.bespoke.pack_turbs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.pack_turbs.get_xy.html">reV.bespoke.pack_turbs.get_xy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.pack_turbs.PackTurbines.html">reV.bespoke.pack_turbs.PackTurbines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.bespoke.place_turbines.html">reV.bespoke.place_turbines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.place_turbines.none_until_optimized.html">reV.bespoke.place_turbines.none_until_optimized</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.bespoke.place_turbines.PlaceTurbines.html">reV.bespoke.place_turbines.PlaceTurbines</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.cli.html">reV.cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.config.html">reV.config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.base_analysis_config.html">reV.config.base_analysis_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.base_analysis_config.AnalysisConfig.html">reV.config.base_analysis_config.AnalysisConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.base_config.html">reV.config.base_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.base_config.BaseConfig.html">reV.config.base_config.BaseConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.cli_project_points.html">reV.config.cli_project_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.curtailment.html">reV.config.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.curtailment.Curtailment.html">reV.config.curtailment.Curtailment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.execution.html">reV.config.execution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.execution.BaseExecutionConfig.html">reV.config.execution.BaseExecutionConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.execution.HPCConfig.html">reV.config.execution.HPCConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.execution.SlurmConfig.html">reV.config.execution.SlurmConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.output_request.html">reV.config.output_request</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.output_request.OutputRequest.html">reV.config.output_request.OutputRequest</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.output_request.SAMOutputRequest.html">reV.config.output_request.SAMOutputRequest</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.project_points.html">reV.config.project_points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.project_points.PointsControl.html">reV.config.project_points.PointsControl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.project_points.ProjectPoints.html">reV.config.project_points.ProjectPoints</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.config.sam_config.html">reV.config.sam_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.sam_config.SAMConfig.html">reV.config.sam_config.SAMConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.config.sam_config.SAMInputsChecker.html">reV.config.sam_config.SAMInputsChecker</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.econ.html">reV.econ</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.econ.cli_econ.html">reV.econ.cli_econ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.econ.econ.html">reV.econ.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.econ.econ.Econ.html">reV.econ.econ.Econ</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.econ.economies_of_scale.html">reV.econ.economies_of_scale</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.econ.economies_of_scale.EconomiesOfScale.html">reV.econ.economies_of_scale.EconomiesOfScale</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.econ.utilities.html">reV.econ.utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.econ.utilities.lcoe_fcr.html">reV.econ.utilities.lcoe_fcr</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.generation.html">reV.generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.generation.base.html">reV.generation.base</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.generation.base.LCOE_REQUIRED_OUTPUTS.html">reV.generation.base.LCOE_REQUIRED_OUTPUTS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.generation.base.BaseGen.html">reV.generation.base.BaseGen</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.generation.cli_gen.html">reV.generation.cli_gen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.generation.generation.html">reV.generation.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.generation.generation.Gen.html">reV.generation.generation.Gen</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.handlers.html">reV.handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.cli_collect.html">reV.handlers.cli_collect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.cli_multi_year.html">reV.handlers.cli_multi_year</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.exclusions.html">reV.handlers.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.exclusions.ExclusionLayers.html">reV.handlers.exclusions.ExclusionLayers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.multi_year.html">reV.handlers.multi_year</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.multi_year.my_collect_groups.html">reV.handlers.multi_year.my_collect_groups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.multi_year.MultiYear.html">reV.handlers.multi_year.MultiYear</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.multi_year.MultiYearGroup.html">reV.handlers.multi_year.MultiYearGroup</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.outputs.html">reV.handlers.outputs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.outputs.Outputs.html">reV.handlers.outputs.Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.handlers.transmission.html">reV.handlers.transmission</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.transmission.POIFeatures.html">reV.handlers.transmission.POIFeatures</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.transmission.TransmissionCosts.html">reV.handlers.transmission.TransmissionCosts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.handlers.transmission.TransmissionFeatures.html">reV.handlers.transmission.TransmissionFeatures</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.hybrids.html">reV.hybrids</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.hybrids.cli_hybrids.html">reV.hybrids.cli_hybrids</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrid_methods.html">reV.hybrids.hybrid_methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrid_methods.aggregate_capacity.html">reV.hybrids.hybrid_methods.aggregate_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrid_methods.aggregate_capacity_factor.html">reV.hybrids.hybrid_methods.aggregate_capacity_factor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrid_methods.aggregate_solar_capacity.html">reV.hybrids.hybrid_methods.aggregate_solar_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrid_methods.aggregate_wind_capacity.html">reV.hybrids.hybrid_methods.aggregate_wind_capacity</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.html">reV.hybrids.hybrids</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.ColNameFormatter.html">reV.hybrids.hybrids.ColNameFormatter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.Hybridization.html">reV.hybrids.hybrids.Hybridization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.HybridsData.html">reV.hybrids.hybrids.HybridsData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.MetaHybridizer.html">reV.hybrids.hybrids.MetaHybridizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.hybrids.hybrids.RatioColumns.html">reV.hybrids.hybrids.RatioColumns</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.losses.html">reV.losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.html">reV.losses.power_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.TRANSFORMATIONS.html">reV.losses.power_curve.TRANSFORMATIONS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.adjust_power_curve.html">reV.losses.power_curve.adjust_power_curve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.AbstractPowerCurveTransformation.html">reV.losses.power_curve.AbstractPowerCurveTransformation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.ExponentialStretching.html">reV.losses.power_curve.ExponentialStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.HorizontalTranslation.html">reV.losses.power_curve.HorizontalTranslation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.LinearStretching.html">reV.losses.power_curve.LinearStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.PowerCurve.html">reV.losses.power_curve.PowerCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLosses.html">reV.losses.power_curve.PowerCurveLosses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLossesInput.html">reV.losses.power_curve.PowerCurveLossesInput</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.PowerCurveLossesMixin.html">reV.losses.power_curve.PowerCurveLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.power_curve.PowerCurveWindResource.html">reV.losses.power_curve.PowerCurveWindResource</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.losses.scheduled.html">reV.losses.scheduled</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.scheduled.Outage.html">reV.losses.scheduled.Outage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.scheduled.OutageScheduler.html">reV.losses.scheduled.OutageScheduler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.scheduled.ScheduledLossesMixin.html">reV.losses.scheduled.ScheduledLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.scheduled.SingleOutageScheduler.html">reV.losses.scheduled.SingleOutageScheduler</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.html">reV.losses.utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.convert_to_full_month_names.html">reV.losses.utils.convert_to_full_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.filter_unknown_month_names.html">reV.losses.utils.filter_unknown_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.format_month_name.html">reV.losses.utils.format_month_name</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.full_month_name_from_abbr.html">reV.losses.utils.full_month_name_from_abbr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.hourly_indices_for_months.html">reV.losses.utils.hourly_indices_for_months</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.month_index.html">reV.losses.utils.month_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.losses.utils.month_indices.html">reV.losses.utils.month_indices</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.nrwal.html">reV.nrwal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.nrwal.cli_nrwal.html">reV.nrwal.cli_nrwal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.nrwal.nrwal.html">reV.nrwal.nrwal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.nrwal.nrwal.RevNrwal.html">reV.nrwal.nrwal.RevNrwal</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.html">reV.qa_qc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.cli_qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc.cli_qa_qc</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.qa_qc.html">reV.qa_qc.qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.qa_qc.QaQc.html">reV.qa_qc.qa_qc.QaQc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.qa_qc.QaQcModule.html">reV.qa_qc.qa_qc.QaQcModule</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.html">reV.qa_qc.summary</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.ExclusionsMask.html">reV.qa_qc.summary.ExclusionsMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.PlotBase.html">reV.qa_qc.summary.PlotBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.SummarizeH5.html">reV.qa_qc.summary.SummarizeH5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.SummarizeSupplyCurve.html">reV.qa_qc.summary.SummarizeSupplyCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.SummaryPlots.html">reV.qa_qc.summary.SummaryPlots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.qa_qc.summary.SupplyCurvePlot.html">reV.qa_qc.summary.SupplyCurvePlot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.html">reV.rep_profiles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.cli_rep_profiles.html">reV.rep_profiles.cli_rep_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.rep_profiles.html">reV.rep_profiles.rep_profiles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.rep_profiles.RegionRepProfile.html">reV.rep_profiles.rep_profiles.RegionRepProfile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.rep_profiles.RepProfiles.html">reV.rep_profiles.rep_profiles.RepProfiles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.rep_profiles.RepProfilesBase.html">reV.rep_profiles.rep_profiles.RepProfilesBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.rep_profiles.rep_profiles.RepresentativeMethods.html">reV.rep_profiles.rep_profiles.RepresentativeMethods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.html">reV.supply_curve</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.aggregation.html">reV.supply_curve.aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.aggregation.AbstractAggFileHandler.html">reV.supply_curve.aggregation.AbstractAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.aggregation.AggFileHandler.html">reV.supply_curve.aggregation.AggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.aggregation.Aggregation.html">reV.supply_curve.aggregation.Aggregation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.aggregation.BaseAggregation.html">reV.supply_curve.aggregation.BaseAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.cli_sc_aggregation.html">reV.supply_curve.cli_sc_aggregation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.cli_supply_curve.html">reV.supply_curve.cli_supply_curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.cli_tech_mapping.html">reV.supply_curve.cli_tech_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.competitive_wind_farms.html">reV.supply_curve.competitive_wind_farms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.html">reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.exclusions.html">reV.supply_curve.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.exclusions.ExclusionMask.html">reV.supply_curve.exclusions.ExclusionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.exclusions.ExclusionMaskFromDict.html">reV.supply_curve.exclusions.ExclusionMaskFromDict</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.exclusions.FrictionMask.html">reV.supply_curve.exclusions.FrictionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.exclusions.LayerMask.html">reV.supply_curve.exclusions.LayerMask</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.extent.html">reV.supply_curve.extent</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.extent.SupplyCurveExtent.html">reV.supply_curve.extent.SupplyCurveExtent</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.points.html">reV.supply_curve.points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.points.AbstractSupplyCurvePoint.html">reV.supply_curve.points.AbstractSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.points.AggregationSupplyCurvePoint.html">reV.supply_curve.points.AggregationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.points.GenerationSupplyCurvePoint.html">reV.supply_curve.points.GenerationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.points.SupplyCurvePoint.html">reV.supply_curve.points.SupplyCurvePoint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.sc_aggregation.html">reV.supply_curve.sc_aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.html">reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.sc_aggregation.SupplyCurveAggregation.html">reV.supply_curve.sc_aggregation.SupplyCurveAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.supply_curve.html">reV.supply_curve.supply_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.supply_curve.DEFAULT_COLUMNS.html">reV.supply_curve.supply_curve.DEFAULT_COLUMNS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi.html">reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.supply_curve.SupplyCurve.html">reV.supply_curve.supply_curve.SupplyCurve</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.tech_mapping.html">reV.supply_curve.tech_mapping</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.supply_curve.tech_mapping.TechMapping.html">reV.supply_curve.tech_mapping.TechMapping</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.utilities.html">reV.utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.log_versions.html">reV.utilities.log_versions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.log_versions.html#reV.utilities.log_versions"><code class="docutils literal notranslate"><span class="pre">log_versions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.DocEnum.html">reV.utilities.DocEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.DocEnum.html#reV.utilities.DocEnum"><code class="docutils literal notranslate"><span class="pre">DocEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.FieldEnum.html">reV.utilities.FieldEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.FieldEnum.html#reV.utilities.FieldEnum"><code class="docutils literal notranslate"><span class="pre">FieldEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.ModuleName.html">reV.utilities.ModuleName</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.ModuleName.html#reV.utilities.ModuleName"><code class="docutils literal notranslate"><span class="pre">ModuleName</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.ResourceMetaField.html">reV.utilities.ResourceMetaField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.ResourceMetaField.html#reV.utilities.ResourceMetaField"><code class="docutils literal notranslate"><span class="pre">ResourceMetaField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.SiteDataField.html">reV.utilities.SiteDataField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.SiteDataField.html#reV.utilities.SiteDataField"><code class="docutils literal notranslate"><span class="pre">SiteDataField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.SupplyCurveField.html">reV.utilities.SupplyCurveField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.SupplyCurveField.html#reV.utilities.SupplyCurveField"><code class="docutils literal notranslate"><span class="pre">SupplyCurveField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.html">reV.utilities.cli_functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.add_to_run_attrs.html">reV.utilities.cli_functions.add_to_run_attrs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.compile_descriptions.html">reV.utilities.cli_functions.compile_descriptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.format_analysis_years.html">reV.utilities.cli_functions.format_analysis_years</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.init_cli_logging.html">reV.utilities.cli_functions.init_cli_logging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.cli_functions.parse_from_pipeline.html">reV.utilities.cli_functions.parse_from_pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.curtailment.html">reV.utilities.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.curtailment.curtail.html">reV.utilities.curtailment.curtail</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.html">reV.utilities.exceptions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.CollectionRuntimeError.html">reV.utilities.exceptions.CollectionRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.CollectionValueError.html">reV.utilities.exceptions.CollectionValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.CollectionWarning.html">reV.utilities.exceptions.CollectionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ConfigError.html">reV.utilities.exceptions.ConfigError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ConfigWarning.html">reV.utilities.exceptions.ConfigWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.DataShapeError.html">reV.utilities.exceptions.DataShapeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.EmptySupplyCurvePointError.html">reV.utilities.exceptions.EmptySupplyCurvePointError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ExclusionLayerError.html">reV.utilities.exceptions.ExclusionLayerError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ExecutionError.html">reV.utilities.exceptions.ExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ExtrapolationWarning.html">reV.utilities.exceptions.ExtrapolationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.FileInputError.html">reV.utilities.exceptions.FileInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.FileInputWarning.html">reV.utilities.exceptions.FileInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.HandlerKeyError.html">reV.utilities.exceptions.HandlerKeyError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.HandlerRuntimeError.html">reV.utilities.exceptions.HandlerRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.HandlerValueError.html">reV.utilities.exceptions.HandlerValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.HandlerWarning.html">reV.utilities.exceptions.HandlerWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.InputError.html">reV.utilities.exceptions.InputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.InputWarning.html">reV.utilities.exceptions.InputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.JSONError.html">reV.utilities.exceptions.JSONError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.MultiFileExclusionError.html">reV.utilities.exceptions.MultiFileExclusionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.NearestNeighborError.html">reV.utilities.exceptions.NearestNeighborError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.OffshoreWindInputError.html">reV.utilities.exceptions.OffshoreWindInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.OffshoreWindInputWarning.html">reV.utilities.exceptions.OffshoreWindInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.OutputWarning.html">reV.utilities.exceptions.OutputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ParallelExecutionWarning.html">reV.utilities.exceptions.ParallelExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.PipelineError.html">reV.utilities.exceptions.PipelineError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ProjectPointsValueError.html">reV.utilities.exceptions.ProjectPointsValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.PySAMVersionError.html">reV.utilities.exceptions.PySAMVersionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.PySAMVersionWarning.html">reV.utilities.exceptions.PySAMVersionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.ResourceError.html">reV.utilities.exceptions.ResourceError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SAMExecutionError.html">reV.utilities.exceptions.SAMExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SAMExecutionWarning.html">reV.utilities.exceptions.SAMExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SAMInputError.html">reV.utilities.exceptions.SAMInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SAMInputWarning.html">reV.utilities.exceptions.SAMInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SlurmWarning.html">reV.utilities.exceptions.SlurmWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SupplyCurveError.html">reV.utilities.exceptions.SupplyCurveError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.SupplyCurveInputError.html">reV.utilities.exceptions.SupplyCurveInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.WhileLoopPackingError.html">reV.utilities.exceptions.WhileLoopPackingError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.reVDeprecationWarning.html">reV.utilities.exceptions.reVDeprecationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.reVError.html">reV.utilities.exceptions.reVError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.reVLossesValueError.html">reV.utilities.exceptions.reVLossesValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.exceptions.reVLossesWarning.html">reV.utilities.exceptions.reVLossesWarning</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.pytest_utils.html">reV.utilities.pytest_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.pytest_utils.make_fake_h5_chunks.html">reV.utilities.pytest_utils.make_fake_h5_chunks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.pytest_utils.pd_date_range.html">reV.utilities.pytest_utils.pd_date_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.pytest_utils.write_chunk.html">reV.utilities.pytest_utils.write_chunk</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/reV.utilities.slots.html">reV.utilities.slots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/reV.utilities.slots.SlottedDict.html">reV.utilities.slots.SlottedDict</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_autosummary/reV.version.html">reV.version</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_cli/cli.html">CLI reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV.html">reV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20template-configs.html">reV template-configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20batch.html">reV batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20pipeline.html">reV pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20project-points.html">reV project-points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../_cli/reV%20project-points.html#rev-project-points-from-lat-lons">from-lat-lons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_cli/reV%20project-points.html#rev-project-points-from-regions">from-regions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20bespoke.html">reV bespoke</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20generation.html">reV generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20econ.html">reV econ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20collect.html">reV collect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20multi-year.html">reV multi-year</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20supply-curve-aggregation.html">reV supply-curve-aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20supply-curve.html">reV supply-curve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20poi-sort.html">reV poi-sort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20rep-profiles.html">reV rep-profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20hybrids.html">reV hybrids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20nrwal.html">reV nrwal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20qa-qc.html">reV qa-qc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20script.html">reV script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20status.html">reV status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../_cli/reV%20reset-status.html">reV reset-status</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">reV.bespoke.place_turbines</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for reV.bespoke.place_turbines</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># pylint: disable=inconsistent-return-statements</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">place turbines for bespoke wind plants</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiPoint</span><span class="p">,</span> <span class="n">MultiPolygon</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Polygon</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">reV.bespoke.gradient_free</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneticAlgorithm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">reV.bespoke.pack_turbs</span><span class="w"> </span><span class="kn">import</span> <span class="n">PackTurbines</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">reV.utilities.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">WhileLoopPackingError</span>
+
+
+<div class="viewcode-block" id="none_until_optimized">
+<a class="viewcode-back" href="../../../_autosummary/reV.bespoke.place_turbines.none_until_optimized.html#reV.bespoke.place_turbines.none_until_optimized">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">none_until_optimized</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator that returns None until `PlaceTurbines` is optimized.</span>
+
+<span class="sd">    Meant for exclusive use in `PlaceTurbines` and its subclasses.</span>
+<span class="sd">    `PlaceTurbines` is considered optimized when its</span>
+<span class="sd">    `optimized_design_variables` attribute is not `None`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    func : callable</span>
+<span class="sd">        A callable function that should return `None` until</span>
+<span class="sd">        `PlaceTurbines` is optimized.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    callable</span>
+<span class="sd">        New function that returns `None` until `PlaceTurbines` is</span>
+<span class="sd">        optimized.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_func</span><span class="p">(</span><span class="n">pt</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrapper to return `None` if `PlaceTurbines` is not optimized&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pt</span><span class="o">.</span><span class="n">optimized_design_variables</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_func</span></div>
+
+
+
+<div class="viewcode-block" id="PlaceTurbines">
+<a class="viewcode-back" href="../../../_autosummary/reV.bespoke.place_turbines.PlaceTurbines.html#reV.bespoke.place_turbines.PlaceTurbines">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PlaceTurbines</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Framework for optimizing turbine locations for site specific</span>
+<span class="sd">    exclusions, wind resources, and objective</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wind_plant</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">,</span>
+                 <span class="n">capital_cost_function</span><span class="p">,</span>
+                 <span class="n">fixed_operating_cost_function</span><span class="p">,</span>
+                 <span class="n">variable_operating_cost_function</span><span class="p">,</span>
+                 <span class="n">balance_of_system_cost_function</span><span class="p">,</span>
+                 <span class="n">include_mask</span><span class="p">,</span> <span class="n">pixel_side_length</span><span class="p">,</span> <span class="n">min_spacing</span><span class="p">,</span>
+                 <span class="n">convex_hull_buffer</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wind_plant : WindPowerPD</span>
+<span class="sd">            wind plant object to analyze wind plant performance. This</span>
+<span class="sd">            object should have everything in the plant defined, such</span>
+<span class="sd">            that only the turbine coordinates and plant capacity need to</span>
+<span class="sd">            be defined during the optimization.</span>
+<span class="sd">        objective_function : str</span>
+<span class="sd">            The objective function of the optimization as a string,</span>
+<span class="sd">            should return the objective to be minimized during layout</span>
+<span class="sd">            optimization. Variables available are:</span>
+
+<span class="sd">                - ``n_turbines``: the number of turbines</span>
+<span class="sd">                - ``system_capacity``: wind plant capacity (kW)</span>
+<span class="sd">                - ``aep``: annual energy production (kWh)</span>
+<span class="sd">                - ``avg_sl_dist_to_center_m``: Average straight-line</span>
+<span class="sd">                  distance to the supply curve point center from all</span>
+<span class="sd">                  turbine locations (in m). Useful for computing plant</span>
+<span class="sd">                  BOS costs.</span>
+<span class="sd">                - ``avg_sl_dist_to_medoid_m``: Average straight-line</span>
+<span class="sd">                  distance to the medoid of all turbine locations</span>
+<span class="sd">                  (in m). Useful for computing plant BOS costs.</span>
+<span class="sd">                - ``nn_conn_dist_m``: Total BOS connection distance</span>
+<span class="sd">                  using nearest-neighbor connections (in m). This</span>
+<span class="sd">                  variable is only available for the</span>
+<span class="sd">                  ``balance_of_system_cost_function`` equation.</span>
+<span class="sd">                - ``fixed_charge_rate``: user input fixed_charge_rate if</span>
+<span class="sd">                  included as part of the sam system config.</span>
+<span class="sd">                - ``capital_cost``: plant capital cost ($) as evaluated</span>
+<span class="sd">                  by `capital_cost_function`</span>
+<span class="sd">                - ``fixed_operating_cost``: plant fixed annual operating</span>
+<span class="sd">                  cost ($/year) as evaluated by</span>
+<span class="sd">                  `fixed_operating_cost_function`</span>
+<span class="sd">                - ``variable_operating_cost``: plant variable annual</span>
+<span class="sd">                  operating cost ($/kWh) as evaluated by</span>
+<span class="sd">                  `variable_operating_cost_function`</span>
+<span class="sd">                - ``balance_of_system_cost``: plant balance of system</span>
+<span class="sd">                  cost ($) as evaluated by</span>
+<span class="sd">                  `balance_of_system_cost_function`</span>
+<span class="sd">                - ``self.wind_plant``: the SAM wind plant object,</span>
+<span class="sd">                  through which all SAM variables can be accessed.</span>
+
+<span class="sd">                  .. IMPORTANT::</span>
+<span class="sd">                     When using the `self.wind_plant` variable,</span>
+<span class="sd">                     DO NOT include quotes around variable names (keys).</span>
+
+<span class="sd">                        - ❌ Wrong: ``self.wind_plant[&quot;annual_energy&quot;]``</span>
+<span class="sd">                        - ✅ Correct: ``self.wind_plant[annual_energy]``</span>
+
+<span class="sd">                  .. IMPORTANT::</span>
+<span class="sd">                     It&#39;s possible for SAM wind plant variables to be</span>
+<span class="sd">                     ``None``, especially if something went wrong while</span>
+<span class="sd">                     optimizing the wind plant layout. In this case,</span>
+<span class="sd">                     your objective function may fail to evaluate and</span>
+<span class="sd">                     terminate the program entirely. To avoid this, add</span>
+<span class="sd">                     a default value for the variable in your objective</span>
+<span class="sd">                     function, like so:</span>
+<span class="sd">                     ``(self.wind_plant[annual_energy] or 0)``</span>
+
+<span class="sd">        capital_cost_function : str</span>
+<span class="sd">            The plant capital cost function as a string, must return the</span>
+<span class="sd">            total capital cost in $. Has access to the same variables as</span>
+<span class="sd">            the objective_function.</span>
+<span class="sd">        fixed_operating_cost_function : str</span>
+<span class="sd">            The plant annual fixed operating cost function as a string,</span>
+<span class="sd">            must return the fixed operating cost in $/year. Has access</span>
+<span class="sd">            to the same variables as the objective_function.</span>
+<span class="sd">        variable_operating_cost_function : str</span>
+<span class="sd">            The plant annual variable operating cost function as a</span>
+<span class="sd">            string, must return the variable operating cost in $/kWh.</span>
+<span class="sd">            Has access to the same variables as the objective_function.</span>
+<span class="sd">            You can set this to &quot;0&quot; to effectively ignore variable</span>
+<span class="sd">            operating costs.</span>
+<span class="sd">        balance_of_system_cost_function : str</span>
+<span class="sd">            The plant balance-of-system cost function as a string, must</span>
+<span class="sd">            return the variable operating cost in $. Has access to the</span>
+<span class="sd">            same variables as the objective_function. You can set this</span>
+<span class="sd">            to &quot;0&quot; to effectively ignore balance-of-system costs.</span>
+<span class="sd">        include_mask : np.ndarray</span>
+<span class="sd">            Supply curve point 2D inclusion mask where included pixels</span>
+<span class="sd">            are set to 1 and excluded pixels are set to 0.</span>
+<span class="sd">        pixel_side_length : int</span>
+<span class="sd">            Side length (m) of a single pixel of the `include_mask`.</span>
+<span class="sd">        min_spacing : float</span>
+<span class="sd">            The minimum spacing between turbines (in meters).</span>
+<span class="sd">        convex_hull_buffer : float, default=0</span>
+<span class="sd">            Buffer (in m) to apply to turbine location convex hull</span>
+<span class="sd">            before computing the convex hull area and capacity density.</span>
+<span class="sd">            By default, ``0``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span> <span class="o">=</span> <span class="n">wind_plant</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">capital_cost_function</span> <span class="o">=</span> <span class="n">_fix_wp_keys</span><span class="p">(</span><span class="n">capital_cost_function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixed_operating_cost_function</span> <span class="o">=</span> <span class="n">_fix_wp_keys</span><span class="p">(</span>
+            <span class="n">fixed_operating_cost_function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variable_operating_cost_function</span> <span class="o">=</span> <span class="n">_fix_wp_keys</span><span class="p">(</span>
+            <span class="n">variable_operating_cost_function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">balance_of_system_cost_function</span> <span class="o">=</span> <span class="n">_fix_wp_keys</span><span class="p">(</span>
+            <span class="n">balance_of_system_cost_function</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span> <span class="o">=</span> <span class="n">_fix_wp_keys</span><span class="p">(</span><span class="n">objective_function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">include_mask</span> <span class="o">=</span> <span class="n">include_mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_side_length</span> <span class="o">=</span> <span class="n">pixel_side_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_spacing</span> <span class="o">=</span> <span class="n">min_spacing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convex_hull_buffer</span> <span class="o">=</span> <span class="n">convex_hull_buffer</span>
+
+        <span class="c1"># internal variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nrows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">include_mask</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_locations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_locations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">turbine_capacity</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span>
+                   <span class="n">sam_sys_inputs</span><span class="p">[</span><span class="s2">&quot;wind_turbine_powercurve_powerout&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">full_polygons</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packing_polygons</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimized_design_variables</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">safe_polygons</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimized_nn_conn_dist_m</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_preflight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_preflight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capital_cost_function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_preflight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_operating_cost_function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_preflight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_operating_cost_function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_preflight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">balance_of_system_cost_function</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_preflight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eqn</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run preflight checks on the equation string.&quot;&quot;&quot;</span>
+        <span class="n">_illegal_substr</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;import &#39;</span><span class="p">,</span> <span class="s1">&#39;os.&#39;</span><span class="p">,</span> <span class="s1">&#39;sys.&#39;</span><span class="p">,</span> <span class="s1">&#39;.__&#39;</span><span class="p">,</span> <span class="s1">&#39;__.&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">substr</span> <span class="ow">in</span> <span class="n">_illegal_substr</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">substr</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">eqn</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Will not evaluate string which contains &quot;</span><span class="si">{}</span><span class="s1">&quot;: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">substr</span><span class="p">,</span> <span class="n">eqn</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PlaceTurbines.define_exclusions">
+<a class="viewcode-back" href="../../../_autosummary/reV.bespoke.place_turbines.PlaceTurbines.html#reV.bespoke.place_turbines.PlaceTurbines.define_exclusions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">define_exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;From the exclusions data, create a shapely MultiPolygon as</span>
+<span class="sd">        self.safe_polygons that defines where turbines can be placed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">include_mask</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">safe_polygons</span> <span class="o">=</span> <span class="n">MultiPolygon</span><span class="p">()</span>
+        <span class="n">side_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_side_length</span>
+        <span class="n">side_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ny</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_side_length</span>
+        <span class="n">floored</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">include_mask</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">floored</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">added_poly</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(((</span><span class="n">side_x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">side_y</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span>
+                                          <span class="p">(</span><span class="n">side_x</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">side_y</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span>
+                                          <span class="p">(</span><span class="n">side_x</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">side_y</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]),</span>
+                                          <span class="p">(</span><span class="n">side_x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">side_y</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">safe_polygons</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">safe_polygons</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">added_poly</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">safe_polygons</span><span class="o">.</span><span class="n">area</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full_polygons</span> <span class="o">=</span> <span class="n">MultiPolygon</span><span class="p">([])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">packing_polygons</span> <span class="o">=</span> <span class="n">MultiPolygon</span><span class="p">([])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full_polygons</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">safe_polygons</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1"># add extra setback to cell boundary</span>
+            <span class="n">minx</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">miny</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">maxx</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_side_length</span>
+            <span class="n">maxy</span> <span class="o">=</span> <span class="n">ny</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_side_length</span>
+            <span class="n">minx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_spacing</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">miny</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_spacing</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">maxx</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_spacing</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">maxy</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_spacing</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+            <span class="n">boundary_poly</span> <span class="o">=</span> \
+                <span class="n">Polygon</span><span class="p">(((</span><span class="n">minx</span><span class="p">,</span> <span class="n">miny</span><span class="p">),</span> <span class="p">(</span><span class="n">minx</span><span class="p">,</span> <span class="n">maxy</span><span class="p">),</span> <span class="p">(</span><span class="n">maxx</span><span class="p">,</span> <span class="n">maxy</span><span class="p">),</span>
+                         <span class="p">(</span><span class="n">maxx</span><span class="p">,</span> <span class="n">miny</span><span class="p">)))</span>
+            <span class="n">packing_polygons</span> <span class="o">=</span> <span class="n">boundary_poly</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">full_polygons</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">packing_polygons</span><span class="p">,</span> <span class="n">MultiPolygon</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">packing_polygons</span> <span class="o">=</span> <span class="n">packing_polygons</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">packing_polygons</span><span class="p">,</span> <span class="n">Polygon</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">packing_polygons</span> <span class="o">=</span> <span class="n">MultiPolygon</span><span class="p">([</span><span class="n">packing_polygons</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">packing_polygons</span> <span class="o">=</span> <span class="n">MultiPolygon</span><span class="p">([])</span></div>
+
+
+<div class="viewcode-block" id="PlaceTurbines.initialize_packing">
+<a class="viewcode-back" href="../../../_autosummary/reV.bespoke.place_turbines.PlaceTurbines.html#reV.bespoke.place_turbines.PlaceTurbines.initialize_packing">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_packing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the turbine packing algorithm (maximizing plant capacity) to</span>
+<span class="sd">        define potential turbine locations that will be used as design</span>
+<span class="sd">        variables in the gentic algorithm.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">packing</span> <span class="o">=</span> <span class="n">PackTurbines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_spacing</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">packing_polygons</span><span class="p">)</span>
+        <span class="n">nturbs</span> <span class="o">=</span> <span class="mf">1E6</span>
+        <span class="n">mult</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">iters</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">nturbs</span> <span class="o">&gt;</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="n">iters</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">iters</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Too many attempts within initialize packing&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">WhileLoopPackingError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">packing</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="n">packing</span><span class="o">.</span><span class="n">min_spacing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_spacing</span> <span class="o">*</span> <span class="n">mult</span>
+            <span class="n">packing</span><span class="o">.</span><span class="n">pack_turbines_poly</span><span class="p">()</span>
+            <span class="n">nturbs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">packing</span><span class="o">.</span><span class="n">turbine_x</span><span class="p">)</span>
+            <span class="n">mult</span> <span class="o">*=</span> <span class="mf">1.1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_locations</span> <span class="o">=</span> <span class="n">packing</span><span class="o">.</span><span class="n">turbine_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_locations</span> <span class="o">=</span> <span class="n">packing</span><span class="o">.</span><span class="n">turbine_y</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sc_center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Supply curve point center. &quot;&quot;&quot;</span>
+        <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">include_mask</span><span class="p">)</span>
+        <span class="n">cx</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_side_length</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">cy</span> <span class="o">=</span> <span class="n">ny</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_side_length</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_avg_sl_dist_to_cent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_locs</span><span class="p">,</span> <span class="n">y_locs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Average straight-line distance to center from turb locations. &quot;&quot;&quot;</span>
+        <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc_center</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">x_locs</span> <span class="o">-</span> <span class="n">cx</span><span class="p">,</span> <span class="n">y_locs</span> <span class="o">-</span> <span class="n">cy</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_avg_sl_dist_to_med</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_locs</span><span class="p">,</span> <span class="n">y_locs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Average straight-line distance to turbine medoid. &quot;&quot;&quot;</span>
+        <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">_turb_medoid</span><span class="p">(</span><span class="n">x_locs</span><span class="p">,</span> <span class="n">y_locs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">x_locs</span> <span class="o">-</span> <span class="n">cx</span><span class="p">,</span> <span class="n">y_locs</span> <span class="o">-</span> <span class="n">cy</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    <span class="c1"># pylint: disable=W0641,W0123</span>
+<div class="viewcode-block" id="PlaceTurbines.optimization_objective">
+<a class="viewcode-back" href="../../../_autosummary/reV.bespoke.place_turbines.PlaceTurbines.html#reV.bespoke.place_turbines.PlaceTurbines.optimization_objective">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimization_objective</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The optimization objective used in the bespoke optimization</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="nb">bool</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">n_turbines</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x_locs</span><span class="p">,</span> <span class="n">y_locs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_locations</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_locations</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="p">[</span><span class="s2">&quot;wind_farm_xCoordinates&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_locs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="p">[</span><span class="s2">&quot;wind_farm_yCoordinates&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_locs</span>
+
+            <span class="n">system_capacity</span> <span class="o">=</span> <span class="n">n_turbines</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_capacity</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="p">[</span><span class="s2">&quot;system_capacity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">system_capacity</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">assign_inputs</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+            <span class="n">aep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="p">[</span><span class="s1">&#39;annual_energy&#39;</span><span class="p">]</span>
+            <span class="n">avg_sl_dist_to_center_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_avg_sl_dist_to_cent</span><span class="p">(</span><span class="n">x_locs</span><span class="p">,</span> <span class="n">y_locs</span><span class="p">)</span>
+            <span class="n">avg_sl_dist_to_medoid_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_avg_sl_dist_to_med</span><span class="p">(</span><span class="n">x_locs</span><span class="p">,</span> <span class="n">y_locs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;nn_conn_dist_m&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">balance_of_system_cost_function</span><span class="p">:</span>
+                <span class="n">nn_conn_dist_m</span> <span class="o">=</span> <span class="n">_compute_nn_conn_dist</span><span class="p">(</span><span class="n">x_locs</span><span class="p">,</span> <span class="n">y_locs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_turbines</span> <span class="o">=</span> <span class="n">system_capacity</span> <span class="o">=</span> <span class="n">aep</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">avg_sl_dist_to_center_m</span> <span class="o">=</span> <span class="n">avg_sl_dist_to_medoid_m</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">nn_conn_dist_m</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">fixed_charge_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_charge_rate</span>
+        <span class="n">capital_cost</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capital_cost_function</span><span class="p">,</span>
+                            <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span>
+        <span class="n">fixed_operating_cost</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_operating_cost_function</span><span class="p">,</span>
+                                    <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span>
+        <span class="n">variable_operating_cost</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_operating_cost_function</span><span class="p">,</span>
+                                       <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span>
+        <span class="n">balance_of_system_cost</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">balance_of_system_cost_function</span><span class="p">,</span>
+                                      <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span>
+        <span class="n">capital_cost</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;capital_cost_multiplier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">fixed_operating_cost</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;fixed_operating_cost_multiplier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">variable_operating_cost</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;variable_operating_cost_multiplier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">balance_of_system_cost</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;balance_of_system_cost_multiplier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">objective</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">objective</span></div>
+
+
+<div class="viewcode-block" id="PlaceTurbines.optimize">
+<a class="viewcode-back" href="../../../_autosummary/reV.bespoke.place_turbines.PlaceTurbines.html#reV.bespoke.place_turbines.PlaceTurbines.optimize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Optimize wind farm layout.</span>
+
+<span class="sd">        Use a genetic algorithm to optimize wind plant layout for the</span>
+<span class="sd">        user-defined objective function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Keyword arguments to pass to GA initialization.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` : GA Algorithm.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nlocs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_locations</span><span class="p">)</span>
+        <span class="n">bits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nlocs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nlocs</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">variable_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nlocs</span><span class="p">):</span>
+            <span class="n">variable_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variable_type</span><span class="p">,</span> <span class="s2">&quot;int&quot;</span><span class="p">)</span>
+
+        <span class="n">ga_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;max_generation&#39;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+            <span class="s1">&#39;population_size&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
+            <span class="s1">&#39;crossover_rate&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+            <span class="s1">&#39;mutation_rate&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+            <span class="s1">&#39;tol&#39;</span><span class="p">:</span> <span class="mf">1E-6</span><span class="p">,</span>
+            <span class="s1">&#39;convergence_iters&#39;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+            <span class="s1">&#39;max_time&#39;</span><span class="p">:</span> <span class="mi">3600</span>
+        <span class="p">}</span>
+
+        <span class="n">ga_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">ga</span> <span class="o">=</span> <span class="n">GeneticAlgorithm</span><span class="p">(</span><span class="n">bits</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">variable_type</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">optimization_objective</span><span class="p">,</span>
+                              <span class="o">**</span><span class="n">ga_kwargs</span><span class="p">)</span>
+
+        <span class="n">ga</span><span class="o">.</span><span class="n">optimize_ga</span><span class="p">()</span>
+
+        <span class="n">optimized_design_variables</span> <span class="o">=</span> <span class="n">ga</span><span class="o">.</span><span class="n">optimized_design_variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimized_design_variables</span> <span class="o">=</span> \
+            <span class="p">[</span><span class="nb">bool</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">optimized_design_variables</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="p">[</span><span class="s2">&quot;wind_farm_xCoordinates&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="p">[</span><span class="s2">&quot;wind_farm_yCoordinates&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="p">[</span><span class="s2">&quot;system_capacity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span></div>
+
+
+<div class="viewcode-block" id="PlaceTurbines.place_turbines">
+<a class="viewcode-back" href="../../../_autosummary/reV.bespoke.place_turbines.PlaceTurbines.html#reV.bespoke.place_turbines.PlaceTurbines.place_turbines">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">place_turbines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define bespoke wind plant turbine layouts.</span>
+
+<span class="sd">        Run all functions to define bespoke wind plant turbine layouts.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Keyword arguments to pass to GA initialization.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :class:`~reV.bespoke.gradient_free.GeneticAlgorithm` : GA Algorithm.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">define_exclusions</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_packing</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlaceTurbines.capital_cost_per_kw">
+<a class="viewcode-back" href="../../../_autosummary/reV.bespoke.place_turbines.PlaceTurbines.html#reV.bespoke.place_turbines.PlaceTurbines.capital_cost_per_kw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">capital_cost_per_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">capacity_mw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Capital cost function ($ per kW) evaluated for a given capacity.</span>
+
+<span class="sd">        The capacity will be adjusted to be an exact multiple of the</span>
+<span class="sd">        turbine rating in order to yield an integer number of</span>
+<span class="sd">        turbines.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        capacity_mw : float</span>
+<span class="sd">            The desired capacity (MW) to sample the cost curve at. Note</span>
+<span class="sd">            as mentioned above, the capacity will be adjusted to be an</span>
+<span class="sd">            exact multiple of the turbine rating in order to yield an</span>
+<span class="sd">            integer number of turbines. For best results, set this</span>
+<span class="sd">            value to be an integer multiple of the turbine rating.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        capital_cost : float</span>
+<span class="sd">            Capital cost ($ per kW) for the (adjusted) plant capacity.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">fixed_charge_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_charge_rate</span>
+        <span class="n">avg_sl_dist_to_center_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_center_m</span>
+        <span class="n">n_turbines</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">capacity_mw</span> <span class="o">*</span> <span class="mf">1e3</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_capacity</span><span class="p">))</span>
+        <span class="n">system_capacity</span> <span class="o">=</span> <span class="n">n_turbines</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_capacity</span>
+        <span class="n">mult</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;capital_cost_multiplier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">system_capacity</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capital_cost_function</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span> <span class="o">*</span> <span class="n">mult</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fixed_charge_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fixed charge rate if input to the SAM WindPowerPD object, None if</span>
+<span class="sd">        not found in inputs.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fixed_charge_rate&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">turbine_x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the final optimized turbine x locations (m)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_locations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">optimized_design_variables</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">turbine_y</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the final optimized turbine y locations (m)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_locations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">optimized_design_variables</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">avg_sl_dist_to_center_m</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the final avg straight line distance to center (m)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_avg_sl_dist_to_cent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">turbine_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_y</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">avg_sl_dist_to_medoid_m</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the final avg straight line distance to turb medoid (m)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_avg_sl_dist_to_med</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">turbine_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_y</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nn_conn_dist_m</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the final avg straight line distance to turb medoid (m)&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimized_nn_conn_dist_m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_optimized_nn_conn_dist_m</span> <span class="o">=</span> <span class="n">_compute_nn_conn_dist</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">turbine_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_y</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimized_nn_conn_dist_m</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nturbs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the final optimized number of turbines&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimized_design_variables</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">capacity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the final optimized plant nameplate capacity (kW)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_capacity</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nturbs</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convex_hull</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the convex hull of the turbine locations&quot;&quot;&quot;</span>
+        <span class="n">turbines</span> <span class="o">=</span> <span class="n">MultiPoint</span><span class="p">([</span><span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+                               <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">turbine_x</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">turbine_y</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="n">turbines</span><span class="o">.</span><span class="n">convex_hull</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convex_hull_buffer</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the area available for wind turbine placement (km^2)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_polygons</span><span class="o">.</span><span class="n">area</span> <span class="o">/</span> <span class="mf">1e6</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convex_hull_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the area of the convex hull of the turbines (km^2)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convex_hull</span><span class="o">.</span><span class="n">area</span> <span class="o">/</span> <span class="mf">1e6</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">full_cell_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the full non-excluded area available for wind turbine</span>
+<span class="sd">        placement (km^2)&quot;&quot;&quot;</span>
+        <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">include_mask</span><span class="p">)</span>
+        <span class="n">side_x</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_side_length</span>
+        <span class="n">side_y</span> <span class="o">=</span> <span class="n">ny</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_side_length</span>
+        <span class="k">return</span> <span class="n">side_x</span> <span class="o">*</span> <span class="n">side_y</span> <span class="o">/</span> <span class="mf">1e6</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">capacity_density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the optimized capacity density of the wind plant</span>
+<span class="sd">        defined with the area available after removing the exclusions</span>
+<span class="sd">        (MW/km2)&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_polygons</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">area</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">area</span> <span class="o">/</span> <span class="mf">1E3</span>
+
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convex_hull_capacity_density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the optimized capacity density of the wind plant</span>
+<span class="sd">        defined with the convex hull area of the turbine layout (MW/km2)&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">convex_hull_area</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">convex_hull_area</span> <span class="o">/</span> <span class="mf">1E3</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">full_cell_capacity_density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the optimized capacity density of the wind plant</span>
+<span class="sd">        defined with the full non-excluded area of the turbine layout (MW/km2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_cell_area</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_cell_area</span> <span class="o">/</span> <span class="mf">1E3</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">aep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the annual energy production of the optimized plant (kWh)&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nturbs</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="p">[</span><span class="s2">&quot;wind_farm_xCoordinates&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="p">[</span><span class="s2">&quot;wind_farm_yCoordinates&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">turbine_y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="p">[</span><span class="s2">&quot;system_capacity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">assign_inputs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">annual_energy</span><span class="p">()</span>
+
+    <span class="c1"># pylint: disable=W0641,W0123</span>
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">capital_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the capital cost of the optimized plant ($)&quot;&quot;&quot;</span>
+        <span class="n">fixed_charge_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_charge_rate</span>
+        <span class="n">n_turbines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nturbs</span>
+        <span class="n">system_capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
+        <span class="n">aep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aep</span>
+        <span class="n">avg_sl_dist_to_center_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_center_m</span>
+        <span class="n">avg_sl_dist_to_medoid_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_medoid_m</span>
+        <span class="n">nn_conn_dist_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nn_conn_dist_m</span>
+
+        <span class="n">mult</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;capital_cost_multiplier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capital_cost_function</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span> <span class="o">*</span> <span class="n">mult</span>
+
+    <span class="c1"># pylint: disable=W0641,W0123</span>
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fixed_operating_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the annual fixed operating cost of the</span>
+<span class="sd">        optimized plant ($/year)&quot;&quot;&quot;</span>
+        <span class="n">fixed_charge_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_charge_rate</span>
+        <span class="n">n_turbines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nturbs</span>
+        <span class="n">system_capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
+        <span class="n">aep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aep</span>
+        <span class="n">avg_sl_dist_to_center_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_center_m</span>
+        <span class="n">avg_sl_dist_to_medoid_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_medoid_m</span>
+        <span class="n">nn_conn_dist_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nn_conn_dist_m</span>
+
+        <span class="n">mult</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;fixed_operating_cost_multiplier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_operating_cost_function</span><span class="p">,</span>
+                    <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span> <span class="o">*</span> <span class="n">mult</span>
+
+    <span class="c1"># pylint: disable=W0641,W0123</span>
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">variable_operating_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the annual variable operating cost of the</span>
+<span class="sd">        optimized plant ($/kWh)&quot;&quot;&quot;</span>
+        <span class="n">fixed_charge_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_charge_rate</span>
+        <span class="n">n_turbines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nturbs</span>
+        <span class="n">system_capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
+        <span class="n">aep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aep</span>
+        <span class="n">avg_sl_dist_to_center_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_center_m</span>
+        <span class="n">avg_sl_dist_to_medoid_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_medoid_m</span>
+        <span class="n">nn_conn_dist_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nn_conn_dist_m</span>
+
+        <span class="n">mult</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;variable_operating_cost_multiplier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_operating_cost_function</span><span class="p">,</span>
+                    <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span> <span class="o">*</span> <span class="n">mult</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">balance_of_system_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the balance of system cost of the optimized plant ($)&quot;&quot;&quot;</span>
+        <span class="n">fixed_charge_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_charge_rate</span>
+        <span class="n">n_turbines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nturbs</span>
+        <span class="n">system_capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
+        <span class="n">aep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aep</span>
+        <span class="n">avg_sl_dist_to_center_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_center_m</span>
+        <span class="n">avg_sl_dist_to_medoid_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_medoid_m</span>
+        <span class="n">nn_conn_dist_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nn_conn_dist_m</span>
+
+        <span class="n">mult</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_plant</span><span class="o">.</span><span class="n">sam_sys_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;balance_of_system_cost_multiplier&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">balance_of_system_cost_function</span><span class="p">,</span>
+                    <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span> <span class="o">*</span> <span class="n">mult</span>
+
+    <span class="c1"># pylint: disable=W0641,W0123</span>
+    <span class="nd">@property</span>
+    <span class="nd">@none_until_optimized</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the optimized objective function value&quot;&quot;&quot;</span>
+        <span class="n">fixed_charge_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_charge_rate</span>
+        <span class="n">n_turbines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nturbs</span>
+        <span class="n">system_capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span>
+        <span class="n">aep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aep</span>
+        <span class="n">capital_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capital_cost</span>
+        <span class="n">fixed_operating_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_operating_cost</span>
+        <span class="n">variable_operating_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_operating_cost</span>
+        <span class="n">balance_of_system_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">balance_of_system_cost</span>
+        <span class="n">avg_sl_dist_to_center_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_center_m</span>
+        <span class="n">avg_sl_dist_to_medoid_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_sl_dist_to_medoid_m</span>
+        <span class="n">nn_conn_dist_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nn_conn_dist_m</span>
+
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">())</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_turb_medoid</span><span class="p">(</span><span class="n">x_locs</span><span class="p">,</span> <span class="n">y_locs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turbine medoid. &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">x_locs</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">y_locs</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_nn_conn_dist</span><span class="p">(</span><span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Connect turbines using a greedy nearest-neighbor approach. &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_coords</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">]</span>
+    <span class="n">allowed_conns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">coordinates</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="kc">None</span><span class="p">],</span> <span class="n">coordinates</span><span class="p">]</span>
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">allowed_conns</span><span class="p">)</span>
+    <span class="n">mask</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">left_to_connect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">allowed_conns</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">allowed_conns</span><span class="p">)</span>
+    <span class="n">mask</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">allowed_conns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">allowed_conns</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+
+    <span class="n">total_dist</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">__</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)):</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">left_to_connect</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">allowed_conns</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">dists</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dists</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">min_dists</span> <span class="o">=</span> <span class="n">dists</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">total_dist</span> <span class="o">+=</span> <span class="n">min_dists</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">next_connection</span> <span class="o">=</span> <span class="n">min_dists</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+        <span class="n">allowed_conns</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">next_connection</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">left_to_connect</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">next_connection</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">total_dist</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fix_wp_keys</span><span class="p">(</span><span class="n">eqn</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Surround key of `self.wind_plant` in quotes&quot;&quot;&quot;</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;(self\.wind_plant\[\s*)([^\]]+?)(\s*\])&#39;</span>
+    <span class="n">replacement</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\1&quot;\2&quot;\3&#39;</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">replacement</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">eqn</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Alliance for Sustainable Energy, LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

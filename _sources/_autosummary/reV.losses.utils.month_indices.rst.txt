@@ -1,0 +1,6 @@
+reV.losses.utils.month\_indices
+===============================
+
+.. currentmodule:: reV.losses.utils
+
+.. autofunction:: month_indices
