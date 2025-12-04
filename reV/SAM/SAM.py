@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """reV-to-SAM interface module.
 
-Wraps the NREL-PySAM library with additional reV features.
+Wraps the NLR-PySAM library with additional reV features.
 """
 
 import copy

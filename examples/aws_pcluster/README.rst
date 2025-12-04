@@ -1,9 +1,9 @@
 Running reV on AWS Parallel Cluster HPC Infrastructure
 ======================================================
 
-reV was originally designed to run on the NREL high performance computer (HPC), but you can now run reV on AWS using the NREL renewable energy resource data (the NSRDB and WTK) that lives on S3. This example will guide you through how to set up reV on an AWS HPC environment with dynamically scaled EC2 compute resources and input resource data sourced from S3 (optionally via HSDS).
+reV was originally designed to run on the NLR high performance computer (HPC), but you can now run reV on AWS using the NLR resource data (the NSRDB and WTK) that lives on S3. This example will guide you through how to set up reV on an AWS HPC environment with dynamically scaled EC2 compute resources and input resource data sourced from S3 (optionally via HSDS).
 
-If you plan on only running reV for a handful of sites (less than 100), first check out our `running reV locally example <https://nrel.github.io/reV/misc/examples.running_locally.html>`_ or `running with HSDS example <https://github.com/NREL/reV/tree/main/examples/running_with_hsds>`_, which will be a lot easier to get started with. Larger reV jobs require you stand up your own AWS parallel cluster and HSDS server. Very small jobs can be run locally using the NREL HSDS developer API.
+If you plan on only running reV for a handful of sites (less than 100), first check out our `running reV locally example <https://nrel.github.io/reV/misc/examples.running_locally.html>`_ or `running with HSDS example <https://github.com/NREL/reV/tree/main/examples/running_with_hsds>`_, which will be a lot easier to get started with. Larger reV jobs require you stand up your own AWS parallel cluster and HSDS server. Very small jobs can be run locally using the NLR HSDS developer API.
 
 Note that everything should be done in AWS region us-west-2 (Oregon) since this is where the NSRDB and WTK data live on S3.
 
@@ -50,7 +50,7 @@ Setting up an AWS Parallel Cluster
 Notes on Running reV in the AWS Parallel Cluster
 ------------------------------------------------
 
-#. If you use the NREL developer API key for HSDS and don't configure a custom HSDS Service you will almost certainly see 503 errors from too many requests being processed. See the instructions below to configure an HSDS Service.
+#. If you use the NLR developer API key for HSDS and don't configure a custom HSDS Service you will almost certainly see 503 errors from too many requests being processed. See the instructions below to configure an HSDS Service.
 #. AWS EC2 instances usually have twice as many vCPUs as physical CPUs due to a default of two threads per physical CPU (at least for the c5 instances) (see ``disable_hyperthreading = false``). The pcluster framework treats each thread as a "node" that can accept one reV job. For this reason, it is recommended that you scale the ``"nodes"`` entry in the reV generation config file but keep ``"max_workers": 1``. For example, if you use two ``c5.2xlarge`` instances in your compute fleet, this is a total of 16 vCPUs, each of which can be thought of as a HPC "node" that can run one process at a time.
 #. If you setup an HSDS local server but the parallel cluster ends up sending too many requests (some nodes but not all will see 503 errors), you can try upping the ``max_task_count`` in the ``~/hsds/admin/config/override.yml`` file.
 #. If your HSDS local server nodes run out of memory (monitor with ``docker stats``), you can try upping the ``dn_ram`` or ``sn_ram`` options in the ``~/hsds/admin/config/override.yml`` file.

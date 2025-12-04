@@ -8,7 +8,7 @@ build-backend = 'setuptools.build_meta'
 [project]
 name="NREL-reV"
 dynamic = ["version"]
-description = "National Renewable Energy Laboratory's (NREL's) Renewable Energy Potential(V) Model: reV"
+description = "National Laboratory of the Rockies' (NLR's) reV model"
 readme = {file = "README.rst", content-type = "text/x-rst"}
 authors = [
   {name = "Galen Maclaurin", email = "galen.maclaurin@nrel.gov"},
@@ -18,7 +18,7 @@ maintainers = [
   {name = "Paul Pinchuk", email = "ppinchuk@nrel.gov"},
 ]
 license = "BSD-3-Clause"
-keywords = ["reV", "NREL"]
+keywords = ["reV", "NLR"]
 requires-python = ">= 3.9"
 classifiers=[
   "Development Status :: 4 - Beta",

@@ -2,13 +2,13 @@ reV Marine Energy Example
 =========================
 
 This example leverages the new SAM marine hydrokinetic (MHK) energy models, the
-NREL hindcast wave data, the MHK cost models in NRWAL, and the integration of
+NLR hindcast wave data, the MHK cost models in NRWAL, and the integration of
 everything in to reV for large scale spatiotemporal analysis. The configs in
 this example run a batched project that estimates the spatiotemporal capacity
 factors and costs associated with three common wave energy reference models in
 the Atlantic and Pacific Oceans.
 
-National Renewable Energy Laboratory. (2020). High Resolution Ocean Surface
+National Laboratory of the Rockies. (2020). High Resolution Ocean Surface
 Wave Hindcast (US Wave) Data [data set].  Retrieved from
 https://dx.doi.org/10.15473/1647329.
 

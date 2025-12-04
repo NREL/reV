@@ -7,11 +7,11 @@ the `HDF Group <https://www.hdfgroup.org/>`_ and is hosted on Amazon Web
 Services (AWS) using a combination of EC2 (Elastic Compute) and S3 (Scalable
 Storage Service). You can read more about the HSDS service
 `in this slide deck <https://www.slideshare.net/HDFEOS/hdf-cloud-services>`_.
-You can use the NREL developer API as the HSDS endpoint for small workloads
+You can use the NLR developer API as the HSDS endpoint for small workloads
 or stand up your own HSDS local server (instructions further below) for an
 enhanced parallelized data experience.
 
-For general information on where to get started accessing NREL data from outside of NREL, see the `rex docs <https://nrel.github.io/rex/misc/examples.nrel_data.html#data-location-external-users>`_.
+For general information on where to get started accessing NLR data from outside of NLR, see the `rex docs <https://nrel.github.io/rex/misc/examples.nrel_data.html#data-location-external-users>`_.
 
 You might also be interested in these examples of how to set up your own `local HSDS server <https://nrel.github.io/rex/misc/examples.hsds.html#setting-up-a-local-hsds-server>`_ and how to run reV on an `AWS parallel cluster <https://nrel.github.io/reV/misc/examples.aws_pcluster.html>`_.
 
@@ -39,7 +39,7 @@ creating a configuration file at ``~/.hscfg``:
 
 To get your own API key, visit https://developer.nrel.gov/signup/
 
-Please note that our HSDS service is for demonstration purposes only. The API in the example above is hosted on an NREL server and will have limits on the amount of data you can access via HSDS. It is common to get an error: ``OSError: Error retrieving data: None errors`` if you attempt to access too much data or if the server is busy. Here are two references for scaling reV using HSDS and AWS:
+Please note that our HSDS service is for demonstration purposes only. The API in the example above is hosted on an NLR server and will have limits on the amount of data you can access via HSDS. It is common to get an error: ``OSError: Error retrieving data: None errors`` if you attempt to access too much data or if the server is busy. Here are two references for scaling reV using HSDS and AWS:
 
 #. `Setup your own HSDS server on your personal computer <https://nrel.github.io/rex/misc/examples.hsds.html#>`_
 #. `Run reV on the AWS Parallel Cluster Infrastructure <https://nrel.github.io/reV/misc/examples.aws_pcluster.html>`_

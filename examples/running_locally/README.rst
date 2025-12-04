@@ -5,7 +5,7 @@ Run reV locally
 and `reV Econ <https://nrel.github.io/reV/_autosummary/reV.econ.econ.Econ.html#reV.econ.econ.Econ>`_
 can be run locally using resource .h5 files stored locally.
 
-For users outside of NREL: you can now point reV directly to filepaths on S3! This will stream small amounts of data from S3 directly
+For users outside of NLR: you can now point reV directly to filepaths on S3! This will stream small amounts of data from S3 directly
 to your computer without having to setup an IO server like HSDS. See the example for reading data directly from S3
 `here <https://nrel.github.io/rex/misc/examples.fsspec.html>`_ and try the example below with resource file paths from S3.
 

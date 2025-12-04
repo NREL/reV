@@ -7,49 +7,48 @@ type: software
 authors:
   - family-names: Buster
     given-names: Grant
-    affiliation: National Renewable Energy Laboratory
+    affiliation: National Laboratory of the Rockies
     orcid: 'https://orcid.org/0000-0001-8616-8100'
   - family-names: Pinchuk
     given-names: Pavlo
-    affiliation: National Renewable Energy Laboratory
+    affiliation: National Laboratory of the Rockies
     orcid: 'https://orcid.org/0000-0003-4736-4728'
   - family-names: Rossol
     given-names: Michael
-    affiliation: National Renewable Energy Laboratory
+    affiliation: National Laboratory of the Rockies
     orcid: 'https://orcid.org/0000-0001-9351-8404'
   - family-names: Benton
     given-names: Brandon
-    affiliation: National Renewable Energy Laboratory
+    affiliation: National Laboratory of the Rockies
     orcid: "https://orcid.org/0009-0008-9931-2050"
   - family-names: Gleason
     given-names: Michael
-    affiliation: National Renewable Energy Laboratory
+    affiliation: National Laboratory of the Rockies
     orcid: "https://orcid.org/0009-0003-5916-6726"
   - family-names: Stanley
     given-names: Andrew P.J.
-    affiliation: National Renewable Energy Laboratory
+    affiliation: National Laboratory of the Rockies
     orcid: "https://orcid.org/0000-0002-0677-3413"
   - family-names: Spencer
     given-names: Robert
-    affiliation: National Renewable Energy Laboratory
+    affiliation: National Laboratory of the Rockies
   - family-names: Bannister
     given-names: Michael
-    affiliation: National Renewable Energy Laboratory
+    affiliation: National Laboratory of the Rockies
   - family-names: Williams
     given-names: Travis
-    affiliation: National Renewable Energy Laboratory
+    affiliation: National Laboratory of the Rockies
     orcid: 'https://orcid.org/0000-0003-0973-1865'
 identifiers:
   - type: doi
     value: 10.5281/zenodo.4501716
 repository-code: 'https://github.com/NREL/reV'
 abstract: >-
-  reV (the Renewable Energy Potential model) is an open-source
-  geospatial techno-economic tool that estimates renewable energy
-  technical potential (capacity and generation), system cost, and
-  supply curves for a variety of technologies, including but not
-  limited to, geothermal (GT), pumped storage hydropower (PSH),
-  solar photovoltaics (PV), concentrating solar power (CSP),
+  reV is an open-source geospatial techno-economic tool that
+  estimates energy technical potential (capacity and generation),
+  system cost, and supply curves for a variety of technologies,
+  including but not limited to, geothermal (GT), pumped storage
+  hydropower (PSH), solar photovoltaics (PV), concentrating solar power (CSP),
   wind energy, etc. reV allows researchers to include exhaustive
   spatial representation of the built and natural environment into
   the generation and cost estimates that it computes. reV is highly
