@@ -405,8 +405,9 @@ class Sam:
             logger.exception(msg)
             raise SAMInputError(msg)
 
-        if (key == "total_installed_cost" and isinstance(value, str)
-             and value.casefold() == "windbos"):
+        value_is_windbos = (isinstance(value, str)
+                            and value.casefold() == "windbos")
+        if (key == "total_installed_cost" and value_is_windbos):
             # "windbos" is a special reV key to tell reV to compute
             # total installed costs using WindBOS module. If detected,
             # don't try to set it as a PySAM attribute
