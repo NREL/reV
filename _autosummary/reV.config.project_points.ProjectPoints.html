@@ -1,0 +1,1091 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>reV.config.project_points.ProjectPoints &mdash; reV 0.14.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c64b94d8"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.config.sam_config" href="reV.config.sam_config.html" />
+    <link rel="prev" title="reV.config.project_points.PointsControl" href="reV.config.project_points.PointsControl.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/installation_usage.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-recommended-for-analysts">Option 1: Install from PIP (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#rev-ecosystem">reV Ecosystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#rev-command-line-tools">reV command line tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#recommended-citation">Recommended Citation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.marine_energy.html">reV Marine Energy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.marine_energy.html#plots-of-the-example-marine-energy-output">Plots of the Example Marine Energy Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#plots-of-the-example-offshore-output">Plots of the Example Offshore Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.rev_losses.html">reV Losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.rev_losses.html#power-curve-losses-wind-only">Power Curve Losses (Wind only)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.rev_losses.html#power-curve-losses-for-a-single-site">Power Curve Losses for a single site</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.rev_losses.html#outage-losses-wind-and-solar">Outage Losses (Wind and Solar)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.aws_pcluster.html">Running reV on an AWS Parallel Cluster</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-an-aws-parallel-cluster">Setting up an AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#notes-on-running-rev-in-the-aws-parallel-cluster">Notes on Running reV in the AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#using-rev-directly-with-s3-files">Using reV Directly with S3 Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-hsds-local-servers-on-your-compute-cluster">Setting up HSDS Local Servers on your Compute Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-an-hsds-kubernetes-service">Setting up an HSDS Kubernetes Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-an-hsds-lambda-service">Setting up an HSDS Lambda Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#simple-h5pyd-test">Simple H5PYD Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#compute-cost-estimates">Compute Cost Estimates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="reV.SAM.html">reV.SAM</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.SAM.html">reV.SAM.SAM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.SAM.RevPySam.html">reV.SAM.SAM.RevPySam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.SAM.Sam.html">reV.SAM.SAM.Sam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.SAM.SamResourceRetriever.html">reV.SAM.SAM.SamResourceRetriever</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.defaults.html">reV.SAM.defaults</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.AbstractDefaultFromConfigFile.html">reV.SAM.defaults.AbstractDefaultFromConfigFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultGeothermal.html">reV.SAM.defaults.DefaultGeothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultLCOE.html">reV.SAM.defaults.DefaultLCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultLinearFresnelDsgIph.html">reV.SAM.defaults.DefaultLinearFresnelDsgIph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultMhkWave.html">reV.SAM.defaults.DefaultMhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultPvSamv1.html">reV.SAM.defaults.DefaultPvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultPvWattsv5.html">reV.SAM.defaults.DefaultPvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultPvWattsv8.html">reV.SAM.defaults.DefaultPvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultSingleOwner.html">reV.SAM.defaults.DefaultSingleOwner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultSwh.html">reV.SAM.defaults.DefaultSwh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultTcsMoltenSalt.html">reV.SAM.defaults.DefaultTcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultWindPower.html">reV.SAM.defaults.DefaultWindPower</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.econ.html">reV.SAM.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.econ.Economic.html">reV.SAM.econ.Economic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.econ.LCOE.html">reV.SAM.econ.LCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.econ.SingleOwner.html">reV.SAM.econ.SingleOwner</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.generation.html">reV.SAM.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamGeneration.html">reV.SAM.generation.AbstractSamGeneration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamGenerationFromWeatherFile.html">reV.SAM.generation.AbstractSamGenerationFromWeatherFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamPv.html">reV.SAM.generation.AbstractSamPv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamSolar.html">reV.SAM.generation.AbstractSamSolar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamWind.html">reV.SAM.generation.AbstractSamWind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.Geothermal.html">reV.SAM.generation.Geothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.LinearDirectSteam.html">reV.SAM.generation.LinearDirectSteam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.MhkWave.html">reV.SAM.generation.MhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvSamv1.html">reV.SAM.generation.PvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvWattsv5.html">reV.SAM.generation.PvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvWattsv7.html">reV.SAM.generation.PvWattsv7</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvWattsv8.html">reV.SAM.generation.PvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.SolarWaterHeat.html">reV.SAM.generation.SolarWaterHeat</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.TcsMoltenSalt.html">reV.SAM.generation.TcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.WindPower.html">reV.SAM.generation.WindPower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.WindPowerPD.html">reV.SAM.generation.WindPowerPD</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.version_checker.html">reV.SAM.version_checker</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.version_checker.PySamVersionChecker.html">reV.SAM.version_checker.PySamVersionChecker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.windbos.html">reV.SAM.windbos</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.windbos.WindBos.html">reV.SAM.windbos.WindBos</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.bespoke.html">reV.bespoke</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.bespoke.html">reV.bespoke.bespoke</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeMultiPlantData.html">reV.bespoke.bespoke.BespokeMultiPlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeSinglePlant.html">reV.bespoke.bespoke.BespokeSinglePlant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeSinglePlantData.html">reV.bespoke.bespoke.BespokeSinglePlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeWindPlants.html">reV.bespoke.bespoke.BespokeWindPlants</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.cli_bespoke.html">reV.bespoke.cli_bespoke</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.gradient_free.html">reV.bespoke.gradient_free</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.gradient_free.GeneticAlgorithm.html">reV.bespoke.gradient_free.GeneticAlgorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.pack_turbs.html">reV.bespoke.pack_turbs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.pack_turbs.get_xy.html">reV.bespoke.pack_turbs.get_xy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.pack_turbs.PackTurbines.html">reV.bespoke.pack_turbs.PackTurbines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.place_turbines.html">reV.bespoke.place_turbines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.place_turbines.none_until_optimized.html">reV.bespoke.place_turbines.none_until_optimized</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.place_turbines.PlaceTurbines.html">reV.bespoke.place_turbines.PlaceTurbines</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.cli.html">reV.cli</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="reV.config.html">reV.config</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.config.base_analysis_config.html">reV.config.base_analysis_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.base_analysis_config.AnalysisConfig.html">reV.config.base_analysis_config.AnalysisConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.base_config.html">reV.config.base_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.base_config.BaseConfig.html">reV.config.base_config.BaseConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.cli_project_points.html">reV.config.cli_project_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.curtailment.html">reV.config.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.curtailment.Curtailment.html">reV.config.curtailment.Curtailment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.execution.html">reV.config.execution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.execution.BaseExecutionConfig.html">reV.config.execution.BaseExecutionConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.execution.HPCConfig.html">reV.config.execution.HPCConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.execution.SlurmConfig.html">reV.config.execution.SlurmConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.output_request.html">reV.config.output_request</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.output_request.OutputRequest.html">reV.config.output_request.OutputRequest</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.output_request.SAMOutputRequest.html">reV.config.output_request.SAMOutputRequest</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="reV.config.project_points.html">reV.config.project_points</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="reV.config.project_points.PointsControl.html">reV.config.project_points.PointsControl</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">reV.config.project_points.ProjectPoints</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.sam_config.html">reV.config.sam_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.sam_config.SAMConfig.html">reV.config.sam_config.SAMConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.sam_config.SAMInputsChecker.html">reV.config.sam_config.SAMInputsChecker</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.econ.html">reV.econ</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.cli_econ.html">reV.econ.cli_econ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.econ.html">reV.econ.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.econ.Econ.html">reV.econ.econ.Econ</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.economies_of_scale.html">reV.econ.economies_of_scale</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.economies_of_scale.EconomiesOfScale.html">reV.econ.economies_of_scale.EconomiesOfScale</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.utilities.html">reV.econ.utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.utilities.lcoe_fcr.html">reV.econ.utilities.lcoe_fcr</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.generation.html">reV.generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.base.html">reV.generation.base</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.base.LCOE_REQUIRED_OUTPUTS.html">reV.generation.base.LCOE_REQUIRED_OUTPUTS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.base.BaseGen.html">reV.generation.base.BaseGen</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.cli_gen.html">reV.generation.cli_gen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.generation.html">reV.generation.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.generation.Gen.html">reV.generation.generation.Gen</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.handlers.html">reV.handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.cli_collect.html">reV.handlers.cli_collect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.cli_multi_year.html">reV.handlers.cli_multi_year</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.exclusions.html">reV.handlers.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.exclusions.ExclusionLayers.html">reV.handlers.exclusions.ExclusionLayers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.multi_year.html">reV.handlers.multi_year</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.multi_year.my_collect_groups.html">reV.handlers.multi_year.my_collect_groups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.multi_year.MultiYear.html">reV.handlers.multi_year.MultiYear</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.multi_year.MultiYearGroup.html">reV.handlers.multi_year.MultiYearGroup</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.outputs.html">reV.handlers.outputs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.outputs.Outputs.html">reV.handlers.outputs.Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.transmission.html">reV.handlers.transmission</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.transmission.POIFeatures.html">reV.handlers.transmission.POIFeatures</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.transmission.TransmissionCosts.html">reV.handlers.transmission.TransmissionCosts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.transmission.TransmissionFeatures.html">reV.handlers.transmission.TransmissionFeatures</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.hybrids.html">reV.hybrids</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.hybrids.cli_hybrids.html">reV.hybrids.cli_hybrids</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.hybrids.hybrid_methods.html">reV.hybrids.hybrid_methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_capacity.html">reV.hybrids.hybrid_methods.aggregate_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_capacity_factor.html">reV.hybrids.hybrid_methods.aggregate_capacity_factor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_solar_capacity.html">reV.hybrids.hybrid_methods.aggregate_solar_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_wind_capacity.html">reV.hybrids.hybrid_methods.aggregate_wind_capacity</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.hybrids.hybrids.html">reV.hybrids.hybrids</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.ColNameFormatter.html">reV.hybrids.hybrids.ColNameFormatter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.Hybridization.html">reV.hybrids.hybrids.Hybridization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.HybridsData.html">reV.hybrids.hybrids.HybridsData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.MetaHybridizer.html">reV.hybrids.hybrids.MetaHybridizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.RatioColumns.html">reV.hybrids.hybrids.RatioColumns</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.losses.html">reV.losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.losses.power_curve.html">reV.losses.power_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.TRANSFORMATIONS.html">reV.losses.power_curve.TRANSFORMATIONS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.adjust_power_curve.html">reV.losses.power_curve.adjust_power_curve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.AbstractPowerCurveTransformation.html">reV.losses.power_curve.AbstractPowerCurveTransformation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.ExponentialStretching.html">reV.losses.power_curve.ExponentialStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.HorizontalTranslation.html">reV.losses.power_curve.HorizontalTranslation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.LinearStretching.html">reV.losses.power_curve.LinearStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurve.html">reV.losses.power_curve.PowerCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveLosses.html">reV.losses.power_curve.PowerCurveLosses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveLossesInput.html">reV.losses.power_curve.PowerCurveLossesInput</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveLossesMixin.html">reV.losses.power_curve.PowerCurveLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveWindResource.html">reV.losses.power_curve.PowerCurveWindResource</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.losses.scheduled.html">reV.losses.scheduled</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.Outage.html">reV.losses.scheduled.Outage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.OutageScheduler.html">reV.losses.scheduled.OutageScheduler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.ScheduledLossesMixin.html">reV.losses.scheduled.ScheduledLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.SingleOutageScheduler.html">reV.losses.scheduled.SingleOutageScheduler</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.losses.utils.html">reV.losses.utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.convert_to_full_month_names.html">reV.losses.utils.convert_to_full_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.filter_unknown_month_names.html">reV.losses.utils.filter_unknown_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.format_month_name.html">reV.losses.utils.format_month_name</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.full_month_name_from_abbr.html">reV.losses.utils.full_month_name_from_abbr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.hourly_indices_for_months.html">reV.losses.utils.hourly_indices_for_months</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.month_index.html">reV.losses.utils.month_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.month_indices.html">reV.losses.utils.month_indices</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.nrwal.html">reV.nrwal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.nrwal.cli_nrwal.html">reV.nrwal.cli_nrwal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.nrwal.nrwal.html">reV.nrwal.nrwal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.nrwal.nrwal.RevNrwal.html">reV.nrwal.nrwal.RevNrwal</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.cli_qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc.cli_qa_qc</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.qa_qc.html">reV.qa_qc.qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.qa_qc.QaQc.html">reV.qa_qc.qa_qc.QaQc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.qa_qc.QaQcModule.html">reV.qa_qc.qa_qc.QaQcModule</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.summary.html">reV.qa_qc.summary</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.ExclusionsMask.html">reV.qa_qc.summary.ExclusionsMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.PlotBase.html">reV.qa_qc.summary.PlotBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SummarizeH5.html">reV.qa_qc.summary.SummarizeH5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SummarizeSupplyCurve.html">reV.qa_qc.summary.SummarizeSupplyCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SummaryPlots.html">reV.qa_qc.summary.SummaryPlots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SupplyCurvePlot.html">reV.qa_qc.summary.SupplyCurvePlot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.cli_rep_profiles.html">reV.rep_profiles.cli_rep_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.rep_profiles.html">reV.rep_profiles.rep_profiles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RegionRepProfile.html">reV.rep_profiles.rep_profiles.RegionRepProfile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RepProfiles.html">reV.rep_profiles.rep_profiles.RepProfiles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RepProfilesBase.html">reV.rep_profiles.rep_profiles.RepProfilesBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RepresentativeMethods.html">reV.rep_profiles.rep_profiles.RepresentativeMethods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.aggregation.html">reV.supply_curve.aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.AbstractAggFileHandler.html">reV.supply_curve.aggregation.AbstractAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.AggFileHandler.html">reV.supply_curve.aggregation.AggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.Aggregation.html">reV.supply_curve.aggregation.Aggregation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.BaseAggregation.html">reV.supply_curve.aggregation.BaseAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.cli_sc_aggregation.html">reV.supply_curve.cli_sc_aggregation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.cli_supply_curve.html">reV.supply_curve.cli_supply_curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.cli_tech_mapping.html">reV.supply_curve.cli_tech_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.competitive_wind_farms.html">reV.supply_curve.competitive_wind_farms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.html">reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.exclusions.html">reV.supply_curve.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.ExclusionMask.html">reV.supply_curve.exclusions.ExclusionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.ExclusionMaskFromDict.html">reV.supply_curve.exclusions.ExclusionMaskFromDict</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.FrictionMask.html">reV.supply_curve.exclusions.FrictionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.LayerMask.html">reV.supply_curve.exclusions.LayerMask</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.extent.html">reV.supply_curve.extent</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.extent.SupplyCurveExtent.html">reV.supply_curve.extent.SupplyCurveExtent</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.points.html">reV.supply_curve.points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.AbstractSupplyCurvePoint.html">reV.supply_curve.points.AbstractSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.AggregationSupplyCurvePoint.html">reV.supply_curve.points.AggregationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.GenerationSupplyCurvePoint.html">reV.supply_curve.points.GenerationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.SupplyCurvePoint.html">reV.supply_curve.points.SupplyCurvePoint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.sc_aggregation.html">reV.supply_curve.sc_aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.html">reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.sc_aggregation.SupplyCurveAggregation.html">reV.supply_curve.sc_aggregation.SupplyCurveAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.supply_curve.html">reV.supply_curve.supply_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.supply_curve.DEFAULT_COLUMNS.html">reV.supply_curve.supply_curve.DEFAULT_COLUMNS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi.html">reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.supply_curve.SupplyCurve.html">reV.supply_curve.supply_curve.SupplyCurve</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.tech_mapping.html">reV.supply_curve.tech_mapping</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.tech_mapping.TechMapping.html">reV.supply_curve.tech_mapping.TechMapping</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.utilities.html">reV.utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.log_versions.html">reV.utilities.log_versions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.log_versions.html#reV.utilities.log_versions"><code class="docutils literal notranslate"><span class="pre">log_versions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.DocEnum.html">reV.utilities.DocEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.DocEnum.html#reV.utilities.DocEnum"><code class="docutils literal notranslate"><span class="pre">DocEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.FieldEnum.html">reV.utilities.FieldEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.FieldEnum.html#reV.utilities.FieldEnum"><code class="docutils literal notranslate"><span class="pre">FieldEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.ModuleName.html">reV.utilities.ModuleName</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.ModuleName.html#reV.utilities.ModuleName"><code class="docutils literal notranslate"><span class="pre">ModuleName</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.ResourceMetaField.html">reV.utilities.ResourceMetaField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.ResourceMetaField.html#reV.utilities.ResourceMetaField"><code class="docutils literal notranslate"><span class="pre">ResourceMetaField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.SiteDataField.html">reV.utilities.SiteDataField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.SiteDataField.html#reV.utilities.SiteDataField"><code class="docutils literal notranslate"><span class="pre">SiteDataField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.SupplyCurveField.html">reV.utilities.SupplyCurveField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.SupplyCurveField.html#reV.utilities.SupplyCurveField"><code class="docutils literal notranslate"><span class="pre">SupplyCurveField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.cli_functions.html">reV.utilities.cli_functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.add_to_run_attrs.html">reV.utilities.cli_functions.add_to_run_attrs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.compile_descriptions.html">reV.utilities.cli_functions.compile_descriptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.format_analysis_years.html">reV.utilities.cli_functions.format_analysis_years</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.init_cli_logging.html">reV.utilities.cli_functions.init_cli_logging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.parse_from_pipeline.html">reV.utilities.cli_functions.parse_from_pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.curtailment.html">reV.utilities.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.curtailment.curtail.html">reV.utilities.curtailment.curtail</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.exceptions.html">reV.utilities.exceptions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.CollectionRuntimeError.html">reV.utilities.exceptions.CollectionRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.CollectionValueError.html">reV.utilities.exceptions.CollectionValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.CollectionWarning.html">reV.utilities.exceptions.CollectionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ConfigError.html">reV.utilities.exceptions.ConfigError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ConfigWarning.html">reV.utilities.exceptions.ConfigWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.DataShapeError.html">reV.utilities.exceptions.DataShapeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.EmptySupplyCurvePointError.html">reV.utilities.exceptions.EmptySupplyCurvePointError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ExclusionLayerError.html">reV.utilities.exceptions.ExclusionLayerError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ExecutionError.html">reV.utilities.exceptions.ExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ExtrapolationWarning.html">reV.utilities.exceptions.ExtrapolationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.FileInputError.html">reV.utilities.exceptions.FileInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.FileInputWarning.html">reV.utilities.exceptions.FileInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerKeyError.html">reV.utilities.exceptions.HandlerKeyError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerRuntimeError.html">reV.utilities.exceptions.HandlerRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerValueError.html">reV.utilities.exceptions.HandlerValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerWarning.html">reV.utilities.exceptions.HandlerWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.InputError.html">reV.utilities.exceptions.InputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.InputWarning.html">reV.utilities.exceptions.InputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.JSONError.html">reV.utilities.exceptions.JSONError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.MultiFileExclusionError.html">reV.utilities.exceptions.MultiFileExclusionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.NearestNeighborError.html">reV.utilities.exceptions.NearestNeighborError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.OffshoreWindInputError.html">reV.utilities.exceptions.OffshoreWindInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.OffshoreWindInputWarning.html">reV.utilities.exceptions.OffshoreWindInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.OutputWarning.html">reV.utilities.exceptions.OutputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ParallelExecutionWarning.html">reV.utilities.exceptions.ParallelExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.PipelineError.html">reV.utilities.exceptions.PipelineError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ProjectPointsValueError.html">reV.utilities.exceptions.ProjectPointsValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.PySAMVersionError.html">reV.utilities.exceptions.PySAMVersionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.PySAMVersionWarning.html">reV.utilities.exceptions.PySAMVersionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ResourceError.html">reV.utilities.exceptions.ResourceError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMExecutionError.html">reV.utilities.exceptions.SAMExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMExecutionWarning.html">reV.utilities.exceptions.SAMExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMInputError.html">reV.utilities.exceptions.SAMInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMInputWarning.html">reV.utilities.exceptions.SAMInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SlurmWarning.html">reV.utilities.exceptions.SlurmWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SupplyCurveError.html">reV.utilities.exceptions.SupplyCurveError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SupplyCurveInputError.html">reV.utilities.exceptions.SupplyCurveInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.WhileLoopPackingError.html">reV.utilities.exceptions.WhileLoopPackingError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVDeprecationWarning.html">reV.utilities.exceptions.reVDeprecationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVError.html">reV.utilities.exceptions.reVError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVLossesValueError.html">reV.utilities.exceptions.reVLossesValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVLossesWarning.html">reV.utilities.exceptions.reVLossesWarning</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.pytest_utils.html">reV.utilities.pytest_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.pytest_utils.make_fake_h5_chunks.html">reV.utilities.pytest_utils.make_fake_h5_chunks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.pytest_utils.pd_date_range.html">reV.utilities.pytest_utils.pd_date_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.pytest_utils.write_chunk.html">reV.utilities.pytest_utils.write_chunk</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.slots.html">reV.utilities.slots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.slots.SlottedDict.html">reV.utilities.slots.SlottedDict</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.version.html">reV.version</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_cli/cli.html">CLI reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV.html">reV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20template-configs.html">reV template-configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20batch.html">reV batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20pipeline.html">reV pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20project-points.html">reV project-points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_cli/reV%20project-points.html#rev-project-points-from-lat-lons">from-lat-lons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_cli/reV%20project-points.html#rev-project-points-from-regions">from-regions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20bespoke.html">reV bespoke</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20generation.html">reV generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20econ.html">reV econ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20collect.html">reV collect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20multi-year.html">reV multi-year</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20supply-curve-aggregation.html">reV supply-curve-aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20supply-curve.html">reV supply-curve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20poi-sort.html">reV poi-sort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20rep-profiles.html">reV rep-profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20hybrids.html">reV hybrids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20nrwal.html">reV nrwal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20qa-qc.html">reV qa-qc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20script.html">reV script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20status.html">reV status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20reset-status.html">reV reset-status</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="reV.html">reV</a></li>
+          <li class="breadcrumb-item"><a href="reV.config.html">reV.config</a></li>
+          <li class="breadcrumb-item"><a href="reV.config.project_points.html">reV.config.project_points</a></li>
+      <li class="breadcrumb-item active">reV.config.project_points.ProjectPoints</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/nrel/reV/blob/main/docs/source/_autosummary/reV.config.project_points.ProjectPoints.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rev-config-project-points-projectpoints">
+<h1>reV.config.project_points.ProjectPoints<a class="headerlink" href="#rev-config-project-points-projectpoints" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ProjectPoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sam_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tech</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curtailment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to manage site and SAM input configuration requests.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">reV</span><span class="w"> </span><span class="kn">import</span> <span class="n">TESTDATADIR</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">reV.config.project_points</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProjectPoints</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">points</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sam_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">TESTDATADIR</span><span class="p">,</span> <span class="s1">&#39;SAM/naris_pv_1axis_inv13.json&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span> <span class="o">=</span> <span class="n">ProjectPoints</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">sam_file</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config_id_site0</span><span class="p">,</span> <span class="n">SAM_config_dict_site0</span> <span class="o">=</span> <span class="n">pp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">site_list_or_slice</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">sites</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">site_list_or_slice</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">get_sites_from_config</span><span class="p">(</span><span class="n">config_id</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ProjectPoints_sub</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">project_points</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h_list</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">h</span>
+</pre></div>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul>
+<li><p><strong>points</strong> (<em>int | slice | list | tuple | str | pd.DataFrame | dict</em>) – Slice specifying project points, string pointing to a project
+points csv, or a dataframe containing the effective csv contents.
+Can also be a single integer site value.</p></li>
+<li><p><strong>sam_configs</strong> (<em>dict | str | SAMConfig</em>) – SAM input configuration ID(s) and file path(s). Keys are the SAM
+config ID(s) which map to the config column in the project points
+CSV. Values are either a JSON SAM config file or dictionary of SAM
+config inputs. Can also be a single config file path or a
+pre loaded SAMConfig object.</p></li>
+<li><p><strong>tech</strong> (<em>str, optional</em>) – SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+solarwaterheat, lineardirectsteam, geothermal)
+The string should be lower-cased with spaces and _ removed,
+by default None</p></li>
+<li><p><strong>res_file</strong> (<em>str | NoneType</em>) – Optional resource file to find maximum length of project points if
+points slice stop is None.</p></li>
+<li><p><strong>curtailment</strong> (<em>NoneType | dict | str | config.curtailment.Curtailment</em>) – Inputs for curtailment parameters. If not None, curtailment inputs
+are expected. Can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Explicit namespace of curtailment variables (dict)</p></li>
+<li><p>Pointer to curtailment config json file with path (str)</p></li>
+<li><p>Instance of curtailment config object
+(config.curtailment.Curtailment)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.get_sites_from_config" title="reV.config.project_points.ProjectPoints.get_sites_from_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sites_from_config</span></code></a>(config)</p></td>
+<td><p>Get a site list that corresponds to a config key.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.get_sites_from_curtailment" title="reV.config.project_points.ProjectPoints.get_sites_from_curtailment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sites_from_curtailment</span></code></a>(curtailment)</p></td>
+<td><p>Get a site list that corresponds to a curtailment key.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.index" title="reV.config.project_points.ProjectPoints.index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index</span></code></a>(gid)</p></td>
+<td><p>Get the index location (iloc not loc) for a resource gid found in the project points.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.join_df" title="reV.config.project_points.ProjectPoints.join_df"><code class="xref py py-obj docutils literal notranslate"><span class="pre">join_df</span></code></a>(df2[, key])</p></td>
+<td><p>Join new df2 to the _df attribute using the _df's gid as pkey.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.lat_lon_coords" title="reV.config.project_points.ProjectPoints.lat_lon_coords"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lat_lon_coords</span></code></a>(lat_lons, res_file, sam_configs)</p></td>
+<td><p>Generate ProjectPoints for gids nearest to given latitude longitudes</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.regions" title="reV.config.project_points.ProjectPoints.regions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regions</span></code></a>(regions, res_file, sam_configs[, ...])</p></td>
+<td><p>Generate ProjectPoints for gids nearest to given latitude longitudes</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.split" title="reV.config.project_points.ProjectPoints.split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split</span></code></a>(i0, i1, project_points)</p></td>
+<td><p>Return split instance of a ProjectPoints instance w/ site subset.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.all_sam_input_keys" title="reV.config.project_points.ProjectPoints.all_sam_input_keys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">all_sam_input_keys</span></code></a></p></td>
+<td><p>Get a list of unique input keys from all SAM technology configs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.curtailment" title="reV.config.project_points.ProjectPoints.curtailment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">curtailment</span></code></a></p></td>
+<td><p>Get the curtailment config object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.d" title="reV.config.project_points.ProjectPoints.d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">d</span></code></a></p></td>
+<td><p>Get the depths (m) corresponding to the site list.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.df" title="reV.config.project_points.ProjectPoints.df"><code class="xref py py-obj docutils literal notranslate"><span class="pre">df</span></code></a></p></td>
+<td><p>Get the project points dataframe property.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.gids" title="reV.config.project_points.ProjectPoints.gids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gids</span></code></a></p></td>
+<td><p>Get the list of gids (resource file index values) belonging to this instance of ProjectPoints.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.h" title="reV.config.project_points.ProjectPoints.h"><code class="xref py py-obj docutils literal notranslate"><span class="pre">h</span></code></a></p></td>
+<td><p>Get the hub heights corresponding to the site list.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.sam_config_ids" title="reV.config.project_points.ProjectPoints.sam_config_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sam_config_ids</span></code></a></p></td>
+<td><p>Get the SAM configs dictionary property.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.sam_config_obj" title="reV.config.project_points.ProjectPoints.sam_config_obj"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sam_config_obj</span></code></a></p></td>
+<td><p>Get the SAM config object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.sam_inputs" title="reV.config.project_points.ProjectPoints.sam_inputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sam_inputs</span></code></a></p></td>
+<td><p>Get the SAM configuration inputs dictionary property.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.sites" title="reV.config.project_points.ProjectPoints.sites"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sites</span></code></a></p></td>
+<td><p>Get the list of sites (resource file gids) belonging to this instance of ProjectPoints.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.sites_as_slice" title="reV.config.project_points.ProjectPoints.sites_as_slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sites_as_slice</span></code></a></p></td>
+<td><p>Get the sites in slice format.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints.tech" title="reV.config.project_points.ProjectPoints.tech"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tech</span></code></a></p></td>
+<td><p>Get the tech property from the config.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.df">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">df</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.df" title="Link to this definition"></a></dt>
+<dd><p>Get the project points dataframe property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_df</strong> (<em>pd.DataFrame</em>) – Table of sites and corresponding SAM configuration IDs.
+Has columns “gid” and ‘config’.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.sam_config_ids">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sam_config_ids</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sam_config_ids" title="Link to this definition"></a></dt>
+<dd><p>Get the SAM configs dictionary property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>dict</em> – Multi-level dictionary containing multiple SAM input config files.
+The top level key is the SAM config ID, top level value is the SAM
+config file path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.sam_config_obj">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sam_config_obj</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sam_config_obj" title="Link to this definition"></a></dt>
+<dd><p>Get the SAM config object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_sam_config_obj</strong> (<em>reV.config.sam_config.SAMConfig</em>) – SAM configuration object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.sam_inputs">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sam_inputs</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sam_inputs" title="Link to this definition"></a></dt>
+<dd><p>Get the SAM configuration inputs dictionary property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>dict</em> – Multi-level dictionary containing multiple SAM input
+configurations. The top level key is the SAM config ID, top level
+value is the SAM config. Each SAM config is a dictionary with keys
+equal to input names, values equal to the actual inputs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.all_sam_input_keys">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_sam_input_keys</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.all_sam_input_keys" title="Link to this definition"></a></dt>
+<dd><p>Get a list of unique input keys from all SAM technology configs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>all_sam_input_keys</strong> (<em>list</em>) – List of unique strings where each string is a input key for the
+SAM technology configs. For example, “gcr” or “losses” for PVWatts
+or “wind_turbine_hub_ht” for windpower.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.gids">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gids</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.gids" title="Link to this definition"></a></dt>
+<dd><p>Get the list of gids (resource file index values) belonging to this
+instance of ProjectPoints. This is an alias of self.sites.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gids</strong> (<em>list</em>) – List of integer gids (resource file index values) belonging to this
+instance of ProjectPoints. This is an alias of self.sites.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.sites">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sites</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sites" title="Link to this definition"></a></dt>
+<dd><p>Get the list of sites (resource file gids) belonging to this
+instance of ProjectPoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sites</strong> (<em>list</em>) – List of integer sites (resource file gids) belonging to this
+instance of ProjectPoints.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.sites_as_slice">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sites_as_slice</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sites_as_slice" title="Link to this definition"></a></dt>
+<dd><p>Get the sites in slice format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sites_as_slice</strong> (<em>list | slice</em>) – Sites slice belonging to this instance of ProjectPoints.
+The type is slice if possible. Will be a list only if sites are
+non-sequential.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.tech">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tech</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.tech" title="Link to this definition"></a></dt>
+<dd><p>Get the tech property from the config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_tech</strong> (<em>str</em>) – SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+solarwaterheat, lineardirectsteam, geothermal)
+The string should be lower-cased with spaces and _ removed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.h">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.h" title="Link to this definition"></a></dt>
+<dd><p>Get the hub heights corresponding to the site list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_h</strong> (<em>list | NoneType</em>) – Hub heights corresponding to each site, taken from the sam config
+for each site. This is None if the technology is not wind.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.d">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">d</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.d" title="Link to this definition"></a></dt>
+<dd><p>Get the depths (m) corresponding to the site list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_d</strong> (<em>list | NoneType</em>) – Resource depths (m) corresponding to each site, taken from
+the sam config for each site. This is None if the technology
+is not geothermal.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.curtailment">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">curtailment</span></span><a class="headerlink" href="#reV.config.project_points.ProjectPoints.curtailment" title="Link to this definition"></a></dt>
+<dd><p>Get the curtailment config object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_curtailment</strong> (<em>NoneType | reV.config.curtailment.Curtailment</em>) – None if no curtailment, reV curtailment config object if
+curtailment is being assessed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.index">
+<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.index" title="Link to this definition"></a></dt>
+<dd><p>Get the index location (iloc not loc) for a resource gid found in
+the project points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gid</strong> (<em>int</em>) – Resource GID found in the project points gid column.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ind</strong> (<em>int</em>) – Row index of gid in the project points dataframe.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.join_df">
+<span class="sig-name descname"><span class="pre">join_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">SiteDataField.GID</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.join_df"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.join_df" title="Link to this definition"></a></dt>
+<dd><p>Join new df2 to the _df attribute using the _df’s gid as pkey.</p>
+<p>This can be used to add site-specific data to the project_points,
+taking advantage of the points_control iterator/split functions such
+that only the relevant site data is passed to the analysis functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df2</strong> (<em>pd.DataFrame</em>) – Dataframe to be joined to the self._df attribute (this instance
+of project points dataframe). This likely contains
+site-specific inputs that are to be passed to parallel workers.</p></li>
+<li><p><strong>key</strong> (<em>str</em>) – Primary key of df2 to be joined to the _df attribute (this
+instance of the project points dataframe). Primary key
+of the self._df attribute is fixed as the gid column.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.get_sites_from_config">
+<span class="sig-name descname"><span class="pre">get_sites_from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.get_sites_from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.get_sites_from_config" title="Link to this definition"></a></dt>
+<dd><p>Get a site list that corresponds to a config key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str</em>) – SAM configuration ID associated with sites.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sites</strong> (<em>list</em>) – List of sites associated with the requested configuration ID. If
+the configuration ID is not recognized, an empty list is returned.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.get_sites_from_curtailment">
+<span class="sig-name descname"><span class="pre">get_sites_from_curtailment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curtailment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.get_sites_from_curtailment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.get_sites_from_curtailment" title="Link to this definition"></a></dt>
+<dd><p>Get a site list that corresponds to a curtailment key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>curtailment</strong> (<em>str</em>) – Curtailment configuration ID associated with sites.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sites</strong> (<em>list</em>) – List of sites associated with the requested curtailment ID.
+If the curtailment ID is not recognized, an empty list is
+returned.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.split">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.split"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.split" title="Link to this definition"></a></dt>
+<dd><p>Return split instance of a ProjectPoints instance w/ site subset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i0</strong> (<em>int</em>) – Starting INDEX (not resource gid) (inclusive) of the site property
+attribute to include in the split instance. This is not necessarily
+the same as the starting site number, for instance if ProjectPoints
+is sites 20:100, i0=0 i1=10 will result in sites 20:30.</p></li>
+<li><p><strong>i1</strong> (<em>int</em>) – Ending INDEX (not resource gid) (exclusive) of the site property
+attribute to include in the split instance. This is not necessarily
+the same as the final site number, for instance if ProjectPoints is
+sites 20:100, i0=0 i1=10 will result in sites 20:30.</p></li>
+<li><p><strong>project_points</strong> (<em>ProjectPoints</em>) – Instance of project points to split.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sub</strong> (<em>ProjectPoints</em>) – New instance of ProjectPoints with a subset of the following
+attributes: sites, project points df, and the self dictionary data
+struct.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.lat_lon_coords">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lat_lon_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat_lons</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sam_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tech</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curtailment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.lat_lon_coords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.lat_lon_coords" title="Link to this definition"></a></dt>
+<dd><p>Generate ProjectPoints for gids nearest to given latitude longitudes</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul>
+<li><p><strong>lat_lons</strong> (<em>str | tuple | list | ndarray</em>) – Pair or pairs of latitude longitude coordinates</p></li>
+<li><p><strong>res_file</strong> (<em>str</em>) – Resource file, needed to fine nearest neighbors</p></li>
+<li><p><strong>sam_configs</strong> (<em>dict | str | SAMConfig</em>) – SAM input configuration ID(s) and file path(s). Keys are the SAM
+config ID(s) which map to the config column in the project points
+CSV. Values are either a JSON SAM config file or dictionary of SAM
+config inputs. Can also be a single config file path or a
+pre loaded SAMConfig object.</p></li>
+<li><p><strong>tech</strong> (<em>str, optional</em>) – SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+solarwaterheat, lineardirectsteam, geothermal)
+The string should be lower-cased with spaces and _ removed,
+by default None</p></li>
+<li><p><strong>curtailment</strong> (<em>NoneType | dict | str | config.curtailment.Curtailment</em>) – Inputs for curtailment parameters. If not None, curtailment inputs
+are expected. Can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Explicit namespace of curtailment variables (dict)</p></li>
+<li><p>Pointer to curtailment config json file with path (str)</p></li>
+<li><p>Instance of curtailment config object
+(config.curtailment.Curtailment)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>pp</strong> (<em>ProjectPoints</em>) – Initialized ProjectPoints object for points nearest to given
+lat_lons</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.config.project_points.ProjectPoints.regions">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">regions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">regions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sam_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tech</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curtailment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.regions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.regions" title="Link to this definition"></a></dt>
+<dd><p>Generate ProjectPoints for gids nearest to given latitude longitudes</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul>
+<li><p><strong>regions</strong> (<em>dict</em>) – Dictionary of regions to extract points for in the form:
+{‘region’: ‘region_column’}</p></li>
+<li><p><strong>res_file</strong> (<em>str</em>) – Resource file, needed to fine nearest neighbors</p></li>
+<li><p><strong>sam_configs</strong> (<em>dict | str | SAMConfig</em>) – SAM input configuration ID(s) and file path(s). Keys are the SAM
+config ID(s) which map to the config column in the project points
+CSV. Values are either a JSON SAM config file or dictionary of SAM
+config inputs. Can also be a single config file path or a
+pre loaded SAMConfig object.</p></li>
+<li><p><strong>tech</strong> (<em>str, optional</em>) – SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+solarwaterheat, lineardirectsteam, geothermal)
+The string should be lower-cased with spaces and _ removed,
+by default None</p></li>
+<li><p><strong>curtailment</strong> (<em>NoneType | dict | str | config.curtailment.Curtailment</em>) – Inputs for curtailment parameters. If not None, curtailment inputs
+are expected. Can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Explicit namespace of curtailment variables (dict)</p></li>
+<li><p>Pointer to curtailment config json file with path (str)</p></li>
+<li><p>Instance of curtailment config object
+(config.curtailment.Curtailment)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>pp</strong> (<em>ProjectPoints</em>) – Initialized ProjectPoints object for points nearest to given
+lat_lons</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="reV.config.project_points.PointsControl.html" class="btn btn-neutral float-left" title="reV.config.project_points.PointsControl" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reV.config.sam_config.html" class="btn btn-neutral float-right" title="reV.config.sam_config" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Alliance for Sustainable Energy, LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

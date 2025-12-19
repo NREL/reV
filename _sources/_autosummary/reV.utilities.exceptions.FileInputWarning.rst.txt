@@ -1,0 +1,6 @@
+reV.utilities.exceptions.FileInputWarning
+=========================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: FileInputWarning

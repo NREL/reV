@@ -1,0 +1,42 @@
+reV.SAM.defaults
+================
+
+.. automodule:: reV.SAM.defaults
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      AbstractDefaultFromConfigFile
+      DefaultGeothermal
+      DefaultLCOE
+      DefaultLinearFresnelDsgIph
+      DefaultMhkWave
+      DefaultPvSamv1
+      DefaultPvWattsv5
+      DefaultPvWattsv8
+      DefaultSingleOwner
+      DefaultSwh
+      DefaultTcsMoltenSalt
+      DefaultWindPower
+   
+   
+
+   
+   
+   
+
+
+

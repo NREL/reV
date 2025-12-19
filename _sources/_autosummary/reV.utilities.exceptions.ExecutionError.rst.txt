@@ -1,0 +1,6 @@
+reV.utilities.exceptions.ExecutionError
+=======================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: ExecutionError

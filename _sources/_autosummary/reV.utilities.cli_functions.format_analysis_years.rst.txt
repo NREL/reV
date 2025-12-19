@@ -1,0 +1,6 @@
+reV.utilities.cli\_functions.format\_analysis\_years
+====================================================
+
+.. currentmodule:: reV.utilities.cli_functions
+
+.. autofunction:: format_analysis_years

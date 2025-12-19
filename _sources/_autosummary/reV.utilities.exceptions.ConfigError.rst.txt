@@ -1,0 +1,6 @@
+reV.utilities.exceptions.ConfigError
+====================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: ConfigError

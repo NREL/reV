@@ -1,0 +1,60 @@
+reV.config.execution.HPCConfig
+==============================
+
+.. currentmodule:: reV.config.execution
+
+.. autoclass:: HPCConfig
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HPCConfig.check_files
+      ~HPCConfig.check_overwrite_keys
+      ~HPCConfig.clear
+      ~HPCConfig.copy
+      ~HPCConfig.fromkeys
+      ~HPCConfig.get
+      ~HPCConfig.items
+      ~HPCConfig.keys
+      ~HPCConfig.pop
+      ~HPCConfig.popitem
+      ~HPCConfig.resolve_path
+      ~HPCConfig.set_self_dict
+      ~HPCConfig.setdefault
+      ~HPCConfig.str_replace_and_resolve
+      ~HPCConfig.update
+      ~HPCConfig.values
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HPCConfig.REQUIREMENTS
+      ~HPCConfig.STR_REP
+      ~HPCConfig.allocation
+      ~HPCConfig.conda_env
+      ~HPCConfig.config_dir
+      ~HPCConfig.config_keys
+      ~HPCConfig.feature
+      ~HPCConfig.log_level
+      ~HPCConfig.max_workers
+      ~HPCConfig.memory_utilization_limit
+      ~HPCConfig.module
+      ~HPCConfig.name
+      ~HPCConfig.nodes
+      ~HPCConfig.option
+      ~HPCConfig.sh_script
+      ~HPCConfig.sites_per_worker
+   
+   

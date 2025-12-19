@@ -1,0 +1,81 @@
+reV.utilities.SiteDataField
+===========================
+
+.. currentmodule:: reV.utilities
+
+.. autoclass:: SiteDataField
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SiteDataField.map_to
+      ~SiteDataField.map_from
+      ~SiteDataField.encode
+      ~SiteDataField.replace
+      ~SiteDataField.split
+      ~SiteDataField.rsplit
+      ~SiteDataField.join
+      ~SiteDataField.capitalize
+      ~SiteDataField.casefold
+      ~SiteDataField.title
+      ~SiteDataField.center
+      ~SiteDataField.count
+      ~SiteDataField.expandtabs
+      ~SiteDataField.find
+      ~SiteDataField.partition
+      ~SiteDataField.index
+      ~SiteDataField.ljust
+      ~SiteDataField.lower
+      ~SiteDataField.lstrip
+      ~SiteDataField.rfind
+      ~SiteDataField.rindex
+      ~SiteDataField.rjust
+      ~SiteDataField.rstrip
+      ~SiteDataField.rpartition
+      ~SiteDataField.splitlines
+      ~SiteDataField.strip
+      ~SiteDataField.swapcase
+      ~SiteDataField.translate
+      ~SiteDataField.upper
+      ~SiteDataField.startswith
+      ~SiteDataField.endswith
+      ~SiteDataField.removeprefix
+      ~SiteDataField.removesuffix
+      ~SiteDataField.isascii
+      ~SiteDataField.islower
+      ~SiteDataField.isupper
+      ~SiteDataField.istitle
+      ~SiteDataField.isspace
+      ~SiteDataField.isdecimal
+      ~SiteDataField.isdigit
+      ~SiteDataField.isnumeric
+      ~SiteDataField.isalpha
+      ~SiteDataField.isalnum
+      ~SiteDataField.isidentifier
+      ~SiteDataField.isprintable
+      ~SiteDataField.zfill
+      ~SiteDataField.format
+      ~SiteDataField.format_map
+      ~SiteDataField.maketrans
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SiteDataField.description
+      ~SiteDataField.GID
+      ~SiteDataField.CONFIG
+      ~SiteDataField.CURTAILMENT
+   
+   

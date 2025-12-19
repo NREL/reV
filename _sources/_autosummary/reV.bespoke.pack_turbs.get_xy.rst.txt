@@ -1,0 +1,6 @@
+reV.bespoke.pack\_turbs.get\_xy
+===============================
+
+.. currentmodule:: reV.bespoke.pack_turbs
+
+.. autofunction:: get_xy

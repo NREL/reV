@@ -1,0 +1,95 @@
+reV.supply\_curve.points.GenerationSupplyCurvePoint
+===================================================
+
+.. currentmodule:: reV.supply_curve.points
+
+.. autoclass:: GenerationSupplyCurvePoint
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GenerationSupplyCurvePoint.agg_data_layers
+      ~GenerationSupplyCurvePoint.aggregate
+      ~GenerationSupplyCurvePoint.close
+      ~GenerationSupplyCurvePoint.economies_of_scale
+      ~GenerationSupplyCurvePoint.exclusion_weighted_mean
+      ~GenerationSupplyCurvePoint.get_agg_slices
+      ~GenerationSupplyCurvePoint.mean_wind_dirs
+      ~GenerationSupplyCurvePoint.point_summary
+      ~GenerationSupplyCurvePoint.run
+      ~GenerationSupplyCurvePoint.sc_mean
+      ~GenerationSupplyCurvePoint.sc_sum
+      ~GenerationSupplyCurvePoint.summarize
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GenerationSupplyCurvePoint.POWER_DENSITY
+      ~GenerationSupplyCurvePoint.area
+      ~GenerationSupplyCurvePoint.bool_mask
+      ~GenerationSupplyCurvePoint.capacity
+      ~GenerationSupplyCurvePoint.capacity_ac
+      ~GenerationSupplyCurvePoint.capacity_dc
+      ~GenerationSupplyCurvePoint.centroid
+      ~GenerationSupplyCurvePoint.cols
+      ~GenerationSupplyCurvePoint.country
+      ~GenerationSupplyCurvePoint.county
+      ~GenerationSupplyCurvePoint.elevation
+      ~GenerationSupplyCurvePoint.exclusions
+      ~GenerationSupplyCurvePoint.fixed_charge_rate
+      ~GenerationSupplyCurvePoint.friction_data
+      ~GenerationSupplyCurvePoint.gen
+      ~GenerationSupplyCurvePoint.gen_ac_data
+      ~GenerationSupplyCurvePoint.gen_data
+      ~GenerationSupplyCurvePoint.gen_gid_set
+      ~GenerationSupplyCurvePoint.gid
+      ~GenerationSupplyCurvePoint.gid_counts
+      ~GenerationSupplyCurvePoint.h5
+      ~GenerationSupplyCurvePoint.h5_dsets_data
+      ~GenerationSupplyCurvePoint.h5_gid_set
+      ~GenerationSupplyCurvePoint.include_mask
+      ~GenerationSupplyCurvePoint.include_mask_flat
+      ~GenerationSupplyCurvePoint.latitude
+      ~GenerationSupplyCurvePoint.lcoe_data
+      ~GenerationSupplyCurvePoint.longitude
+      ~GenerationSupplyCurvePoint.mean_cf
+      ~GenerationSupplyCurvePoint.mean_cf_ac
+      ~GenerationSupplyCurvePoint.mean_cf_dc
+      ~GenerationSupplyCurvePoint.mean_friction
+      ~GenerationSupplyCurvePoint.mean_h5_dsets_data
+      ~GenerationSupplyCurvePoint.mean_lcoe
+      ~GenerationSupplyCurvePoint.mean_lcoe_friction
+      ~GenerationSupplyCurvePoint.mean_res
+      ~GenerationSupplyCurvePoint.mean_wake_losses
+      ~GenerationSupplyCurvePoint.n_gids
+      ~GenerationSupplyCurvePoint.offshore
+      ~GenerationSupplyCurvePoint.pixel_area
+      ~GenerationSupplyCurvePoint.power_density
+      ~GenerationSupplyCurvePoint.power_density_ac
+      ~GenerationSupplyCurvePoint.regional_multiplier
+      ~GenerationSupplyCurvePoint.res_data
+      ~GenerationSupplyCurvePoint.res_gid_set
+      ~GenerationSupplyCurvePoint.resolution
+      ~GenerationSupplyCurvePoint.rows
+      ~GenerationSupplyCurvePoint.sc_col_ind
+      ~GenerationSupplyCurvePoint.sc_point_annual_energy
+      ~GenerationSupplyCurvePoint.sc_point_gid
+      ~GenerationSupplyCurvePoint.sc_row_ind
+      ~GenerationSupplyCurvePoint.state
+      ~GenerationSupplyCurvePoint.summary
+      ~GenerationSupplyCurvePoint.timezone
+      ~GenerationSupplyCurvePoint.zone_mask
+   
+   

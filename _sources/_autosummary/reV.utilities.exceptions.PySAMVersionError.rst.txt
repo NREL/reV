@@ -1,0 +1,6 @@
+reV.utilities.exceptions.PySAMVersionError
+==========================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: PySAMVersionError

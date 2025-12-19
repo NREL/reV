@@ -1,0 +1,31 @@
+reV.losses.power\_curve.HorizontalTranslation
+=============================================
+
+.. currentmodule:: reV.losses.power_curve
+
+.. autoclass:: HorizontalTranslation
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HorizontalTranslation.apply
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HorizontalTranslation.bounds
+      ~HorizontalTranslation.optm_bounds
+   
+   

@@ -1,0 +1,33 @@
+reV.utilities.slots.SlottedDict
+===============================
+
+.. currentmodule:: reV.utilities.slots
+
+.. autoclass:: SlottedDict
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SlottedDict.items
+      ~SlottedDict.keys
+      ~SlottedDict.update
+      ~SlottedDict.values
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SlottedDict.var_list
+   
+   

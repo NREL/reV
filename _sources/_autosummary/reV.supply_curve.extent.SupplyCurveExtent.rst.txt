@@ -1,0 +1,54 @@
+reV.supply\_curve.extent.SupplyCurveExtent
+==========================================
+
+.. currentmodule:: reV.supply_curve.extent
+
+.. autoclass:: SupplyCurveExtent
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SupplyCurveExtent.close
+      ~SupplyCurveExtent.get_coord
+      ~SupplyCurveExtent.get_excl_points
+      ~SupplyCurveExtent.get_excl_slices
+      ~SupplyCurveExtent.get_flat_excl_ind
+      ~SupplyCurveExtent.get_sc_row_col_ind
+      ~SupplyCurveExtent.get_slice_lookup
+      ~SupplyCurveExtent.valid_sc_points
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SupplyCurveExtent.col_indices
+      ~SupplyCurveExtent.cols_of_excl
+      ~SupplyCurveExtent.excl_col_slices
+      ~SupplyCurveExtent.excl_cols
+      ~SupplyCurveExtent.excl_row_slices
+      ~SupplyCurveExtent.excl_rows
+      ~SupplyCurveExtent.excl_shape
+      ~SupplyCurveExtent.exclusions
+      ~SupplyCurveExtent.lat_lon
+      ~SupplyCurveExtent.latitude
+      ~SupplyCurveExtent.longitude
+      ~SupplyCurveExtent.n_cols
+      ~SupplyCurveExtent.n_rows
+      ~SupplyCurveExtent.points
+      ~SupplyCurveExtent.resolution
+      ~SupplyCurveExtent.row_indices
+      ~SupplyCurveExtent.rows_of_excl
+      ~SupplyCurveExtent.shape
+   
+   

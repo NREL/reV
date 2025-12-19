@@ -1,0 +1,38 @@
+reV.generation.base
+===================
+
+.. automodule:: reV.generation.base
+
+   
+   
+   .. rubric:: Module attributes
+
+   .. autosummary::
+      :toctree:
+   
+      LCOE_REQUIRED_OUTPUTS
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      BaseGen
+   
+   
+
+   
+   
+   
+
+
+

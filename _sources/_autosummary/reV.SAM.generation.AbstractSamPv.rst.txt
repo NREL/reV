@@ -1,0 +1,72 @@
+reV.SAM.generation.AbstractSamPv
+================================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: AbstractSamPv
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AbstractSamPv.ac
+      ~AbstractSamPv.add_scheduled_losses
+      ~AbstractSamPv.agg_albedo
+      ~AbstractSamPv.annual_energy
+      ~AbstractSamPv.assign_inputs
+      ~AbstractSamPv.cf_mean
+      ~AbstractSamPv.cf_mean_ac
+      ~AbstractSamPv.cf_profile
+      ~AbstractSamPv.cf_profile_ac
+      ~AbstractSamPv.check_resource_data
+      ~AbstractSamPv.clipped_power
+      ~AbstractSamPv.collect_outputs
+      ~AbstractSamPv.dc
+      ~AbstractSamPv.default
+      ~AbstractSamPv.drop_leap
+      ~AbstractSamPv.energy_yield
+      ~AbstractSamPv.ensure_res_len
+      ~AbstractSamPv.execute
+      ~AbstractSamPv.gen_profile
+      ~AbstractSamPv.get_sam_res
+      ~AbstractSamPv.get_time_interval
+      ~AbstractSamPv.make_datetime
+      ~AbstractSamPv.outputs_to_utc_arr
+      ~AbstractSamPv.reV_run
+      ~AbstractSamPv.run
+      ~AbstractSamPv.run_gen_and_econ
+      ~AbstractSamPv.set_latitude_tilt_az
+      ~AbstractSamPv.set_resource_data
+      ~AbstractSamPv.system_capacity_ac
+      ~AbstractSamPv.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbstractSamPv.DIR
+      ~AbstractSamPv.IGNORE_ATTRS
+      ~AbstractSamPv.MODULE
+      ~AbstractSamPv.OUTAGE_CONFIG_KEY
+      ~AbstractSamPv.OUTAGE_SEED_CONFIG_KEY
+      ~AbstractSamPv.PYSAM
+      ~AbstractSamPv.attr_dict
+      ~AbstractSamPv.has_timezone
+      ~AbstractSamPv.input_list
+      ~AbstractSamPv.meta
+      ~AbstractSamPv.module
+      ~AbstractSamPv.outage_seed
+      ~AbstractSamPv.pysam
+      ~AbstractSamPv.site
+   
+   

@@ -1,0 +1,33 @@
+reV.hybrids.hybrids.RatioColumns
+================================
+
+.. currentmodule:: reV.hybrids.hybrids
+
+.. autoclass:: RatioColumns
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RatioColumns.count
+      ~RatioColumns.index
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RatioColumns.denom
+      ~RatioColumns.fixed
+      ~RatioColumns.num
+   
+   

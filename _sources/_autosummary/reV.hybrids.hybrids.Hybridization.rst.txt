@@ -1,0 +1,39 @@
+reV.hybrids.hybrids.Hybridization
+=================================
+
+.. currentmodule:: reV.hybrids.hybrids
+
+.. autoclass:: Hybridization
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Hybridization.run
+      ~Hybridization.run_meta
+      ~Hybridization.run_profiles
+      ~Hybridization.save_profiles
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Hybridization.hybrid_meta
+      ~Hybridization.hybrid_time_index
+      ~Hybridization.profiles
+      ~Hybridization.solar_meta
+      ~Hybridization.solar_time_index
+      ~Hybridization.wind_meta
+      ~Hybridization.wind_time_index
+   
+   

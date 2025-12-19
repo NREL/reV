@@ -1,0 +1,33 @@
+reV.qa\_qc.summary.ExclusionsMask
+=================================
+
+.. currentmodule:: reV.qa_qc.summary
+
+.. autoclass:: ExclusionsMask
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ExclusionsMask.exclusions_plot
+      ~ExclusionsMask.exclusions_plotly
+      ~ExclusionsMask.plot
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ExclusionsMask.data
+      ~ExclusionsMask.mask
+   
+   

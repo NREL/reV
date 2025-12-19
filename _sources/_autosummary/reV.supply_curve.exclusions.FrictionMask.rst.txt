@@ -1,0 +1,41 @@
+reV.supply\_curve.exclusions.FrictionMask
+=========================================
+
+.. currentmodule:: reV.supply_curve.exclusions
+
+.. autoclass:: FrictionMask
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FrictionMask.add_layer
+      ~FrictionMask.close
+      ~FrictionMask.run
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FrictionMask.FILTER_KERNELS
+      ~FrictionMask.excl_h5
+      ~FrictionMask.excl_layers
+      ~FrictionMask.latitude
+      ~FrictionMask.layer_names
+      ~FrictionMask.layers
+      ~FrictionMask.longitude
+      ~FrictionMask.mask
+      ~FrictionMask.nodata_lookup
+      ~FrictionMask.shape
+   
+   

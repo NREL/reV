@@ -1,0 +1,35 @@
+reV.hybrids.hybrids.HybridsData
+===============================
+
+.. currentmodule:: reV.hybrids.hybrids
+
+.. autoclass:: HybridsData
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HybridsData.contains_col
+      ~HybridsData.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HybridsData.hybrid_time_index
+      ~HybridsData.solar_meta
+      ~HybridsData.solar_time_index
+      ~HybridsData.wind_meta
+      ~HybridsData.wind_time_index
+   
+   

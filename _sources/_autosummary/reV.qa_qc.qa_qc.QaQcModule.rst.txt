@@ -1,0 +1,42 @@
+reV.qa\_qc.qa\_qc.QaQcModule
+============================
+
+.. currentmodule:: reV.qa_qc.qa_qc
+
+.. autoclass:: QaQcModule
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~QaQcModule.area_filter_kernel
+      ~QaQcModule.cmap
+      ~QaQcModule.columns
+      ~QaQcModule.dsets
+      ~QaQcModule.excl_dict
+      ~QaQcModule.excl_fpath
+      ~QaQcModule.fpath
+      ~QaQcModule.group
+      ~QaQcModule.lcoe
+      ~QaQcModule.min_area
+      ~QaQcModule.plot_step
+      ~QaQcModule.plot_type
+      ~QaQcModule.process_size
+      ~QaQcModule.sub_dir
+   
+   

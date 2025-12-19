@@ -1,0 +1,6 @@
+reV.qa\_qc.cli\_qa\_qc.cli\_qa\_qc
+==================================
+
+.. currentmodule:: reV.qa_qc.cli_qa_qc
+
+.. autofunction:: cli_qa_qc

@@ -1,0 +1,35 @@
+reV.handlers
+============
+
+.. automodule:: reV.handlers
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   cli_collect
+   cli_multi_year
+   exclusions
+   multi_year
+   outputs
+   transmission
+

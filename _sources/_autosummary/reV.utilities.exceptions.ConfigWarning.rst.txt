@@ -1,0 +1,6 @@
+reV.utilities.exceptions.ConfigWarning
+======================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: ConfigWarning

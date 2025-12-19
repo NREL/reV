@@ -1,0 +1,156 @@
+reV.utilities.SupplyCurveField
+==============================
+
+.. currentmodule:: reV.utilities
+
+.. autoclass:: SupplyCurveField
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SupplyCurveField.map_to
+      ~SupplyCurveField.map_from
+      ~SupplyCurveField.encode
+      ~SupplyCurveField.replace
+      ~SupplyCurveField.split
+      ~SupplyCurveField.rsplit
+      ~SupplyCurveField.join
+      ~SupplyCurveField.capitalize
+      ~SupplyCurveField.casefold
+      ~SupplyCurveField.title
+      ~SupplyCurveField.center
+      ~SupplyCurveField.count
+      ~SupplyCurveField.expandtabs
+      ~SupplyCurveField.find
+      ~SupplyCurveField.partition
+      ~SupplyCurveField.index
+      ~SupplyCurveField.ljust
+      ~SupplyCurveField.lower
+      ~SupplyCurveField.lstrip
+      ~SupplyCurveField.rfind
+      ~SupplyCurveField.rindex
+      ~SupplyCurveField.rjust
+      ~SupplyCurveField.rstrip
+      ~SupplyCurveField.rpartition
+      ~SupplyCurveField.splitlines
+      ~SupplyCurveField.strip
+      ~SupplyCurveField.swapcase
+      ~SupplyCurveField.translate
+      ~SupplyCurveField.upper
+      ~SupplyCurveField.startswith
+      ~SupplyCurveField.endswith
+      ~SupplyCurveField.removeprefix
+      ~SupplyCurveField.removesuffix
+      ~SupplyCurveField.isascii
+      ~SupplyCurveField.islower
+      ~SupplyCurveField.isupper
+      ~SupplyCurveField.istitle
+      ~SupplyCurveField.isspace
+      ~SupplyCurveField.isdecimal
+      ~SupplyCurveField.isdigit
+      ~SupplyCurveField.isnumeric
+      ~SupplyCurveField.isalpha
+      ~SupplyCurveField.isalnum
+      ~SupplyCurveField.isidentifier
+      ~SupplyCurveField.isprintable
+      ~SupplyCurveField.zfill
+      ~SupplyCurveField.format
+      ~SupplyCurveField.format_map
+      ~SupplyCurveField.maketrans
+      ~SupplyCurveField.map_from_legacy
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SupplyCurveField.description
+      ~SupplyCurveField.units
+      ~SupplyCurveField.SC_GID
+      ~SupplyCurveField.LATITUDE
+      ~SupplyCurveField.LONGITUDE
+      ~SupplyCurveField.COUNTRY
+      ~SupplyCurveField.STATE
+      ~SupplyCurveField.COUNTY
+      ~SupplyCurveField.ELEVATION
+      ~SupplyCurveField.TIMEZONE
+      ~SupplyCurveField.SC_POINT_GID
+      ~SupplyCurveField.SC_ROW_IND
+      ~SupplyCurveField.SC_COL_IND
+      ~SupplyCurveField.SOURCE_GIDS
+      ~SupplyCurveField.RES_GIDS
+      ~SupplyCurveField.GEN_GIDS
+      ~SupplyCurveField.GID_COUNTS
+      ~SupplyCurveField.N_GIDS
+      ~SupplyCurveField.ZONE_ID
+      ~SupplyCurveField.MEAN_RES
+      ~SupplyCurveField.MEAN_CF_AC
+      ~SupplyCurveField.MEAN_CF_DC
+      ~SupplyCurveField.WAKE_LOSSES
+      ~SupplyCurveField.MEAN_LCOE
+      ~SupplyCurveField.CAPACITY_AC_MW
+      ~SupplyCurveField.CAPACITY_DC_MW
+      ~SupplyCurveField.OFFSHORE
+      ~SupplyCurveField.AREA_SQ_KM
+      ~SupplyCurveField.MEAN_FRICTION
+      ~SupplyCurveField.MEAN_LCOE_FRICTION
+      ~SupplyCurveField.RAW_LCOE
+      ~SupplyCurveField.EOS_MULT
+      ~SupplyCurveField.FIXED_EOS_MULT
+      ~SupplyCurveField.VAR_EOS_MULT
+      ~SupplyCurveField.REG_MULT
+      ~SupplyCurveField.SC_POINT_ANNUAL_ENERGY_MWH
+      ~SupplyCurveField.COST_BASE_CC_USD_PER_AC_MW
+      ~SupplyCurveField.COST_SITE_CC_USD_PER_AC_MW
+      ~SupplyCurveField.COST_BASE_FOC_USD_PER_AC_MW
+      ~SupplyCurveField.COST_SITE_FOC_USD_PER_AC_MW
+      ~SupplyCurveField.COST_BASE_VOC_USD_PER_AC_MWH
+      ~SupplyCurveField.COST_SITE_VOC_USD_PER_AC_MWH
+      ~SupplyCurveField.FIXED_CHARGE_RATE
+      ~SupplyCurveField.POSSIBLE_X_COORDS
+      ~SupplyCurveField.POSSIBLE_Y_COORDS
+      ~SupplyCurveField.TURBINE_X_COORDS
+      ~SupplyCurveField.TURBINE_Y_COORDS
+      ~SupplyCurveField.N_TURBINES
+      ~SupplyCurveField.INCLUDED_AREA
+      ~SupplyCurveField.INCLUDED_AREA_CAPACITY_DENSITY
+      ~SupplyCurveField.CONVEX_HULL_AREA
+      ~SupplyCurveField.CONVEX_HULL_CAPACITY_DENSITY
+      ~SupplyCurveField.FULL_CELL_CAPACITY_DENSITY
+      ~SupplyCurveField.BESPOKE_AEP
+      ~SupplyCurveField.BESPOKE_OBJECTIVE
+      ~SupplyCurveField.BESPOKE_CAPITAL_COST
+      ~SupplyCurveField.BESPOKE_FIXED_OPERATING_COST
+      ~SupplyCurveField.BESPOKE_VARIABLE_OPERATING_COST
+      ~SupplyCurveField.BESPOKE_BALANCE_OF_SYSTEM_COST
+      ~SupplyCurveField.TRANS_GID
+      ~SupplyCurveField.TRANS_TYPE
+      ~SupplyCurveField.TOTAL_LCOE_FRICTION
+      ~SupplyCurveField.TRANS_CAPACITY
+      ~SupplyCurveField.DIST_SPUR_KM
+      ~SupplyCurveField.DIST_EXPORT_KM
+      ~SupplyCurveField.REINFORCEMENT_DIST_KM
+      ~SupplyCurveField.TIE_LINE_COST_PER_MW
+      ~SupplyCurveField.CONNECTION_COST_PER_MW
+      ~SupplyCurveField.EXPORT_COST_PER_MW
+      ~SupplyCurveField.REINFORCEMENT_COST_PER_MW
+      ~SupplyCurveField.TOTAL_TRANS_CAP_COST_PER_MW
+      ~SupplyCurveField.LCOT
+      ~SupplyCurveField.TOTAL_LCOE
+      ~SupplyCurveField.N_PARALLEL_TRANS
+      ~SupplyCurveField.POI_LAT
+      ~SupplyCurveField.POI_LON
+      ~SupplyCurveField.REINFORCEMENT_POI_LAT
+      ~SupplyCurveField.REINFORCEMENT_POI_LON
+   
+   

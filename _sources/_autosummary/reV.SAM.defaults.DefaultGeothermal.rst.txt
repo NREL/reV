@@ -1,0 +1,31 @@
+reV.SAM.defaults.DefaultGeothermal
+==================================
+
+.. currentmodule:: reV.SAM.defaults
+
+.. autoclass:: DefaultGeothermal
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DefaultGeothermal.default
+      ~DefaultGeothermal.init_default_pysam_obj
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DefaultGeothermal.CONFIG_FILE_NAME
+   
+   

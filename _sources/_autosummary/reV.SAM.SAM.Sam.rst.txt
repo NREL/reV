@@ -1,0 +1,35 @@
+reV.SAM.SAM.Sam
+===============
+
+.. currentmodule:: reV.SAM.SAM
+
+.. autoclass:: Sam
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Sam.assign_inputs
+      ~Sam.default
+      ~Sam.execute
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Sam.IGNORE_ATTRS
+      ~Sam.attr_dict
+      ~Sam.input_list
+      ~Sam.pysam
+   
+   

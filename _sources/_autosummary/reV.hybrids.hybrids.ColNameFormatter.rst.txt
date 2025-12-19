@@ -1,0 +1,30 @@
+reV.hybrids.hybrids.ColNameFormatter
+====================================
+
+.. currentmodule:: reV.hybrids.hybrids
+
+.. autoclass:: ColNameFormatter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ColNameFormatter.fmt
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ColNameFormatter.ALLOWED
+   
+   

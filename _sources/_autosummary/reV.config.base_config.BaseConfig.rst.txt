@@ -1,0 +1,50 @@
+reV.config.base\_config.BaseConfig
+==================================
+
+.. currentmodule:: reV.config.base_config
+
+.. autoclass:: BaseConfig
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BaseConfig.check_files
+      ~BaseConfig.check_overwrite_keys
+      ~BaseConfig.clear
+      ~BaseConfig.copy
+      ~BaseConfig.fromkeys
+      ~BaseConfig.get
+      ~BaseConfig.items
+      ~BaseConfig.keys
+      ~BaseConfig.pop
+      ~BaseConfig.popitem
+      ~BaseConfig.resolve_path
+      ~BaseConfig.set_self_dict
+      ~BaseConfig.setdefault
+      ~BaseConfig.str_replace_and_resolve
+      ~BaseConfig.update
+      ~BaseConfig.values
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BaseConfig.REQUIREMENTS
+      ~BaseConfig.STR_REP
+      ~BaseConfig.config_dir
+      ~BaseConfig.config_keys
+      ~BaseConfig.log_level
+      ~BaseConfig.name
+   
+   

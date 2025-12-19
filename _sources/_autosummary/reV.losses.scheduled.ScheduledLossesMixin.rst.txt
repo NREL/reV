@@ -1,0 +1,32 @@
+reV.losses.scheduled.ScheduledLossesMixin
+=========================================
+
+.. currentmodule:: reV.losses.scheduled
+
+.. autoclass:: ScheduledLossesMixin
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ScheduledLossesMixin.add_scheduled_losses
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ScheduledLossesMixin.OUTAGE_CONFIG_KEY
+      ~ScheduledLossesMixin.OUTAGE_SEED_CONFIG_KEY
+      ~ScheduledLossesMixin.outage_seed
+   
+   

@@ -1,0 +1,6 @@
+reV.losses.utils.filter\_unknown\_month\_names
+==============================================
+
+.. currentmodule:: reV.losses.utils
+
+.. autofunction:: filter_unknown_month_names

@@ -1,0 +1,6 @@
+reV.utilities.exceptions.FileInputError
+=======================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: FileInputError

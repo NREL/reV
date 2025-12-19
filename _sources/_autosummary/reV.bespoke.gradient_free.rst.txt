@@ -1,0 +1,31 @@
+reV.bespoke.gradient\_free
+==========================
+
+.. automodule:: reV.bespoke.gradient_free
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      GeneticAlgorithm
+   
+   
+
+   
+   
+   
+
+
+

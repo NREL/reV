@@ -1,0 +1,31 @@
+reV.qa\_qc.summary.SummarizeSupplyCurve
+=======================================
+
+.. currentmodule:: reV.qa_qc.summary
+
+.. autoclass:: SummarizeSupplyCurve
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SummarizeSupplyCurve.run
+      ~SummarizeSupplyCurve.supply_curve_summary
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SummarizeSupplyCurve.sc_table
+   
+   

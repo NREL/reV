@@ -1,0 +1,78 @@
+reV.utilities.FieldEnum
+=======================
+
+.. currentmodule:: reV.utilities
+
+.. autoclass:: FieldEnum
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FieldEnum.encode
+      ~FieldEnum.replace
+      ~FieldEnum.split
+      ~FieldEnum.rsplit
+      ~FieldEnum.join
+      ~FieldEnum.capitalize
+      ~FieldEnum.casefold
+      ~FieldEnum.title
+      ~FieldEnum.center
+      ~FieldEnum.count
+      ~FieldEnum.expandtabs
+      ~FieldEnum.find
+      ~FieldEnum.partition
+      ~FieldEnum.index
+      ~FieldEnum.ljust
+      ~FieldEnum.lower
+      ~FieldEnum.lstrip
+      ~FieldEnum.rfind
+      ~FieldEnum.rindex
+      ~FieldEnum.rjust
+      ~FieldEnum.rstrip
+      ~FieldEnum.rpartition
+      ~FieldEnum.splitlines
+      ~FieldEnum.strip
+      ~FieldEnum.swapcase
+      ~FieldEnum.translate
+      ~FieldEnum.upper
+      ~FieldEnum.startswith
+      ~FieldEnum.endswith
+      ~FieldEnum.removeprefix
+      ~FieldEnum.removesuffix
+      ~FieldEnum.isascii
+      ~FieldEnum.islower
+      ~FieldEnum.isupper
+      ~FieldEnum.istitle
+      ~FieldEnum.isspace
+      ~FieldEnum.isdecimal
+      ~FieldEnum.isdigit
+      ~FieldEnum.isnumeric
+      ~FieldEnum.isalpha
+      ~FieldEnum.isalnum
+      ~FieldEnum.isidentifier
+      ~FieldEnum.isprintable
+      ~FieldEnum.zfill
+      ~FieldEnum.format
+      ~FieldEnum.format_map
+      ~FieldEnum.maketrans
+      ~FieldEnum.map_to
+      ~FieldEnum.map_from
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FieldEnum.description
+   
+   

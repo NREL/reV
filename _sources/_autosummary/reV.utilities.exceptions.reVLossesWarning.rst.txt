@@ -1,0 +1,6 @@
+reV.utilities.exceptions.reVLossesWarning
+=========================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: reVLossesWarning

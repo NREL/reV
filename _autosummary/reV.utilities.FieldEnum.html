@@ -1,0 +1,1314 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>reV.utilities.FieldEnum &mdash; reV 0.14.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c64b94d8"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.utilities.ModuleName" href="reV.utilities.ModuleName.html" />
+    <link rel="prev" title="reV.utilities.DocEnum" href="reV.utilities.DocEnum.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/installation_usage.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-recommended-for-analysts">Option 1: Install from PIP (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#rev-ecosystem">reV Ecosystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#rev-command-line-tools">reV command line tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#recommended-citation">Recommended Citation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.marine_energy.html">reV Marine Energy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.marine_energy.html#plots-of-the-example-marine-energy-output">Plots of the Example Marine Energy Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#plots-of-the-example-offshore-output">Plots of the Example Offshore Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.rev_losses.html">reV Losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.rev_losses.html#power-curve-losses-wind-only">Power Curve Losses (Wind only)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.rev_losses.html#power-curve-losses-for-a-single-site">Power Curve Losses for a single site</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.rev_losses.html#outage-losses-wind-and-solar">Outage Losses (Wind and Solar)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.aws_pcluster.html">Running reV on an AWS Parallel Cluster</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-an-aws-parallel-cluster">Setting up an AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#notes-on-running-rev-in-the-aws-parallel-cluster">Notes on Running reV in the AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#using-rev-directly-with-s3-files">Using reV Directly with S3 Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-hsds-local-servers-on-your-compute-cluster">Setting up HSDS Local Servers on your Compute Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-an-hsds-kubernetes-service">Setting up an HSDS Kubernetes Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-an-hsds-lambda-service">Setting up an HSDS Lambda Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#simple-h5pyd-test">Simple H5PYD Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#compute-cost-estimates">Compute Cost Estimates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="reV.SAM.html">reV.SAM</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.SAM.html">reV.SAM.SAM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.SAM.RevPySam.html">reV.SAM.SAM.RevPySam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.SAM.Sam.html">reV.SAM.SAM.Sam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.SAM.SamResourceRetriever.html">reV.SAM.SAM.SamResourceRetriever</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.defaults.html">reV.SAM.defaults</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.AbstractDefaultFromConfigFile.html">reV.SAM.defaults.AbstractDefaultFromConfigFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultGeothermal.html">reV.SAM.defaults.DefaultGeothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultLCOE.html">reV.SAM.defaults.DefaultLCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultLinearFresnelDsgIph.html">reV.SAM.defaults.DefaultLinearFresnelDsgIph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultMhkWave.html">reV.SAM.defaults.DefaultMhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultPvSamv1.html">reV.SAM.defaults.DefaultPvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultPvWattsv5.html">reV.SAM.defaults.DefaultPvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultPvWattsv8.html">reV.SAM.defaults.DefaultPvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultSingleOwner.html">reV.SAM.defaults.DefaultSingleOwner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultSwh.html">reV.SAM.defaults.DefaultSwh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultTcsMoltenSalt.html">reV.SAM.defaults.DefaultTcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultWindPower.html">reV.SAM.defaults.DefaultWindPower</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.econ.html">reV.SAM.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.econ.Economic.html">reV.SAM.econ.Economic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.econ.LCOE.html">reV.SAM.econ.LCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.econ.SingleOwner.html">reV.SAM.econ.SingleOwner</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.generation.html">reV.SAM.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamGeneration.html">reV.SAM.generation.AbstractSamGeneration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamGenerationFromWeatherFile.html">reV.SAM.generation.AbstractSamGenerationFromWeatherFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamPv.html">reV.SAM.generation.AbstractSamPv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamSolar.html">reV.SAM.generation.AbstractSamSolar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamWind.html">reV.SAM.generation.AbstractSamWind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.Geothermal.html">reV.SAM.generation.Geothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.LinearDirectSteam.html">reV.SAM.generation.LinearDirectSteam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.MhkWave.html">reV.SAM.generation.MhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvSamv1.html">reV.SAM.generation.PvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvWattsv5.html">reV.SAM.generation.PvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvWattsv7.html">reV.SAM.generation.PvWattsv7</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvWattsv8.html">reV.SAM.generation.PvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.SolarWaterHeat.html">reV.SAM.generation.SolarWaterHeat</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.TcsMoltenSalt.html">reV.SAM.generation.TcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.WindPower.html">reV.SAM.generation.WindPower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.WindPowerPD.html">reV.SAM.generation.WindPowerPD</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.version_checker.html">reV.SAM.version_checker</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.version_checker.PySamVersionChecker.html">reV.SAM.version_checker.PySamVersionChecker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.windbos.html">reV.SAM.windbos</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.windbos.WindBos.html">reV.SAM.windbos.WindBos</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.bespoke.html">reV.bespoke</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.bespoke.html">reV.bespoke.bespoke</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeMultiPlantData.html">reV.bespoke.bespoke.BespokeMultiPlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeSinglePlant.html">reV.bespoke.bespoke.BespokeSinglePlant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeSinglePlantData.html">reV.bespoke.bespoke.BespokeSinglePlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeWindPlants.html">reV.bespoke.bespoke.BespokeWindPlants</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.cli_bespoke.html">reV.bespoke.cli_bespoke</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.gradient_free.html">reV.bespoke.gradient_free</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.gradient_free.GeneticAlgorithm.html">reV.bespoke.gradient_free.GeneticAlgorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.pack_turbs.html">reV.bespoke.pack_turbs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.pack_turbs.get_xy.html">reV.bespoke.pack_turbs.get_xy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.pack_turbs.PackTurbines.html">reV.bespoke.pack_turbs.PackTurbines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.place_turbines.html">reV.bespoke.place_turbines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.place_turbines.none_until_optimized.html">reV.bespoke.place_turbines.none_until_optimized</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.place_turbines.PlaceTurbines.html">reV.bespoke.place_turbines.PlaceTurbines</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.cli.html">reV.cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reV.config.html">reV.config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.base_analysis_config.html">reV.config.base_analysis_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.base_analysis_config.AnalysisConfig.html">reV.config.base_analysis_config.AnalysisConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.base_config.html">reV.config.base_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.base_config.BaseConfig.html">reV.config.base_config.BaseConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.cli_project_points.html">reV.config.cli_project_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.curtailment.html">reV.config.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.curtailment.Curtailment.html">reV.config.curtailment.Curtailment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.execution.html">reV.config.execution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.execution.BaseExecutionConfig.html">reV.config.execution.BaseExecutionConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.execution.HPCConfig.html">reV.config.execution.HPCConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.execution.SlurmConfig.html">reV.config.execution.SlurmConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.output_request.html">reV.config.output_request</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.output_request.OutputRequest.html">reV.config.output_request.OutputRequest</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.output_request.SAMOutputRequest.html">reV.config.output_request.SAMOutputRequest</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.project_points.html">reV.config.project_points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.project_points.PointsControl.html">reV.config.project_points.PointsControl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.project_points.ProjectPoints.html">reV.config.project_points.ProjectPoints</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.sam_config.html">reV.config.sam_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.sam_config.SAMConfig.html">reV.config.sam_config.SAMConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.sam_config.SAMInputsChecker.html">reV.config.sam_config.SAMInputsChecker</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.econ.html">reV.econ</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.cli_econ.html">reV.econ.cli_econ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.econ.html">reV.econ.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.econ.Econ.html">reV.econ.econ.Econ</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.economies_of_scale.html">reV.econ.economies_of_scale</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.economies_of_scale.EconomiesOfScale.html">reV.econ.economies_of_scale.EconomiesOfScale</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.utilities.html">reV.econ.utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.utilities.lcoe_fcr.html">reV.econ.utilities.lcoe_fcr</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.generation.html">reV.generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.base.html">reV.generation.base</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.base.LCOE_REQUIRED_OUTPUTS.html">reV.generation.base.LCOE_REQUIRED_OUTPUTS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.base.BaseGen.html">reV.generation.base.BaseGen</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.cli_gen.html">reV.generation.cli_gen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.generation.html">reV.generation.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.generation.Gen.html">reV.generation.generation.Gen</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.handlers.html">reV.handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.cli_collect.html">reV.handlers.cli_collect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.cli_multi_year.html">reV.handlers.cli_multi_year</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.exclusions.html">reV.handlers.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.exclusions.ExclusionLayers.html">reV.handlers.exclusions.ExclusionLayers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.multi_year.html">reV.handlers.multi_year</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.multi_year.my_collect_groups.html">reV.handlers.multi_year.my_collect_groups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.multi_year.MultiYear.html">reV.handlers.multi_year.MultiYear</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.multi_year.MultiYearGroup.html">reV.handlers.multi_year.MultiYearGroup</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.outputs.html">reV.handlers.outputs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.outputs.Outputs.html">reV.handlers.outputs.Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.transmission.html">reV.handlers.transmission</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.transmission.POIFeatures.html">reV.handlers.transmission.POIFeatures</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.transmission.TransmissionCosts.html">reV.handlers.transmission.TransmissionCosts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.transmission.TransmissionFeatures.html">reV.handlers.transmission.TransmissionFeatures</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.hybrids.html">reV.hybrids</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.hybrids.cli_hybrids.html">reV.hybrids.cli_hybrids</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.hybrids.hybrid_methods.html">reV.hybrids.hybrid_methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_capacity.html">reV.hybrids.hybrid_methods.aggregate_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_capacity_factor.html">reV.hybrids.hybrid_methods.aggregate_capacity_factor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_solar_capacity.html">reV.hybrids.hybrid_methods.aggregate_solar_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_wind_capacity.html">reV.hybrids.hybrid_methods.aggregate_wind_capacity</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.hybrids.hybrids.html">reV.hybrids.hybrids</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.ColNameFormatter.html">reV.hybrids.hybrids.ColNameFormatter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.Hybridization.html">reV.hybrids.hybrids.Hybridization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.HybridsData.html">reV.hybrids.hybrids.HybridsData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.MetaHybridizer.html">reV.hybrids.hybrids.MetaHybridizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.RatioColumns.html">reV.hybrids.hybrids.RatioColumns</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.losses.html">reV.losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.losses.power_curve.html">reV.losses.power_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.TRANSFORMATIONS.html">reV.losses.power_curve.TRANSFORMATIONS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.adjust_power_curve.html">reV.losses.power_curve.adjust_power_curve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.AbstractPowerCurveTransformation.html">reV.losses.power_curve.AbstractPowerCurveTransformation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.ExponentialStretching.html">reV.losses.power_curve.ExponentialStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.HorizontalTranslation.html">reV.losses.power_curve.HorizontalTranslation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.LinearStretching.html">reV.losses.power_curve.LinearStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurve.html">reV.losses.power_curve.PowerCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveLosses.html">reV.losses.power_curve.PowerCurveLosses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveLossesInput.html">reV.losses.power_curve.PowerCurveLossesInput</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveLossesMixin.html">reV.losses.power_curve.PowerCurveLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveWindResource.html">reV.losses.power_curve.PowerCurveWindResource</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.losses.scheduled.html">reV.losses.scheduled</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.Outage.html">reV.losses.scheduled.Outage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.OutageScheduler.html">reV.losses.scheduled.OutageScheduler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.ScheduledLossesMixin.html">reV.losses.scheduled.ScheduledLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.SingleOutageScheduler.html">reV.losses.scheduled.SingleOutageScheduler</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.losses.utils.html">reV.losses.utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.convert_to_full_month_names.html">reV.losses.utils.convert_to_full_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.filter_unknown_month_names.html">reV.losses.utils.filter_unknown_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.format_month_name.html">reV.losses.utils.format_month_name</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.full_month_name_from_abbr.html">reV.losses.utils.full_month_name_from_abbr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.hourly_indices_for_months.html">reV.losses.utils.hourly_indices_for_months</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.month_index.html">reV.losses.utils.month_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.month_indices.html">reV.losses.utils.month_indices</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.nrwal.html">reV.nrwal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.nrwal.cli_nrwal.html">reV.nrwal.cli_nrwal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.nrwal.nrwal.html">reV.nrwal.nrwal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.nrwal.nrwal.RevNrwal.html">reV.nrwal.nrwal.RevNrwal</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.cli_qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc.cli_qa_qc</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.qa_qc.html">reV.qa_qc.qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.qa_qc.QaQc.html">reV.qa_qc.qa_qc.QaQc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.qa_qc.QaQcModule.html">reV.qa_qc.qa_qc.QaQcModule</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.summary.html">reV.qa_qc.summary</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.ExclusionsMask.html">reV.qa_qc.summary.ExclusionsMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.PlotBase.html">reV.qa_qc.summary.PlotBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SummarizeH5.html">reV.qa_qc.summary.SummarizeH5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SummarizeSupplyCurve.html">reV.qa_qc.summary.SummarizeSupplyCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SummaryPlots.html">reV.qa_qc.summary.SummaryPlots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SupplyCurvePlot.html">reV.qa_qc.summary.SupplyCurvePlot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.cli_rep_profiles.html">reV.rep_profiles.cli_rep_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.rep_profiles.html">reV.rep_profiles.rep_profiles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RegionRepProfile.html">reV.rep_profiles.rep_profiles.RegionRepProfile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RepProfiles.html">reV.rep_profiles.rep_profiles.RepProfiles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RepProfilesBase.html">reV.rep_profiles.rep_profiles.RepProfilesBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RepresentativeMethods.html">reV.rep_profiles.rep_profiles.RepresentativeMethods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.aggregation.html">reV.supply_curve.aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.AbstractAggFileHandler.html">reV.supply_curve.aggregation.AbstractAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.AggFileHandler.html">reV.supply_curve.aggregation.AggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.Aggregation.html">reV.supply_curve.aggregation.Aggregation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.BaseAggregation.html">reV.supply_curve.aggregation.BaseAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.cli_sc_aggregation.html">reV.supply_curve.cli_sc_aggregation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.cli_supply_curve.html">reV.supply_curve.cli_supply_curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.cli_tech_mapping.html">reV.supply_curve.cli_tech_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.competitive_wind_farms.html">reV.supply_curve.competitive_wind_farms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.html">reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.exclusions.html">reV.supply_curve.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.ExclusionMask.html">reV.supply_curve.exclusions.ExclusionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.ExclusionMaskFromDict.html">reV.supply_curve.exclusions.ExclusionMaskFromDict</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.FrictionMask.html">reV.supply_curve.exclusions.FrictionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.LayerMask.html">reV.supply_curve.exclusions.LayerMask</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.extent.html">reV.supply_curve.extent</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.extent.SupplyCurveExtent.html">reV.supply_curve.extent.SupplyCurveExtent</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.points.html">reV.supply_curve.points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.AbstractSupplyCurvePoint.html">reV.supply_curve.points.AbstractSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.AggregationSupplyCurvePoint.html">reV.supply_curve.points.AggregationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.GenerationSupplyCurvePoint.html">reV.supply_curve.points.GenerationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.SupplyCurvePoint.html">reV.supply_curve.points.SupplyCurvePoint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.sc_aggregation.html">reV.supply_curve.sc_aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.html">reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.sc_aggregation.SupplyCurveAggregation.html">reV.supply_curve.sc_aggregation.SupplyCurveAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.supply_curve.html">reV.supply_curve.supply_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.supply_curve.DEFAULT_COLUMNS.html">reV.supply_curve.supply_curve.DEFAULT_COLUMNS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi.html">reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.supply_curve.SupplyCurve.html">reV.supply_curve.supply_curve.SupplyCurve</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.tech_mapping.html">reV.supply_curve.tech_mapping</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.tech_mapping.TechMapping.html">reV.supply_curve.tech_mapping.TechMapping</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="reference internal" href="reV.utilities.html">reV.utilities</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.log_versions.html">reV.utilities.log_versions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.log_versions.html#reV.utilities.log_versions"><code class="docutils literal notranslate"><span class="pre">log_versions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.DocEnum.html">reV.utilities.DocEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.DocEnum.html#reV.utilities.DocEnum"><code class="docutils literal notranslate"><span class="pre">DocEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">reV.utilities.FieldEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#reV.utilities.FieldEnum"><code class="docutils literal notranslate"><span class="pre">FieldEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.ModuleName.html">reV.utilities.ModuleName</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.ModuleName.html#reV.utilities.ModuleName"><code class="docutils literal notranslate"><span class="pre">ModuleName</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.ResourceMetaField.html">reV.utilities.ResourceMetaField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.ResourceMetaField.html#reV.utilities.ResourceMetaField"><code class="docutils literal notranslate"><span class="pre">ResourceMetaField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.SiteDataField.html">reV.utilities.SiteDataField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.SiteDataField.html#reV.utilities.SiteDataField"><code class="docutils literal notranslate"><span class="pre">SiteDataField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.SupplyCurveField.html">reV.utilities.SupplyCurveField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.SupplyCurveField.html#reV.utilities.SupplyCurveField"><code class="docutils literal notranslate"><span class="pre">SupplyCurveField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.cli_functions.html">reV.utilities.cli_functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.add_to_run_attrs.html">reV.utilities.cli_functions.add_to_run_attrs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.compile_descriptions.html">reV.utilities.cli_functions.compile_descriptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.format_analysis_years.html">reV.utilities.cli_functions.format_analysis_years</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.init_cli_logging.html">reV.utilities.cli_functions.init_cli_logging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.parse_from_pipeline.html">reV.utilities.cli_functions.parse_from_pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.curtailment.html">reV.utilities.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.curtailment.curtail.html">reV.utilities.curtailment.curtail</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.exceptions.html">reV.utilities.exceptions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.CollectionRuntimeError.html">reV.utilities.exceptions.CollectionRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.CollectionValueError.html">reV.utilities.exceptions.CollectionValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.CollectionWarning.html">reV.utilities.exceptions.CollectionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ConfigError.html">reV.utilities.exceptions.ConfigError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ConfigWarning.html">reV.utilities.exceptions.ConfigWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.DataShapeError.html">reV.utilities.exceptions.DataShapeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.EmptySupplyCurvePointError.html">reV.utilities.exceptions.EmptySupplyCurvePointError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ExclusionLayerError.html">reV.utilities.exceptions.ExclusionLayerError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ExecutionError.html">reV.utilities.exceptions.ExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ExtrapolationWarning.html">reV.utilities.exceptions.ExtrapolationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.FileInputError.html">reV.utilities.exceptions.FileInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.FileInputWarning.html">reV.utilities.exceptions.FileInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerKeyError.html">reV.utilities.exceptions.HandlerKeyError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerRuntimeError.html">reV.utilities.exceptions.HandlerRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerValueError.html">reV.utilities.exceptions.HandlerValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerWarning.html">reV.utilities.exceptions.HandlerWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.InputError.html">reV.utilities.exceptions.InputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.InputWarning.html">reV.utilities.exceptions.InputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.JSONError.html">reV.utilities.exceptions.JSONError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.MultiFileExclusionError.html">reV.utilities.exceptions.MultiFileExclusionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.NearestNeighborError.html">reV.utilities.exceptions.NearestNeighborError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.OffshoreWindInputError.html">reV.utilities.exceptions.OffshoreWindInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.OffshoreWindInputWarning.html">reV.utilities.exceptions.OffshoreWindInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.OutputWarning.html">reV.utilities.exceptions.OutputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ParallelExecutionWarning.html">reV.utilities.exceptions.ParallelExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.PipelineError.html">reV.utilities.exceptions.PipelineError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ProjectPointsValueError.html">reV.utilities.exceptions.ProjectPointsValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.PySAMVersionError.html">reV.utilities.exceptions.PySAMVersionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.PySAMVersionWarning.html">reV.utilities.exceptions.PySAMVersionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ResourceError.html">reV.utilities.exceptions.ResourceError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMExecutionError.html">reV.utilities.exceptions.SAMExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMExecutionWarning.html">reV.utilities.exceptions.SAMExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMInputError.html">reV.utilities.exceptions.SAMInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMInputWarning.html">reV.utilities.exceptions.SAMInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SlurmWarning.html">reV.utilities.exceptions.SlurmWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SupplyCurveError.html">reV.utilities.exceptions.SupplyCurveError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SupplyCurveInputError.html">reV.utilities.exceptions.SupplyCurveInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.WhileLoopPackingError.html">reV.utilities.exceptions.WhileLoopPackingError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVDeprecationWarning.html">reV.utilities.exceptions.reVDeprecationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVError.html">reV.utilities.exceptions.reVError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVLossesValueError.html">reV.utilities.exceptions.reVLossesValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVLossesWarning.html">reV.utilities.exceptions.reVLossesWarning</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.pytest_utils.html">reV.utilities.pytest_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.pytest_utils.make_fake_h5_chunks.html">reV.utilities.pytest_utils.make_fake_h5_chunks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.pytest_utils.pd_date_range.html">reV.utilities.pytest_utils.pd_date_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.pytest_utils.write_chunk.html">reV.utilities.pytest_utils.write_chunk</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.slots.html">reV.utilities.slots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.slots.SlottedDict.html">reV.utilities.slots.SlottedDict</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.version.html">reV.version</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_cli/cli.html">CLI reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV.html">reV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20template-configs.html">reV template-configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20batch.html">reV batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20pipeline.html">reV pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20project-points.html">reV project-points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_cli/reV%20project-points.html#rev-project-points-from-lat-lons">from-lat-lons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_cli/reV%20project-points.html#rev-project-points-from-regions">from-regions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20bespoke.html">reV bespoke</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20generation.html">reV generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20econ.html">reV econ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20collect.html">reV collect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20multi-year.html">reV multi-year</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20supply-curve-aggregation.html">reV supply-curve-aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20supply-curve.html">reV supply-curve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20poi-sort.html">reV poi-sort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20rep-profiles.html">reV rep-profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20hybrids.html">reV hybrids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20nrwal.html">reV nrwal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20qa-qc.html">reV qa-qc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20script.html">reV script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20status.html">reV status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20reset-status.html">reV reset-status</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="reV.html">reV</a></li>
+          <li class="breadcrumb-item"><a href="reV.utilities.html">reV.utilities</a></li>
+      <li class="breadcrumb-item active">reV.utilities.FieldEnum</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/nrel/reV/blob/main/docs/source/_autosummary/reV.utilities.FieldEnum.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rev-utilities-fieldenum">
+<h1>reV.utilities.FieldEnum<a class="headerlink" href="#rev-utilities-fieldenum" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FieldEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/utilities.html#FieldEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.utilities.FieldEnum" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="reV.utilities.DocEnum.html#reV.utilities.DocEnum" title="reV.utilities.DocEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocEnum</span></code></a></p>
+<p>Base Field enum with some mapping methods.</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.encode" title="reV.utilities.FieldEnum.encode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">encode</span></code></a>([encoding, errors])</p></td>
+<td><p>Encode the string using the codec registered for encoding.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.replace" title="reV.utilities.FieldEnum.replace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace</span></code></a>(old, new[, count])</p></td>
+<td><p>Return a copy with all occurrences of substring old replaced by new.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.split" title="reV.utilities.FieldEnum.split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split</span></code></a>([sep, maxsplit])</p></td>
+<td><p>Return a list of the substrings in the string, using sep as the separator string.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.rsplit" title="reV.utilities.FieldEnum.rsplit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rsplit</span></code></a>([sep, maxsplit])</p></td>
+<td><p>Return a list of the substrings in the string, using sep as the separator string.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.join" title="reV.utilities.FieldEnum.join"><code class="xref py py-obj docutils literal notranslate"><span class="pre">join</span></code></a>(iterable, /)</p></td>
+<td><p>Concatenate any number of strings.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.capitalize" title="reV.utilities.FieldEnum.capitalize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">capitalize</span></code></a>()</p></td>
+<td><p>Return a capitalized version of the string.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.casefold" title="reV.utilities.FieldEnum.casefold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">casefold</span></code></a>()</p></td>
+<td><p>Return a version of the string suitable for caseless comparisons.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.title" title="reV.utilities.FieldEnum.title"><code class="xref py py-obj docutils literal notranslate"><span class="pre">title</span></code></a>()</p></td>
+<td><p>Return a version of the string where each word is titlecased.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.center" title="reV.utilities.FieldEnum.center"><code class="xref py py-obj docutils literal notranslate"><span class="pre">center</span></code></a>(width[, fillchar])</p></td>
+<td><p>Return a centered string of length width.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.count" title="reV.utilities.FieldEnum.count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">count</span></code></a>(sub[, start[, end]])</p></td>
+<td><p>Return the number of non-overlapping occurrences of substring sub in string S[start:end].</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.expandtabs" title="reV.utilities.FieldEnum.expandtabs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expandtabs</span></code></a>([tabsize])</p></td>
+<td><p>Return a copy where all tab characters are expanded using spaces.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.find" title="reV.utilities.FieldEnum.find"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find</span></code></a>(sub[, start[, end]])</p></td>
+<td><p>Return the lowest index in S where substring sub is found, such that sub is contained within S[start:end].</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.partition" title="reV.utilities.FieldEnum.partition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partition</span></code></a>(sep, /)</p></td>
+<td><p>Partition the string into three parts using the given separator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.index" title="reV.utilities.FieldEnum.index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index</span></code></a>(sub[, start[, end]])</p></td>
+<td><p>Return the lowest index in S where substring sub is found, such that sub is contained within S[start:end].</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.ljust" title="reV.utilities.FieldEnum.ljust"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ljust</span></code></a>(width[, fillchar])</p></td>
+<td><p>Return a left-justified string of length width.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.lower" title="reV.utilities.FieldEnum.lower"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lower</span></code></a>()</p></td>
+<td><p>Return a copy of the string converted to lowercase.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.lstrip" title="reV.utilities.FieldEnum.lstrip"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lstrip</span></code></a>([chars])</p></td>
+<td><p>Return a copy of the string with leading whitespace removed.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.rfind" title="reV.utilities.FieldEnum.rfind"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rfind</span></code></a>(sub[, start[, end]])</p></td>
+<td><p>Return the highest index in S where substring sub is found, such that sub is contained within S[start:end].</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.rindex" title="reV.utilities.FieldEnum.rindex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rindex</span></code></a>(sub[, start[, end]])</p></td>
+<td><p>Return the highest index in S where substring sub is found, such that sub is contained within S[start:end].</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.rjust" title="reV.utilities.FieldEnum.rjust"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rjust</span></code></a>(width[, fillchar])</p></td>
+<td><p>Return a right-justified string of length width.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.rstrip" title="reV.utilities.FieldEnum.rstrip"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rstrip</span></code></a>([chars])</p></td>
+<td><p>Return a copy of the string with trailing whitespace removed.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.rpartition" title="reV.utilities.FieldEnum.rpartition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rpartition</span></code></a>(sep, /)</p></td>
+<td><p>Partition the string into three parts using the given separator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.splitlines" title="reV.utilities.FieldEnum.splitlines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">splitlines</span></code></a>([keepends])</p></td>
+<td><p>Return a list of the lines in the string, breaking at line boundaries.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.strip" title="reV.utilities.FieldEnum.strip"><code class="xref py py-obj docutils literal notranslate"><span class="pre">strip</span></code></a>([chars])</p></td>
+<td><p>Return a copy of the string with leading and trailing whitespace removed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.swapcase" title="reV.utilities.FieldEnum.swapcase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">swapcase</span></code></a>()</p></td>
+<td><p>Convert uppercase characters to lowercase and lowercase characters to uppercase.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.translate" title="reV.utilities.FieldEnum.translate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate</span></code></a>(table, /)</p></td>
+<td><p>Replace each character in the string using the given translation table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.upper" title="reV.utilities.FieldEnum.upper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upper</span></code></a>()</p></td>
+<td><p>Return a copy of the string converted to uppercase.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.startswith" title="reV.utilities.FieldEnum.startswith"><code class="xref py py-obj docutils literal notranslate"><span class="pre">startswith</span></code></a>(prefix[, start[, end]])</p></td>
+<td><p>Return True if S starts with the specified prefix, False otherwise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.endswith" title="reV.utilities.FieldEnum.endswith"><code class="xref py py-obj docutils literal notranslate"><span class="pre">endswith</span></code></a>(suffix[, start[, end]])</p></td>
+<td><p>Return True if S ends with the specified suffix, False otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.removeprefix" title="reV.utilities.FieldEnum.removeprefix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">removeprefix</span></code></a>(prefix, /)</p></td>
+<td><p>Return a str with the given prefix string removed if present.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.removesuffix" title="reV.utilities.FieldEnum.removesuffix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">removesuffix</span></code></a>(suffix, /)</p></td>
+<td><p>Return a str with the given suffix string removed if present.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.isascii" title="reV.utilities.FieldEnum.isascii"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isascii</span></code></a>()</p></td>
+<td><p>Return True if all characters in the string are ASCII, False otherwise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.islower" title="reV.utilities.FieldEnum.islower"><code class="xref py py-obj docutils literal notranslate"><span class="pre">islower</span></code></a>()</p></td>
+<td><p>Return True if the string is a lowercase string, False otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.isupper" title="reV.utilities.FieldEnum.isupper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isupper</span></code></a>()</p></td>
+<td><p>Return True if the string is an uppercase string, False otherwise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.istitle" title="reV.utilities.FieldEnum.istitle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">istitle</span></code></a>()</p></td>
+<td><p>Return True if the string is a title-cased string, False otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.isspace" title="reV.utilities.FieldEnum.isspace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isspace</span></code></a>()</p></td>
+<td><p>Return True if the string is a whitespace string, False otherwise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.isdecimal" title="reV.utilities.FieldEnum.isdecimal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isdecimal</span></code></a>()</p></td>
+<td><p>Return True if the string is a decimal string, False otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.isdigit" title="reV.utilities.FieldEnum.isdigit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isdigit</span></code></a>()</p></td>
+<td><p>Return True if the string is a digit string, False otherwise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.isnumeric" title="reV.utilities.FieldEnum.isnumeric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isnumeric</span></code></a>()</p></td>
+<td><p>Return True if the string is a numeric string, False otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.isalpha" title="reV.utilities.FieldEnum.isalpha"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isalpha</span></code></a>()</p></td>
+<td><p>Return True if the string is an alphabetic string, False otherwise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.isalnum" title="reV.utilities.FieldEnum.isalnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isalnum</span></code></a>()</p></td>
+<td><p>Return True if the string is an alpha-numeric string, False otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.isidentifier" title="reV.utilities.FieldEnum.isidentifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isidentifier</span></code></a>()</p></td>
+<td><p>Return True if the string is a valid Python identifier, False otherwise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.isprintable" title="reV.utilities.FieldEnum.isprintable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isprintable</span></code></a>()</p></td>
+<td><p>Return True if the string is printable, False otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.zfill" title="reV.utilities.FieldEnum.zfill"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zfill</span></code></a>(width, /)</p></td>
+<td><p>Pad a numeric string with zeros on the left, to fill a field of the given width.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.format" title="reV.utilities.FieldEnum.format"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Return a formatted version of S, using substitutions from args and kwargs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.format_map" title="reV.utilities.FieldEnum.format_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_map</span></code></a>(mapping)</p></td>
+<td><p>Return a formatted version of S, using substitutions from mapping.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.maketrans" title="reV.utilities.FieldEnum.maketrans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">maketrans</span></code></a></p></td>
+<td><p>Return a translation table usable for str.translate().</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.map_to" title="reV.utilities.FieldEnum.map_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">map_to</span></code></a>(other)</p></td>
+<td><p>Return a rename map from this enum to another.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.map_from" title="reV.utilities.FieldEnum.map_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">map_from</span></code></a>(other)</p></td>
+<td><p>Map from a dictionary of name / member pairs to this enum.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.utilities.FieldEnum.description" title="reV.utilities.FieldEnum.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span></code></a></p></td>
+<td><p>Description of enum member pulled from docstring</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.map_to">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">map_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/utilities.html#FieldEnum.map_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.utilities.FieldEnum.map_to" title="Link to this definition"></a></dt>
+<dd><p>Return a rename map from this enum to another.</p>
+<p>Mapping is performed on matching enum names. In other words, if
+both enums have a <cite>ONE</cite> attribute, this will be mapped from one
+enum to another.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code>) – <code class="docutils literal notranslate"><span class="pre">Enum</span></code> subclass with <code class="docutils literal notranslate"><span class="pre">__members__</span></code> attribute.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>dict</em> – Dictionary mapping matching values from one enum to another.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">Test1</span><span class="p">(</span><span class="n">FieldEnum</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">ONE</span> <span class="o">=</span> <span class="s2">&quot;one_x&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">TWO</span> <span class="o">=</span> <span class="s2">&quot;two&quot;</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">Test2</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">ONE</span> <span class="o">=</span> <span class="s2">&quot;one_y&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">THREE</span> <span class="o">=</span> <span class="s2">&quot;three&quot;</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test1</span><span class="o">.</span><span class="n">map_to</span><span class="p">(</span><span class="n">Test2</span><span class="p">)</span>
+<span class="go">{&lt;Test1.ONE: &#39;one_x&#39;&gt;: &lt;Test2.ONE: &#39;one_y&#39;&gt;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.map_from">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">map_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/utilities.html#FieldEnum.map_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.utilities.FieldEnum.map_from" title="Link to this definition"></a></dt>
+<dd><p>Map from a dictionary of name / member pairs to this enum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<em>dict</em>) – Dictionary mapping key values (typically old aliases) to
+enum values. For example, <code class="docutils literal notranslate"><span class="pre">{'sc_gid':</span> <span class="pre">'SC_GID'}</span></code> would
+return a dictionary that maps <code class="docutils literal notranslate"><span class="pre">'sc_gid'</span></code> to the <code class="docutils literal notranslate"><span class="pre">SC_GID</span></code>
+member of this enum.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>dict</em> – Mapping of input dictionary keys to member values of this
+enum.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">Test</span><span class="p">(</span><span class="n">FieldEnum</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">ONE</span> <span class="o">=</span> <span class="s2">&quot;one_x&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">TWO</span> <span class="o">=</span> <span class="s2">&quot;two_y&quot;</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Test</span><span class="o">.</span><span class="n">map_from</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;ONE&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;TWO&quot;</span><span class="p">})</span>
+<span class="go">{1: &lt;Test.ONE: &#39;one_x&#39;&gt;, 2: &lt;Test.TWO: &#39;two_y&#39;&gt;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.__add__">
+<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.__add__" title="Link to this definition"></a></dt>
+<dd><p>Return self+value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.__mul__">
+<span class="sig-name descname"><span class="pre">__mul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.__mul__" title="Link to this definition"></a></dt>
+<dd><p>Return self*value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'strict'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.encode" title="Link to this definition"></a></dt>
+<dd><p>Encode the string using the codec registered for encoding.</p>
+<dl class="simple">
+<dt>encoding</dt><dd><p>The encoding in which to encode the string.</p>
+</dd>
+<dt>errors</dt><dd><p>The error handling scheme to use for encoding errors.
+The default is ‘strict’ meaning that encoding errors raise a
+UnicodeEncodeError.  Other possible values are ‘ignore’, ‘replace’ and
+‘xmlcharrefreplace’ as well as any other name registered with
+codecs.register_error that can handle UnicodeEncodeErrors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.replace">
+<span class="sig-name descname"><span class="pre">replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.replace" title="Link to this definition"></a></dt>
+<dd><p>Return a copy with all occurrences of substring old replaced by new.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>count</dt><dd><p>Maximum number of occurrences to replace.
+-1 (the default value) means replace all occurrences.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>If the optional argument count is given, only the first count occurrences are
+replaced.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.split">
+<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxsplit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.split" title="Link to this definition"></a></dt>
+<dd><p>Return a list of the substrings in the string, using sep as the separator string.</p>
+<blockquote>
+<div><dl>
+<dt>sep</dt><dd><p>The separator used to split the string.</p>
+<p>When set to None (the default value), will split on any whitespace
+character (including n r t f and spaces) and will discard
+empty strings from the result.</p>
+</dd>
+<dt>maxsplit</dt><dd><p>Maximum number of splits.
+-1 (the default value) means no limit.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Splitting starts at the front of the string and works to the end.</p>
+<p>Note, str.split() is mainly useful for data that has been intentionally
+delimited.  With natural text that includes punctuation, consider using
+the regular expression module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.rsplit">
+<span class="sig-name descname"><span class="pre">rsplit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxsplit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.rsplit" title="Link to this definition"></a></dt>
+<dd><p>Return a list of the substrings in the string, using sep as the separator string.</p>
+<blockquote>
+<div><dl>
+<dt>sep</dt><dd><p>The separator used to split the string.</p>
+<p>When set to None (the default value), will split on any whitespace
+character (including n r t f and spaces) and will discard
+empty strings from the result.</p>
+</dd>
+<dt>maxsplit</dt><dd><p>Maximum number of splits.
+-1 (the default value) means no limit.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Splitting starts at the end of the string and works to the front.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.join">
+<span class="sig-name descname"><span class="pre">join</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.join" title="Link to this definition"></a></dt>
+<dd><p>Concatenate any number of strings.</p>
+<p>The string whose method is called is inserted in between each given string.
+The result is returned as a new string.</p>
+<p>Example: ‘.’.join([‘ab’, ‘pq’, ‘rs’]) -&gt; ‘ab.pq.rs’</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.capitalize">
+<span class="sig-name descname"><span class="pre">capitalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.capitalize" title="Link to this definition"></a></dt>
+<dd><p>Return a capitalized version of the string.</p>
+<p>More specifically, make the first character have upper case and the rest lower
+case.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.casefold">
+<span class="sig-name descname"><span class="pre">casefold</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.casefold" title="Link to this definition"></a></dt>
+<dd><p>Return a version of the string suitable for caseless comparisons.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.title">
+<span class="sig-name descname"><span class="pre">title</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.title" title="Link to this definition"></a></dt>
+<dd><p>Return a version of the string where each word is titlecased.</p>
+<p>More specifically, words start with uppercased characters and all remaining
+cased characters have lower case.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.center">
+<span class="sig-name descname"><span class="pre">center</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fillchar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.center" title="Link to this definition"></a></dt>
+<dd><p>Return a centered string of length width.</p>
+<p>Padding is done using the specified fill character (default is a space).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.count">
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="headerlink" href="#reV.utilities.FieldEnum.count" title="Link to this definition"></a></dt>
+<dd><p>Return the number of non-overlapping occurrences of substring sub in
+string S[start:end].  Optional arguments start and end are
+interpreted as in slice notation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.expandtabs">
+<span class="sig-name descname"><span class="pre">expandtabs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tabsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.expandtabs" title="Link to this definition"></a></dt>
+<dd><p>Return a copy where all tab characters are expanded using spaces.</p>
+<p>If tabsize is not given, a tab size of 8 characters is assumed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.find">
+<span class="sig-name descname"><span class="pre">find</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="headerlink" href="#reV.utilities.FieldEnum.find" title="Link to this definition"></a></dt>
+<dd><p>Return the lowest index in S where substring sub is found,
+such that sub is contained within S[start:end].  Optional
+arguments start and end are interpreted as in slice notation.</p>
+<p>Return -1 on failure.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.partition">
+<span class="sig-name descname"><span class="pre">partition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sep</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.partition" title="Link to this definition"></a></dt>
+<dd><p>Partition the string into three parts using the given separator.</p>
+<p>This will search for the separator in the string.  If the separator is found,
+returns a 3-tuple containing the part before the separator, the separator
+itself, and the part after it.</p>
+<p>If the separator is not found, returns a 3-tuple containing the original string
+and two empty strings.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.index">
+<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="headerlink" href="#reV.utilities.FieldEnum.index" title="Link to this definition"></a></dt>
+<dd><p>Return the lowest index in S where substring sub is found,
+such that sub is contained within S[start:end].  Optional
+arguments start and end are interpreted as in slice notation.</p>
+<p>Raises ValueError when the substring is not found.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.ljust">
+<span class="sig-name descname"><span class="pre">ljust</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fillchar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.ljust" title="Link to this definition"></a></dt>
+<dd><p>Return a left-justified string of length width.</p>
+<p>Padding is done using the specified fill character (default is a space).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.lower">
+<span class="sig-name descname"><span class="pre">lower</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.lower" title="Link to this definition"></a></dt>
+<dd><p>Return a copy of the string converted to lowercase.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.lstrip">
+<span class="sig-name descname"><span class="pre">lstrip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.lstrip" title="Link to this definition"></a></dt>
+<dd><p>Return a copy of the string with leading whitespace removed.</p>
+<p>If chars is given and not None, remove characters in chars instead.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.rfind">
+<span class="sig-name descname"><span class="pre">rfind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="headerlink" href="#reV.utilities.FieldEnum.rfind" title="Link to this definition"></a></dt>
+<dd><p>Return the highest index in S where substring sub is found,
+such that sub is contained within S[start:end].  Optional
+arguments start and end are interpreted as in slice notation.</p>
+<p>Return -1 on failure.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.rindex">
+<span class="sig-name descname"><span class="pre">rindex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="headerlink" href="#reV.utilities.FieldEnum.rindex" title="Link to this definition"></a></dt>
+<dd><p>Return the highest index in S where substring sub is found,
+such that sub is contained within S[start:end].  Optional
+arguments start and end are interpreted as in slice notation.</p>
+<p>Raises ValueError when the substring is not found.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.rjust">
+<span class="sig-name descname"><span class="pre">rjust</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fillchar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.rjust" title="Link to this definition"></a></dt>
+<dd><p>Return a right-justified string of length width.</p>
+<p>Padding is done using the specified fill character (default is a space).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.rstrip">
+<span class="sig-name descname"><span class="pre">rstrip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.rstrip" title="Link to this definition"></a></dt>
+<dd><p>Return a copy of the string with trailing whitespace removed.</p>
+<p>If chars is given and not None, remove characters in chars instead.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.rpartition">
+<span class="sig-name descname"><span class="pre">rpartition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sep</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.rpartition" title="Link to this definition"></a></dt>
+<dd><p>Partition the string into three parts using the given separator.</p>
+<p>This will search for the separator in the string, starting at the end. If
+the separator is found, returns a 3-tuple containing the part before the
+separator, the separator itself, and the part after it.</p>
+<p>If the separator is not found, returns a 3-tuple containing two empty strings
+and the original string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.splitlines">
+<span class="sig-name descname"><span class="pre">splitlines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keepends</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.splitlines" title="Link to this definition"></a></dt>
+<dd><p>Return a list of the lines in the string, breaking at line boundaries.</p>
+<p>Line breaks are not included in the resulting list unless keepends is given and
+true.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.strip">
+<span class="sig-name descname"><span class="pre">strip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.strip" title="Link to this definition"></a></dt>
+<dd><p>Return a copy of the string with leading and trailing whitespace removed.</p>
+<p>If chars is given and not None, remove characters in chars instead.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.swapcase">
+<span class="sig-name descname"><span class="pre">swapcase</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.swapcase" title="Link to this definition"></a></dt>
+<dd><p>Convert uppercase characters to lowercase and lowercase characters to uppercase.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.translate">
+<span class="sig-name descname"><span class="pre">translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.translate" title="Link to this definition"></a></dt>
+<dd><p>Replace each character in the string using the given translation table.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>table</dt><dd><p>Translation table, which must be a mapping of Unicode ordinals to
+Unicode ordinals, strings, or None.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>The table must implement lookup/indexing via __getitem__, for instance a
+dictionary or list.  If this operation raises LookupError, the character is
+left untouched.  Characters mapped to None are deleted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.upper">
+<span class="sig-name descname"><span class="pre">upper</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.upper" title="Link to this definition"></a></dt>
+<dd><p>Return a copy of the string converted to uppercase.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.startswith">
+<span class="sig-name descname"><span class="pre">startswith</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="headerlink" href="#reV.utilities.FieldEnum.startswith" title="Link to this definition"></a></dt>
+<dd><p>Return True if S starts with the specified prefix, False otherwise.
+With optional start, test S beginning at that position.
+With optional end, stop comparing S at that position.
+prefix can also be a tuple of strings to try.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.endswith">
+<span class="sig-name descname"><span class="pre">endswith</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="headerlink" href="#reV.utilities.FieldEnum.endswith" title="Link to this definition"></a></dt>
+<dd><p>Return True if S ends with the specified suffix, False otherwise.
+With optional start, test S beginning at that position.
+With optional end, stop comparing S at that position.
+suffix can also be a tuple of strings to try.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.removeprefix">
+<span class="sig-name descname"><span class="pre">removeprefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.removeprefix" title="Link to this definition"></a></dt>
+<dd><p>Return a str with the given prefix string removed if present.</p>
+<p>If the string starts with the prefix string, return string[len(prefix):].
+Otherwise, return a copy of the original string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.removesuffix">
+<span class="sig-name descname"><span class="pre">removesuffix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.removesuffix" title="Link to this definition"></a></dt>
+<dd><p>Return a str with the given suffix string removed if present.</p>
+<p>If the string ends with the suffix string and that suffix is not empty,
+return string[:-len(suffix)]. Otherwise, return a copy of the original
+string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.isascii">
+<span class="sig-name descname"><span class="pre">isascii</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.isascii" title="Link to this definition"></a></dt>
+<dd><p>Return True if all characters in the string are ASCII, False otherwise.</p>
+<p>ASCII characters have code points in the range U+0000-U+007F.
+Empty string is ASCII too.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.islower">
+<span class="sig-name descname"><span class="pre">islower</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.islower" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is a lowercase string, False otherwise.</p>
+<p>A string is lowercase if all cased characters in the string are lowercase and
+there is at least one cased character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.isupper">
+<span class="sig-name descname"><span class="pre">isupper</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.isupper" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is an uppercase string, False otherwise.</p>
+<p>A string is uppercase if all cased characters in the string are uppercase and
+there is at least one cased character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.istitle">
+<span class="sig-name descname"><span class="pre">istitle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.istitle" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is a title-cased string, False otherwise.</p>
+<p>In a title-cased string, upper- and title-case characters may only
+follow uncased characters and lowercase characters only cased ones.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.isspace">
+<span class="sig-name descname"><span class="pre">isspace</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.isspace" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is a whitespace string, False otherwise.</p>
+<p>A string is whitespace if all characters in the string are whitespace and there
+is at least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.isdecimal">
+<span class="sig-name descname"><span class="pre">isdecimal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.isdecimal" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is a decimal string, False otherwise.</p>
+<p>A string is a decimal string if all characters in the string are decimal and
+there is at least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.isdigit">
+<span class="sig-name descname"><span class="pre">isdigit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.isdigit" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is a digit string, False otherwise.</p>
+<p>A string is a digit string if all characters in the string are digits and there
+is at least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.isnumeric">
+<span class="sig-name descname"><span class="pre">isnumeric</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.isnumeric" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is a numeric string, False otherwise.</p>
+<p>A string is numeric if all characters in the string are numeric and there is at
+least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.isalpha">
+<span class="sig-name descname"><span class="pre">isalpha</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.isalpha" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is an alphabetic string, False otherwise.</p>
+<p>A string is alphabetic if all characters in the string are alphabetic and there
+is at least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.isalnum">
+<span class="sig-name descname"><span class="pre">isalnum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.isalnum" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is an alpha-numeric string, False otherwise.</p>
+<p>A string is alpha-numeric if all characters in the string are alpha-numeric and
+there is at least one character in the string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.isidentifier">
+<span class="sig-name descname"><span class="pre">isidentifier</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.isidentifier" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is a valid Python identifier, False otherwise.</p>
+<p>Call keyword.iskeyword(s) to test whether string s is a reserved identifier,
+such as “def” or “class”.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.isprintable">
+<span class="sig-name descname"><span class="pre">isprintable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.isprintable" title="Link to this definition"></a></dt>
+<dd><p>Return True if the string is printable, False otherwise.</p>
+<p>A string is printable if all of its characters are considered printable in
+repr() or if it is empty.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.zfill">
+<span class="sig-name descname"><span class="pre">zfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.zfill" title="Link to this definition"></a></dt>
+<dd><p>Pad a numeric string with zeros on the left, to fill a field of the given width.</p>
+<p>The string is never truncated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#reV.utilities.FieldEnum.format" title="Link to this definition"></a></dt>
+<dd><p>Return a formatted version of S, using substitutions from args and kwargs.
+The substitutions are identified by braces (‘{’ and ‘}’).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.format_map">
+<span class="sig-name descname"><span class="pre">format_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapping</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#reV.utilities.FieldEnum.format_map" title="Link to this definition"></a></dt>
+<dd><p>Return a formatted version of S, using substitutions from mapping.
+The substitutions are identified by braces (‘{’ and ‘}’).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.maketrans">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">maketrans</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reV.utilities.FieldEnum.maketrans" title="Link to this definition"></a></dt>
+<dd><p>Return a translation table usable for str.translate().</p>
+<p>If there is only one argument, it must be a dictionary mapping Unicode
+ordinals (integers) or characters to Unicode ordinals, strings or None.
+Character keys will be then converted to ordinals.
+If there are two arguments, they must be strings of equal length, and
+in the resulting dictionary, each character in x will be mapped to the
+character at the same position in y. If there is a third argument, it
+must be a string, whose characters will be mapped to None in the result.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.utilities.FieldEnum.description">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><a class="headerlink" href="#reV.utilities.FieldEnum.description" title="Link to this definition"></a></dt>
+<dd><p>Description of enum member pulled from docstring</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="reV.utilities.DocEnum.html" class="btn btn-neutral float-left" title="reV.utilities.DocEnum" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reV.utilities.ModuleName.html" class="btn btn-neutral float-right" title="reV.utilities.ModuleName" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Alliance for Sustainable Energy, LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

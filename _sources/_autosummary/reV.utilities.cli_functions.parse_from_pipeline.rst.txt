@@ -1,0 +1,6 @@
+reV.utilities.cli\_functions.parse\_from\_pipeline
+==================================================
+
+.. currentmodule:: reV.utilities.cli_functions
+
+.. autofunction:: parse_from_pipeline

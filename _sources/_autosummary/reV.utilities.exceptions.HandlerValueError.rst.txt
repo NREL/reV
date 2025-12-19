@@ -1,0 +1,6 @@
+reV.utilities.exceptions.HandlerValueError
+==========================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: HandlerValueError

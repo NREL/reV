@@ -1,0 +1,45 @@
+reV.supply\_curve.supply\_curve
+===============================
+
+.. automodule:: reV.supply_curve.supply_curve
+
+   
+   
+   .. rubric:: Module attributes
+
+   .. autosummary::
+      :toctree:
+   
+      DEFAULT_COLUMNS
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      max_tcc_per_mw_for_poi
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      SupplyCurve
+   
+   
+
+   
+   
+   
+
+
+

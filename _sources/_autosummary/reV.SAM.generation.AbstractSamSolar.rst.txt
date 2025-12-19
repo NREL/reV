@@ -1,0 +1,64 @@
+reV.SAM.generation.AbstractSamSolar
+===================================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: AbstractSamSolar
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AbstractSamSolar.add_scheduled_losses
+      ~AbstractSamSolar.agg_albedo
+      ~AbstractSamSolar.annual_energy
+      ~AbstractSamSolar.assign_inputs
+      ~AbstractSamSolar.cf_mean
+      ~AbstractSamSolar.cf_profile
+      ~AbstractSamSolar.check_resource_data
+      ~AbstractSamSolar.collect_outputs
+      ~AbstractSamSolar.default
+      ~AbstractSamSolar.drop_leap
+      ~AbstractSamSolar.energy_yield
+      ~AbstractSamSolar.ensure_res_len
+      ~AbstractSamSolar.execute
+      ~AbstractSamSolar.gen_profile
+      ~AbstractSamSolar.get_sam_res
+      ~AbstractSamSolar.get_time_interval
+      ~AbstractSamSolar.make_datetime
+      ~AbstractSamSolar.outputs_to_utc_arr
+      ~AbstractSamSolar.reV_run
+      ~AbstractSamSolar.run
+      ~AbstractSamSolar.run_gen_and_econ
+      ~AbstractSamSolar.set_resource_data
+      ~AbstractSamSolar.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbstractSamSolar.DIR
+      ~AbstractSamSolar.IGNORE_ATTRS
+      ~AbstractSamSolar.MODULE
+      ~AbstractSamSolar.OUTAGE_CONFIG_KEY
+      ~AbstractSamSolar.OUTAGE_SEED_CONFIG_KEY
+      ~AbstractSamSolar.attr_dict
+      ~AbstractSamSolar.has_timezone
+      ~AbstractSamSolar.input_list
+      ~AbstractSamSolar.meta
+      ~AbstractSamSolar.module
+      ~AbstractSamSolar.outage_seed
+      ~AbstractSamSolar.pysam
+      ~AbstractSamSolar.site
+   
+   

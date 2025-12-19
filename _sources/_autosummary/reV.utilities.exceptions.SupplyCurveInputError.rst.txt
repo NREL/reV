@@ -1,0 +1,6 @@
+reV.utilities.exceptions.SupplyCurveInputError
+==============================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: SupplyCurveInputError

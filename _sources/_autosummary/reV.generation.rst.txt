@@ -1,0 +1,32 @@
+reV.generation
+==============
+
+.. automodule:: reV.generation
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   base
+   cli_gen
+   generation
+

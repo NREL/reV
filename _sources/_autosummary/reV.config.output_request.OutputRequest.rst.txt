@@ -1,0 +1,40 @@
+reV.config.output\_request.OutputRequest
+========================================
+
+.. currentmodule:: reV.config.output_request
+
+.. autoclass:: OutputRequest
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OutputRequest.append
+      ~OutputRequest.clear
+      ~OutputRequest.copy
+      ~OutputRequest.count
+      ~OutputRequest.extend
+      ~OutputRequest.index
+      ~OutputRequest.insert
+      ~OutputRequest.pop
+      ~OutputRequest.remove
+      ~OutputRequest.reverse
+      ~OutputRequest.sort
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OutputRequest.CORRECTIONS
+   
+   

@@ -1,0 +1,935 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Running reV on an AWS Parallel Cluster &mdash; reV 0.14.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c64b94d8"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Running with HSDS" href="examples.running_with_hsds.html" />
+    <link rel="prev" title="Run reV locally" href="examples.running_locally.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation_usage.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#option-1-install-from-pip-recommended-for-analysts">Option 1: Install from PIP (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#rev-ecosystem">reV Ecosystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#rev-command-line-tools">reV command line tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#recommended-citation">Recommended Citation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="examples.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.marine_energy.html">reV Marine Energy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.marine_energy.html#plots-of-the-example-marine-energy-output">Plots of the Example Marine Energy Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.offshore_wind.html#plots-of-the-example-offshore-output">Plots of the Example Offshore Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.rev_losses.html">reV Losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.rev_losses.html#power-curve-losses-wind-only">Power Curve Losses (Wind only)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.rev_losses.html#power-curve-losses-for-a-single-site">Power Curve Losses for a single site</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.rev_losses.html#outage-losses-wind-and-solar">Outage Losses (Wind and Solar)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Running reV on an AWS Parallel Cluster</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-an-aws-parallel-cluster">Setting up an AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#notes-on-running-rev-in-the-aws-parallel-cluster">Notes on Running reV in the AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-rev-directly-with-s3-files">Using reV Directly with S3 Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-hsds-local-servers-on-your-compute-cluster">Setting up HSDS Local Servers on your Compute Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-an-hsds-kubernetes-service">Setting up an HSDS Kubernetes Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-an-hsds-lambda-service">Setting up an HSDS Lambda Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simple-h5pyd-test">Simple H5PYD Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compute-cost-estimates">Compute Cost Estimates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_autosummary/reV.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.SAM.html">reV.SAM</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.SAM.SAM.html">reV.SAM.SAM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.SAM.RevPySam.html">reV.SAM.SAM.RevPySam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.SAM.Sam.html">reV.SAM.SAM.Sam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.SAM.SamResourceRetriever.html">reV.SAM.SAM.SamResourceRetriever</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.html">reV.SAM.defaults</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.AbstractDefaultFromConfigFile.html">reV.SAM.defaults.AbstractDefaultFromConfigFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultGeothermal.html">reV.SAM.defaults.DefaultGeothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultLCOE.html">reV.SAM.defaults.DefaultLCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultLinearFresnelDsgIph.html">reV.SAM.defaults.DefaultLinearFresnelDsgIph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultMhkWave.html">reV.SAM.defaults.DefaultMhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultPvSamv1.html">reV.SAM.defaults.DefaultPvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultPvWattsv5.html">reV.SAM.defaults.DefaultPvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultPvWattsv8.html">reV.SAM.defaults.DefaultPvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultSingleOwner.html">reV.SAM.defaults.DefaultSingleOwner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultSwh.html">reV.SAM.defaults.DefaultSwh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultTcsMoltenSalt.html">reV.SAM.defaults.DefaultTcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.defaults.DefaultWindPower.html">reV.SAM.defaults.DefaultWindPower</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.SAM.econ.html">reV.SAM.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.econ.Economic.html">reV.SAM.econ.Economic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.econ.LCOE.html">reV.SAM.econ.LCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.econ.SingleOwner.html">reV.SAM.econ.SingleOwner</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.SAM.generation.html">reV.SAM.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.AbstractSamGeneration.html">reV.SAM.generation.AbstractSamGeneration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.AbstractSamGenerationFromWeatherFile.html">reV.SAM.generation.AbstractSamGenerationFromWeatherFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.AbstractSamPv.html">reV.SAM.generation.AbstractSamPv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.AbstractSamSolar.html">reV.SAM.generation.AbstractSamSolar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.AbstractSamWind.html">reV.SAM.generation.AbstractSamWind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.Geothermal.html">reV.SAM.generation.Geothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.LinearDirectSteam.html">reV.SAM.generation.LinearDirectSteam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.MhkWave.html">reV.SAM.generation.MhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.PvSamv1.html">reV.SAM.generation.PvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.PvWattsv5.html">reV.SAM.generation.PvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.PvWattsv7.html">reV.SAM.generation.PvWattsv7</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.PvWattsv8.html">reV.SAM.generation.PvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.SolarWaterHeat.html">reV.SAM.generation.SolarWaterHeat</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.TcsMoltenSalt.html">reV.SAM.generation.TcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.WindPower.html">reV.SAM.generation.WindPower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.generation.WindPowerPD.html">reV.SAM.generation.WindPowerPD</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.SAM.version_checker.html">reV.SAM.version_checker</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.version_checker.PySamVersionChecker.html">reV.SAM.version_checker.PySamVersionChecker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.SAM.windbos.html">reV.SAM.windbos</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.SAM.windbos.WindBos.html">reV.SAM.windbos.WindBos</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.bespoke.html">reV.bespoke</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.bespoke.bespoke.html">reV.bespoke.bespoke</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.bespoke.bespoke.BespokeMultiPlantData.html">reV.bespoke.bespoke.BespokeMultiPlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.bespoke.bespoke.BespokeSinglePlant.html">reV.bespoke.bespoke.BespokeSinglePlant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.bespoke.bespoke.BespokeSinglePlantData.html">reV.bespoke.bespoke.BespokeSinglePlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.bespoke.bespoke.BespokeWindPlants.html">reV.bespoke.bespoke.BespokeWindPlants</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.bespoke.cli_bespoke.html">reV.bespoke.cli_bespoke</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.bespoke.gradient_free.html">reV.bespoke.gradient_free</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.bespoke.gradient_free.GeneticAlgorithm.html">reV.bespoke.gradient_free.GeneticAlgorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.bespoke.pack_turbs.html">reV.bespoke.pack_turbs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.bespoke.pack_turbs.get_xy.html">reV.bespoke.pack_turbs.get_xy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.bespoke.pack_turbs.PackTurbines.html">reV.bespoke.pack_turbs.PackTurbines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.bespoke.place_turbines.html">reV.bespoke.place_turbines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.bespoke.place_turbines.none_until_optimized.html">reV.bespoke.place_turbines.none_until_optimized</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.bespoke.place_turbines.PlaceTurbines.html">reV.bespoke.place_turbines.PlaceTurbines</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.cli.html">reV.cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.config.html">reV.config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.config.base_analysis_config.html">reV.config.base_analysis_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.base_analysis_config.AnalysisConfig.html">reV.config.base_analysis_config.AnalysisConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.config.base_config.html">reV.config.base_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.base_config.BaseConfig.html">reV.config.base_config.BaseConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.config.cli_project_points.html">reV.config.cli_project_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.config.curtailment.html">reV.config.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.curtailment.Curtailment.html">reV.config.curtailment.Curtailment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.config.execution.html">reV.config.execution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.execution.BaseExecutionConfig.html">reV.config.execution.BaseExecutionConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.execution.HPCConfig.html">reV.config.execution.HPCConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.execution.SlurmConfig.html">reV.config.execution.SlurmConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.config.output_request.html">reV.config.output_request</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.output_request.OutputRequest.html">reV.config.output_request.OutputRequest</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.output_request.SAMOutputRequest.html">reV.config.output_request.SAMOutputRequest</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.config.project_points.html">reV.config.project_points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.project_points.PointsControl.html">reV.config.project_points.PointsControl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.project_points.ProjectPoints.html">reV.config.project_points.ProjectPoints</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.config.sam_config.html">reV.config.sam_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.sam_config.SAMConfig.html">reV.config.sam_config.SAMConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.config.sam_config.SAMInputsChecker.html">reV.config.sam_config.SAMInputsChecker</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.econ.html">reV.econ</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.econ.cli_econ.html">reV.econ.cli_econ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.econ.econ.html">reV.econ.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.econ.econ.Econ.html">reV.econ.econ.Econ</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.econ.economies_of_scale.html">reV.econ.economies_of_scale</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.econ.economies_of_scale.EconomiesOfScale.html">reV.econ.economies_of_scale.EconomiesOfScale</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.econ.utilities.html">reV.econ.utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.econ.utilities.lcoe_fcr.html">reV.econ.utilities.lcoe_fcr</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.generation.html">reV.generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.generation.base.html">reV.generation.base</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.generation.base.LCOE_REQUIRED_OUTPUTS.html">reV.generation.base.LCOE_REQUIRED_OUTPUTS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.generation.base.BaseGen.html">reV.generation.base.BaseGen</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.generation.cli_gen.html">reV.generation.cli_gen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.generation.generation.html">reV.generation.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.generation.generation.Gen.html">reV.generation.generation.Gen</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.handlers.html">reV.handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.handlers.cli_collect.html">reV.handlers.cli_collect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.handlers.cli_multi_year.html">reV.handlers.cli_multi_year</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.handlers.exclusions.html">reV.handlers.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.handlers.exclusions.ExclusionLayers.html">reV.handlers.exclusions.ExclusionLayers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.handlers.multi_year.html">reV.handlers.multi_year</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.handlers.multi_year.my_collect_groups.html">reV.handlers.multi_year.my_collect_groups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.handlers.multi_year.MultiYear.html">reV.handlers.multi_year.MultiYear</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.handlers.multi_year.MultiYearGroup.html">reV.handlers.multi_year.MultiYearGroup</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.handlers.outputs.html">reV.handlers.outputs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.handlers.outputs.Outputs.html">reV.handlers.outputs.Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.handlers.transmission.html">reV.handlers.transmission</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.handlers.transmission.POIFeatures.html">reV.handlers.transmission.POIFeatures</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.handlers.transmission.TransmissionCosts.html">reV.handlers.transmission.TransmissionCosts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.handlers.transmission.TransmissionFeatures.html">reV.handlers.transmission.TransmissionFeatures</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.hybrids.html">reV.hybrids</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.hybrids.cli_hybrids.html">reV.hybrids.cli_hybrids</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrid_methods.html">reV.hybrids.hybrid_methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrid_methods.aggregate_capacity.html">reV.hybrids.hybrid_methods.aggregate_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrid_methods.aggregate_capacity_factor.html">reV.hybrids.hybrid_methods.aggregate_capacity_factor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrid_methods.aggregate_solar_capacity.html">reV.hybrids.hybrid_methods.aggregate_solar_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrid_methods.aggregate_wind_capacity.html">reV.hybrids.hybrid_methods.aggregate_wind_capacity</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrids.html">reV.hybrids.hybrids</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrids.ColNameFormatter.html">reV.hybrids.hybrids.ColNameFormatter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrids.Hybridization.html">reV.hybrids.hybrids.Hybridization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrids.HybridsData.html">reV.hybrids.hybrids.HybridsData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrids.MetaHybridizer.html">reV.hybrids.hybrids.MetaHybridizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.hybrids.hybrids.RatioColumns.html">reV.hybrids.hybrids.RatioColumns</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.losses.html">reV.losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.html">reV.losses.power_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.TRANSFORMATIONS.html">reV.losses.power_curve.TRANSFORMATIONS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.adjust_power_curve.html">reV.losses.power_curve.adjust_power_curve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.AbstractPowerCurveTransformation.html">reV.losses.power_curve.AbstractPowerCurveTransformation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.ExponentialStretching.html">reV.losses.power_curve.ExponentialStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.HorizontalTranslation.html">reV.losses.power_curve.HorizontalTranslation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.LinearStretching.html">reV.losses.power_curve.LinearStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.PowerCurve.html">reV.losses.power_curve.PowerCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.PowerCurveLosses.html">reV.losses.power_curve.PowerCurveLosses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.PowerCurveLossesInput.html">reV.losses.power_curve.PowerCurveLossesInput</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.PowerCurveLossesMixin.html">reV.losses.power_curve.PowerCurveLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.power_curve.PowerCurveWindResource.html">reV.losses.power_curve.PowerCurveWindResource</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.losses.scheduled.html">reV.losses.scheduled</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.scheduled.Outage.html">reV.losses.scheduled.Outage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.scheduled.OutageScheduler.html">reV.losses.scheduled.OutageScheduler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.scheduled.ScheduledLossesMixin.html">reV.losses.scheduled.ScheduledLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.scheduled.SingleOutageScheduler.html">reV.losses.scheduled.SingleOutageScheduler</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.losses.utils.html">reV.losses.utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.utils.convert_to_full_month_names.html">reV.losses.utils.convert_to_full_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.utils.filter_unknown_month_names.html">reV.losses.utils.filter_unknown_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.utils.format_month_name.html">reV.losses.utils.format_month_name</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.utils.full_month_name_from_abbr.html">reV.losses.utils.full_month_name_from_abbr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.utils.hourly_indices_for_months.html">reV.losses.utils.hourly_indices_for_months</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.utils.month_index.html">reV.losses.utils.month_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.losses.utils.month_indices.html">reV.losses.utils.month_indices</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.nrwal.html">reV.nrwal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.nrwal.cli_nrwal.html">reV.nrwal.cli_nrwal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.nrwal.nrwal.html">reV.nrwal.nrwal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.nrwal.nrwal.RevNrwal.html">reV.nrwal.nrwal.RevNrwal</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.qa_qc.html">reV.qa_qc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.qa_qc.cli_qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc.cli_qa_qc</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.qa_qc.qa_qc.html">reV.qa_qc.qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.qa_qc.qa_qc.QaQc.html">reV.qa_qc.qa_qc.QaQc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.qa_qc.qa_qc.QaQcModule.html">reV.qa_qc.qa_qc.QaQcModule</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.qa_qc.summary.html">reV.qa_qc.summary</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.qa_qc.summary.ExclusionsMask.html">reV.qa_qc.summary.ExclusionsMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.qa_qc.summary.PlotBase.html">reV.qa_qc.summary.PlotBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.qa_qc.summary.SummarizeH5.html">reV.qa_qc.summary.SummarizeH5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.qa_qc.summary.SummarizeSupplyCurve.html">reV.qa_qc.summary.SummarizeSupplyCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.qa_qc.summary.SummaryPlots.html">reV.qa_qc.summary.SummaryPlots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.qa_qc.summary.SupplyCurvePlot.html">reV.qa_qc.summary.SupplyCurvePlot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.rep_profiles.html">reV.rep_profiles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.rep_profiles.cli_rep_profiles.html">reV.rep_profiles.cli_rep_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.rep_profiles.rep_profiles.html">reV.rep_profiles.rep_profiles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.rep_profiles.rep_profiles.RegionRepProfile.html">reV.rep_profiles.rep_profiles.RegionRepProfile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.rep_profiles.rep_profiles.RepProfiles.html">reV.rep_profiles.rep_profiles.RepProfiles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.rep_profiles.rep_profiles.RepProfilesBase.html">reV.rep_profiles.rep_profiles.RepProfilesBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.rep_profiles.rep_profiles.RepresentativeMethods.html">reV.rep_profiles.rep_profiles.RepresentativeMethods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.supply_curve.html">reV.supply_curve</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.aggregation.html">reV.supply_curve.aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.aggregation.AbstractAggFileHandler.html">reV.supply_curve.aggregation.AbstractAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.aggregation.AggFileHandler.html">reV.supply_curve.aggregation.AggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.aggregation.Aggregation.html">reV.supply_curve.aggregation.Aggregation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.aggregation.BaseAggregation.html">reV.supply_curve.aggregation.BaseAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.cli_sc_aggregation.html">reV.supply_curve.cli_sc_aggregation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.cli_supply_curve.html">reV.supply_curve.cli_supply_curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.cli_tech_mapping.html">reV.supply_curve.cli_tech_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.competitive_wind_farms.html">reV.supply_curve.competitive_wind_farms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.html">reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.exclusions.html">reV.supply_curve.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.exclusions.ExclusionMask.html">reV.supply_curve.exclusions.ExclusionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.exclusions.ExclusionMaskFromDict.html">reV.supply_curve.exclusions.ExclusionMaskFromDict</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.exclusions.FrictionMask.html">reV.supply_curve.exclusions.FrictionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.exclusions.LayerMask.html">reV.supply_curve.exclusions.LayerMask</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.extent.html">reV.supply_curve.extent</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.extent.SupplyCurveExtent.html">reV.supply_curve.extent.SupplyCurveExtent</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.points.html">reV.supply_curve.points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.points.AbstractSupplyCurvePoint.html">reV.supply_curve.points.AbstractSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.points.AggregationSupplyCurvePoint.html">reV.supply_curve.points.AggregationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.points.GenerationSupplyCurvePoint.html">reV.supply_curve.points.GenerationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.points.SupplyCurvePoint.html">reV.supply_curve.points.SupplyCurvePoint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.sc_aggregation.html">reV.supply_curve.sc_aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.html">reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.sc_aggregation.SupplyCurveAggregation.html">reV.supply_curve.sc_aggregation.SupplyCurveAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.supply_curve.html">reV.supply_curve.supply_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.supply_curve.DEFAULT_COLUMNS.html">reV.supply_curve.supply_curve.DEFAULT_COLUMNS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi.html">reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.supply_curve.SupplyCurve.html">reV.supply_curve.supply_curve.SupplyCurve</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.supply_curve.tech_mapping.html">reV.supply_curve.tech_mapping</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.supply_curve.tech_mapping.TechMapping.html">reV.supply_curve.tech_mapping.TechMapping</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.utilities.html">reV.utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.log_versions.html">reV.utilities.log_versions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.log_versions.html#reV.utilities.log_versions"><code class="docutils literal notranslate"><span class="pre">log_versions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.DocEnum.html">reV.utilities.DocEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.DocEnum.html#reV.utilities.DocEnum"><code class="docutils literal notranslate"><span class="pre">DocEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.FieldEnum.html">reV.utilities.FieldEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.FieldEnum.html#reV.utilities.FieldEnum"><code class="docutils literal notranslate"><span class="pre">FieldEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.ModuleName.html">reV.utilities.ModuleName</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.ModuleName.html#reV.utilities.ModuleName"><code class="docutils literal notranslate"><span class="pre">ModuleName</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.ResourceMetaField.html">reV.utilities.ResourceMetaField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.ResourceMetaField.html#reV.utilities.ResourceMetaField"><code class="docutils literal notranslate"><span class="pre">ResourceMetaField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.SiteDataField.html">reV.utilities.SiteDataField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.SiteDataField.html#reV.utilities.SiteDataField"><code class="docutils literal notranslate"><span class="pre">SiteDataField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.SupplyCurveField.html">reV.utilities.SupplyCurveField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.SupplyCurveField.html#reV.utilities.SupplyCurveField"><code class="docutils literal notranslate"><span class="pre">SupplyCurveField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.cli_functions.html">reV.utilities.cli_functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.cli_functions.add_to_run_attrs.html">reV.utilities.cli_functions.add_to_run_attrs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.cli_functions.compile_descriptions.html">reV.utilities.cli_functions.compile_descriptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.cli_functions.format_analysis_years.html">reV.utilities.cli_functions.format_analysis_years</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.cli_functions.init_cli_logging.html">reV.utilities.cli_functions.init_cli_logging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.cli_functions.parse_from_pipeline.html">reV.utilities.cli_functions.parse_from_pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.curtailment.html">reV.utilities.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.curtailment.curtail.html">reV.utilities.curtailment.curtail</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.html">reV.utilities.exceptions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.CollectionRuntimeError.html">reV.utilities.exceptions.CollectionRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.CollectionValueError.html">reV.utilities.exceptions.CollectionValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.CollectionWarning.html">reV.utilities.exceptions.CollectionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.ConfigError.html">reV.utilities.exceptions.ConfigError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.ConfigWarning.html">reV.utilities.exceptions.ConfigWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.DataShapeError.html">reV.utilities.exceptions.DataShapeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.EmptySupplyCurvePointError.html">reV.utilities.exceptions.EmptySupplyCurvePointError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.ExclusionLayerError.html">reV.utilities.exceptions.ExclusionLayerError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.ExecutionError.html">reV.utilities.exceptions.ExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.ExtrapolationWarning.html">reV.utilities.exceptions.ExtrapolationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.FileInputError.html">reV.utilities.exceptions.FileInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.FileInputWarning.html">reV.utilities.exceptions.FileInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.HandlerKeyError.html">reV.utilities.exceptions.HandlerKeyError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.HandlerRuntimeError.html">reV.utilities.exceptions.HandlerRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.HandlerValueError.html">reV.utilities.exceptions.HandlerValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.HandlerWarning.html">reV.utilities.exceptions.HandlerWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.InputError.html">reV.utilities.exceptions.InputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.InputWarning.html">reV.utilities.exceptions.InputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.JSONError.html">reV.utilities.exceptions.JSONError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.MultiFileExclusionError.html">reV.utilities.exceptions.MultiFileExclusionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.NearestNeighborError.html">reV.utilities.exceptions.NearestNeighborError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.OffshoreWindInputError.html">reV.utilities.exceptions.OffshoreWindInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.OffshoreWindInputWarning.html">reV.utilities.exceptions.OffshoreWindInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.OutputWarning.html">reV.utilities.exceptions.OutputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.ParallelExecutionWarning.html">reV.utilities.exceptions.ParallelExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.PipelineError.html">reV.utilities.exceptions.PipelineError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.ProjectPointsValueError.html">reV.utilities.exceptions.ProjectPointsValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.PySAMVersionError.html">reV.utilities.exceptions.PySAMVersionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.PySAMVersionWarning.html">reV.utilities.exceptions.PySAMVersionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.ResourceError.html">reV.utilities.exceptions.ResourceError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.SAMExecutionError.html">reV.utilities.exceptions.SAMExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.SAMExecutionWarning.html">reV.utilities.exceptions.SAMExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.SAMInputError.html">reV.utilities.exceptions.SAMInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.SAMInputWarning.html">reV.utilities.exceptions.SAMInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.SlurmWarning.html">reV.utilities.exceptions.SlurmWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.SupplyCurveError.html">reV.utilities.exceptions.SupplyCurveError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.SupplyCurveInputError.html">reV.utilities.exceptions.SupplyCurveInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.WhileLoopPackingError.html">reV.utilities.exceptions.WhileLoopPackingError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.reVDeprecationWarning.html">reV.utilities.exceptions.reVDeprecationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.reVError.html">reV.utilities.exceptions.reVError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.reVLossesValueError.html">reV.utilities.exceptions.reVLossesValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.exceptions.reVLossesWarning.html">reV.utilities.exceptions.reVLossesWarning</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.pytest_utils.html">reV.utilities.pytest_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.pytest_utils.make_fake_h5_chunks.html">reV.utilities.pytest_utils.make_fake_h5_chunks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.pytest_utils.pd_date_range.html">reV.utilities.pytest_utils.pd_date_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.pytest_utils.write_chunk.html">reV.utilities.pytest_utils.write_chunk</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_autosummary/reV.utilities.slots.html">reV.utilities.slots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_autosummary/reV.utilities.slots.SlottedDict.html">reV.utilities.slots.SlottedDict</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_autosummary/reV.version.html">reV.version</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_cli/cli.html">CLI reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV.html">reV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20template-configs.html">reV template-configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20batch.html">reV batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20pipeline.html">reV pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20project-points.html">reV project-points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_cli/reV%20project-points.html#rev-project-points-from-lat-lons">from-lat-lons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_cli/reV%20project-points.html#rev-project-points-from-regions">from-regions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20bespoke.html">reV bespoke</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20generation.html">reV generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20econ.html">reV econ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20collect.html">reV collect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20multi-year.html">reV multi-year</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20supply-curve-aggregation.html">reV supply-curve-aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20supply-curve.html">reV supply-curve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20poi-sort.html">reV poi-sort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20rep-profiles.html">reV rep-profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20hybrids.html">reV hybrids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20nrwal.html">reV nrwal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20qa-qc.html">reV qa-qc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20script.html">reV script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20status.html">reV status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20reset-status.html">reV reset-status</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="examples.html">Examples</a></li>
+      <li class="breadcrumb-item active">Running reV on an AWS Parallel Cluster</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/nrel/reV/blob/main/docs/source/misc/examples.aws_pcluster.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="running-rev-on-an-aws-parallel-cluster">
+<h1>Running reV on an AWS Parallel Cluster<a class="headerlink" href="#running-rev-on-an-aws-parallel-cluster" title="Link to this heading"></a></h1>
+<p>reV was originally designed to run on the NLR high performance computer (HPC), but you can now run reV on AWS using the NLR resource data (the NSRDB and WTK) that lives on S3. This example will guide you through how to set up reV on an AWS HPC environment with dynamically scaled EC2 compute resources and input resource data sourced from S3 (optionally via HSDS).</p>
+<p>If you plan on only running reV for a handful of sites (less than 100), first check out our <a class="reference external" href="https://nrel.github.io/reV/misc/examples.running_locally.html">running reV locally example</a> or <a class="reference external" href="https://github.com/NREL/reV/tree/main/examples/running_with_hsds">running with HSDS example</a>, which will be a lot easier to get started with. Larger reV jobs require you stand up your own AWS parallel cluster and HSDS server. Very small jobs can be run locally using the NLR HSDS developer API.</p>
+<p>Note that everything should be done in AWS region us-west-2 (Oregon) since this is where the NSRDB and WTK data live on S3.</p>
+<section id="setting-up-an-aws-parallel-cluster">
+<h2>Setting up an AWS Parallel Cluster<a class="headerlink" href="#setting-up-an-aws-parallel-cluster" title="Link to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Get started with the <a class="reference external" href="https://www.hpcworkshops.com/01-hpc-overview.html">AWS HPC Overview</a>.</p></li>
+<li><p>Set up a <a class="reference external" href="https://www.hpcworkshops.com/02-aws-getting-started.html">Cloud9 IDE</a>.</p></li>
+<li><p>Set up an <a class="reference external" href="https://www.hpcworkshops.com/03-hpc-aws-parallelcluster-workshop.html">AWS Parallel Cluster</a>.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Use the <a class="reference external" href="https://github.com/NREL/reV/blob/gb/aws/examples/aws_pcluster/rev-pcluster-config.ini">rev-pcluster-config.ini</a> file as an example.</p></li>
+<li><p>Choose a basic instance for head node (<code class="docutils literal notranslate"><span class="pre">master_instance_type</span></code>), e.g. t2.micro, t2.large, c5.large, or c5.xlarge. Note that a t2 instance is free-tier eligible and is probably sufficient for the pcluster login node which will not be doing any of the compute or storage.</p></li>
+<li><p>Choose a shared EBS storage volume (this is the <code class="docutils literal notranslate"><span class="pre">/shared/</span></code> volume) with a “gp2” (<code class="docutils literal notranslate"><span class="pre">volume_type</span></code>) which can have SSD storage ranging from 1GB-16TB (<code class="docutils literal notranslate"><span class="pre">volume_size</span></code>).</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Optional, set up an <a class="reference external" href="https://www.hpcworkshops.com/04-amazon-fsx-for-lustre.html">HPC parallel filesystem</a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Seems like EBS is probably fine and FSx is unnecessary for non-IO-intensive reV modules. Generation will retrieve resource data from HSDS and so is probably fine with EBS. SC-aggregation is probably fine with EBS if you set <code class="docutils literal notranslate"><span class="pre">pre_extract_inclusions=True</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><a class="reference external" href="https://www.hpcworkshops.com/03-hpc-aws-parallelcluster-workshop/07-logon-pc.html">Login to your cluster</a> from your cloud9 IDE: <code class="docutils literal notranslate"><span class="pre">pcluster</span> <span class="pre">ssh</span> <span class="pre">pcluster_name</span> <span class="pre">-i</span> <span class="pre">~/.ssh/lab-3-key</span></code></p></li>
+<li><p>Get <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a>, install, and activate your conda environment.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">wget</span> <span class="pre">https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sh</span> <span class="pre">Miniconda3-latest-Linux-x86_64.sh</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">~/.bashrc</span></code></p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Decide on if you want to access <a class="reference external" href="https://github.com/NREL/reV/tree/main/examples/aws_pcluster#using-rev-directly-with-s3-files">resource files on S3</a> for easy setup or <a class="reference external" href="https://github.com/NREL/reV/tree/main/examples/aws_pcluster#setting-up-hsds-local-servers-on-your-compute-cluster">HSDS</a> for better performance. At this time, it is recommended that you try using S3 files first and then use HSDS Local Servers if you want better performance.</p></li>
+<li><p>Install reV</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>You need to clone the reV repo to get the <code class="docutils literal notranslate"><span class="pre">aws_pcluster</span></code> <a class="reference external" href="https://github.com/NREL/reV/tree/main/examples/aws_pcluster">example files</a>. reV example files do not ship with the pypi package.</p></li>
+<li><p>You will have to first add the pcluster public ssh key (<code class="docutils literal notranslate"><span class="pre">cat</span> <span class="pre">~/.ssh/id_rsa.pub</span></code>) to your github ssh keys.</p></li>
+<li><p>Put the reV repo in the <code class="docutils literal notranslate"><span class="pre">/shared/</span></code> volume so that the <code class="docutils literal notranslate"><span class="pre">aws_pcluster</span></code> project directory is in the large EBS storage volume shared between compute nodes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">/shared/</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">git&#64;github.com:NREL/reV.git</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">/shared/reV/</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.[hsds]</span></code> if you’re setting up an HSDS local server</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Try running the reV <code class="docutils literal notranslate"><span class="pre">aws_pcluster</span></code> example:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">/shared/reV/examples/aws_pcluster</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reV</span> <span class="pre">pipeline</span> <span class="pre">-c</span> <span class="pre">config_pipeline.json</span></code></p></li>
+<li><p>Check the slurm queue with <code class="docutils literal notranslate"><span class="pre">squeue</span></code> and the compute cluster status in the ec2 console or with <code class="docutils literal notranslate"><span class="pre">sinfo</span></code></p></li>
+<li><p>Jobs will be in state <code class="docutils literal notranslate"><span class="pre">CF</span></code> (configuring) while the nodes spin up (this can take several minutes) and then <code class="docutils literal notranslate"><span class="pre">R</span></code> (running)</p></li>
+</ol>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="notes-on-running-rev-in-the-aws-parallel-cluster">
+<h2>Notes on Running reV in the AWS Parallel Cluster<a class="headerlink" href="#notes-on-running-rev-in-the-aws-parallel-cluster" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>If you use the NLR developer API key for HSDS and don’t configure a custom HSDS Service you will almost certainly see 503 errors from too many requests being processed. See the instructions below to configure an HSDS Service.</p></li>
+<li><p>AWS EC2 instances usually have twice as many vCPUs as physical CPUs due to a default of two threads per physical CPU (at least for the c5 instances) (see <code class="docutils literal notranslate"><span class="pre">disable_hyperthreading</span> <span class="pre">=</span> <span class="pre">false</span></code>). The pcluster framework treats each thread as a “node” that can accept one reV job. For this reason, it is recommended that you scale the <code class="docutils literal notranslate"><span class="pre">&quot;nodes&quot;</span></code> entry in the reV generation config file but keep <code class="docutils literal notranslate"><span class="pre">&quot;max_workers&quot;:</span> <span class="pre">1</span></code>. For example, if you use two <code class="docutils literal notranslate"><span class="pre">c5.2xlarge</span></code> instances in your compute fleet, this is a total of 16 vCPUs, each of which can be thought of as a HPC “node” that can run one process at a time.</p></li>
+<li><p>If you setup an HSDS local server but the parallel cluster ends up sending too many requests (some nodes but not all will see 503 errors), you can try upping the <code class="docutils literal notranslate"><span class="pre">max_task_count</span></code> in the <code class="docutils literal notranslate"><span class="pre">~/hsds/admin/config/override.yml</span></code> file.</p></li>
+<li><p>If your HSDS local server nodes run out of memory (monitor with <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">stats</span></code>), you can try upping the <code class="docutils literal notranslate"><span class="pre">dn_ram</span></code> or <code class="docutils literal notranslate"><span class="pre">sn_ram</span></code> options in the <code class="docutils literal notranslate"><span class="pre">~/hsds/admin/config/override.yml</span></code> file.</p></li>
+<li><p>The best way to stop your pcluster is using <code class="docutils literal notranslate"><span class="pre">pcluster</span> <span class="pre">stop</span> <span class="pre">pcluster_name</span></code> from the cloud9 IDE (not ssh’d into the pcluster) and then stop the login node in the AWS Console EC2 interface (find the “master” node and stop the instance). This will keep the EBS data intact and not charge you for EC2 costs. When you’re done with the pcluster you can call <code class="docutils literal notranslate"><span class="pre">pcluster</span> <span class="pre">delete</span> <span class="pre">pcluster_name</span></code> but this will also delete all of the EBS data.</p></li>
+</ol>
+</section>
+<section id="using-rev-directly-with-s3-files">
+<h2>Using reV Directly with S3 Files<a class="headerlink" href="#using-rev-directly-with-s3-files" title="Link to this heading"></a></h2>
+<p>You can now point reV directly to a list of files on S3. This is recommended before starting with HSDS services because it is much more simple and doesn’t require any HSDS setup. This will be slow but a good starting point. See the <a class="reference external" href="https://nrel.github.io/reV/misc/examples.running_locally.html">running reV locally example</a> for an example of this.</p>
+<p>If you want to use S3 files, find the file paths using the AWS CLI or a similar utility, replace the <code class="docutils literal notranslate"><span class="pre">resource_file</span></code> entry in <code class="docutils literal notranslate"><span class="pre">config_gen.json</span></code> with an appropriate file list (there should be a list of s3 filepaths there by default as example). If you need better performance than the basic S3 file setup, read on below for how to setup an HSDS local server.</p>
+</section>
+<section id="setting-up-hsds-local-servers-on-your-compute-cluster">
+<h2>Setting up HSDS Local Servers on your Compute Cluster<a class="headerlink" href="#setting-up-hsds-local-servers-on-your-compute-cluster" title="Link to this heading"></a></h2>
+<p>The current recommended approach for setting up an HSDS service for reV is to start local HSDS servers on your AWS parallel cluster compute nodes. These instructions set up a shell script that each reV compute job will run on its respective compute node. The shell script checks that an HSDS local server is running, and will start one if not. These instructions are generally copied from the <a class="reference external" href="https://github.com/HDFGroup/hsds/blob/master/docs/docker_install_aws.md">HSDS AWS README</a> with a few modifications.</p>
+<p>Note that these instructions were originally developed and tested in February 2022 and have not been maintained. The latest instructions for setting up HSDS local servers can be found in the rex docs page: <a class="reference external" href="https://nrel.github.io/rex/misc/examples.hsds.html#setting-up-a-local-hsds-server">HSDS local server instructions</a>. The best way to run reV on an AWS PCluster with HSDS local servers may be a combination of the instructions below and the latest instructions from the rex docs page. You may have to modify the <code class="docutils literal notranslate"><span class="pre">start_hsds.sh</span></code> script with the latest guidance on running HSDS local servers.</p>
+<ol class="arabic">
+<li><p>Make sure you have installed Miniconda but have not yet installed reV/rex.</p></li>
+<li><p>Clone the <a class="reference external" href="https://github.com/HDFGroup/hsds">HSDS Repository</a>. into your home directory in the pcluster login node: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">git&#64;github.com:HDFGroup/hsds.git</span></code> (you may have to set up your ssh keys first).</p></li>
+<li><p>Install HSDS by running <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code> from the hsds repository folder (running <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code> is currently required as the setup script does some extra magic over a pip installation).</p></li>
+<li><p>Copy the password file: <code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">~/hsds/admin/config/passwd.default</span> <span class="pre">~/hsds/admin/config/passwd.txt</span></code> and (optionally) modify any username/passwords you wish.</p></li>
+<li><p>Create an HSDS config file at <code class="docutils literal notranslate"><span class="pre">~/.hscfg</span></code> with the following entries:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Local HSDS server</span>
+<span class="nv">hs_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>http://localhost:5101
+<span class="nv">hs_username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>admin
+<span class="nv">hs_password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>admin
+<span class="nv">hs_api_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>None
+<span class="nv">hs_bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>nrel-pds-hsds
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Copy the <code class="docutils literal notranslate"><span class="pre">start_hsds.sh</span></code> script from this example (<a class="reference external" href="https://github.com/NREL/reV/blob/main/examples/aws_pcluster/start_hsds.sh">source file</a>) to your home directory in the pcluster login node (e.g. <code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">/shared/reV/examples/aws_pcluster/start_hsds.sh</span> <span class="pre">~/</span></code>).</p></li>
+<li><p>Replace the following environment variables in <code class="docutils literal notranslate"><span class="pre">start_hsds.sh</span></code> with your values: <code class="docutils literal notranslate"><span class="pre">AWS_ACCESS_KEY_ID</span></code>, <code class="docutils literal notranslate"><span class="pre">AWS_SECRET_ACCESS_KEY</span></code>, and <code class="docutils literal notranslate"><span class="pre">BUCKET_NAME</span></code> (note that you should use AWS keys from an IAM user with admin privileges and not your AWS console root user).</p></li>
+<li><p>Optional, to test your HSDS local server config, do the following:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Run the start script: <code class="docutils literal notranslate"><span class="pre">sh</span> <span class="pre">~/start_hsds.sh</span></code></p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">ps</span></code> and verify that there are 4 or more HSDS services active (hsds_rangeget_1, hsds_sn_1, hsds_head_1, and an hsds_dn_* node for every available core)</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">hsinfo</span></code> and verify that this doesn’t throw an error</p></li>
+<li><p>Try running <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">h5pyd</span></code> and then run the the h5pyd test (either the .py in this example or the h5pyd test snippet below).</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Make sure this key-value pair is set in the <code class="docutils literal notranslate"><span class="pre">execution_control</span></code> block of the <code class="docutils literal notranslate"><span class="pre">config_gen.json</span></code> file: <code class="docutils literal notranslate"><span class="pre">&quot;sh_script&quot;:</span> <span class="pre">&quot;sh</span> <span class="pre">~/start_hsds.sh&quot;</span></code></p></li>
+<li><p>Optional, copy the config override file: <code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">~/hsds/admin/config/config.yml</span> <span class="pre">~/hsds/admin/config/override.yml</span></code>, update any config lines in the <code class="docutils literal notranslate"><span class="pre">override.yml</span></code> file that you wish to change, and remove all other lines (see notes on <code class="docutils literal notranslate"><span class="pre">max_task_count</span></code> and <code class="docutils literal notranslate"><span class="pre">dn_ram</span></code>).</p></li>
+<li><p>Add the following to <code class="docutils literal notranslate"><span class="pre">config_gen.json</span></code>: <code class="docutils literal notranslate"><span class="pre">config_gen[&quot;execution_control&quot;][&quot;sh_script&quot;]</span> <span class="pre">=</span> <span class="pre">&quot;sh</span> <span class="pre">~/start_hsds.sh&quot;</span></code> this will start the HSDS server on each compute node before running reV.</p></li>
+<li><p>Set the resource file paths in <code class="docutils literal notranslate"><span class="pre">config_gen.json</span></code> to the appropriate file paths on HSDS: <code class="docutils literal notranslate"><span class="pre">config_gen[&quot;resource_file&quot;]</span> <span class="pre">=</span> <span class="pre">&quot;/nrel/wtk/conus/wtk_conus_{}.h5&quot;</span></code> (the curly bracket will be filled in automatically by reV). To find the appropriate HSDS filepaths, see the instruction set <a class="reference external" href="https://nrel.github.io/rex/misc/examples.nrel_data.html#data-location-external-users">here</a>.</p></li>
+<li><p>You should be good to go! The line in the generation config file makes reV run the <code class="docutils literal notranslate"><span class="pre">start_hsds.sh</span></code> script before running the reV job. The script will install docker and make sure one HSDS server is running per EC2 instance.</p></li>
+</ol>
+</section>
+<section id="setting-up-an-hsds-kubernetes-service">
+<h2>Setting up an HSDS Kubernetes Service<a class="headerlink" href="#setting-up-an-hsds-kubernetes-service" title="Link to this heading"></a></h2>
+<p>Setting up your own HSDS Kubernetes service is one way to run a large reV job with full parallelization. This has not been trialed by the NREL team in full, but we have tested on the HSDS group’s Kubernetes cluster. If you want to pursue this route, you can follow the HSDS repository instructions for <a class="reference external" href="https://github.com/HDFGroup/hsds/blob/master/docs/kubernetes_install_aws.md">HSDS Kubernetes on AWS</a>.</p>
+</section>
+<section id="setting-up-an-hsds-lambda-service">
+<h2>Setting up an HSDS Lambda Service<a class="headerlink" href="#setting-up-an-hsds-lambda-service" title="Link to this heading"></a></h2>
+<p>We’ve tested AWS Lambda functions as the HSDS service for reV workflows and we’ve found that Lambda functions require too much overhead to work well with the reV workflow. These instructions are included here for posterity, but HSDS-Lambda is _not_ recommended for the reV workflow.</p>
+<p>These instructions are generally copied from the <a class="reference external" href="https://github.com/HDFGroup/hsds/blob/master/docs/aws_lambda_setup.md">HSDS Lambda README</a> with a few modifications.</p>
+<p>It seems you cannot currently use the public ECR container image from the HSDS ECR repo so the first few bullets are instructions on how to set up your own HSDS image and push to a private ECR repo.</p>
+<p>H5pyd cannot currently call a lambda function directly, so the instructions at the end show you how to set up an API gateway that interfaces between h5pyd and the lambda function.</p>
+<p>Follow these instructions from your Cloud9 environment. None of this is directly related to the pcluster environment, except for the requirement to add the <code class="docutils literal notranslate"><span class="pre">.hscfg</span></code> file in the pcluster home directory.</p>
+<ol class="arabic">
+<li><p>Clone the <a class="reference external" href="https://github.com/HDFGroup/hsds">HSDS repository</a> into your Cloud9 environment.</p></li>
+<li><p>You may need to <a class="reference external" href="https://docs.aws.amazon.com/cloud9/latest/user-guide/move-environment.html#move-environment-resize">resize your EBS volume</a>.</p></li>
+<li><p>In the AWS Management Console, create a new ECR repository called “hslambda”. Keep the default private repo settings.</p></li>
+<li><p>Create an HSDS image and push to your <code class="docutils literal notranslate"><span class="pre">hslambda</span></code> ECR repo. This sublist is a combination of commands from the ECR push commands and the HSDS build instructions (make sure you use the actual push commands from your ECR repo with the actual region, repository name, and aws account id):</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">hsds</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aws</span> <span class="pre">ecr</span> <span class="pre">get-login-password</span> <span class="pre">--region</span> <span class="pre">region</span> <span class="pre">|</span> <span class="pre">docker</span> <span class="pre">login</span> <span class="pre">--username</span> <span class="pre">AWS</span> <span class="pre">--password-stdin</span> <span class="pre">aws_account_id.dkr.ecr.region.amazonaws.com</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sh</span> <span class="pre">lambda_build.sh</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">tag</span> <span class="pre">hslambda:latest</span> <span class="pre">aws_account_id.dkr.ecr.region.amazonaws.com/my-repository:tag</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">push</span> <span class="pre">aws_account_id.dkr.ecr.region.amazonaws.com/my-repository:tag</span></code></p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>You should now see your new image appear in your <code class="docutils literal notranslate"><span class="pre">hslambda</span></code> ECR repo in the AWS Console. Get the URI from this image.</p></li>
+<li><p>In the AWS Management Console, go to the Lambda service interface in your desired region (us-west-2, Oregon).</p></li>
+<li><p>Click “Create Function” -&gt; Choose “Container Image” option, function name is <code class="docutils literal notranslate"><span class="pre">hslambda</span></code>, use the Container Image URI from the image you just uploaded to your ECR repo, select “Create Function” and wait for the image to load.</p></li>
+<li><p>You should see a banner saying you’ve successfully created the <code class="docutils literal notranslate"><span class="pre">hslambda</span></code> function. Yay!</p></li>
+<li><p>Set the following in the configuration tab:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Use at least 1024MB of memory (feel free to tune this later for your workload)</p></li>
+<li><p>Timeout of at least 30 seconds (feel free to tune this later for your workload)</p></li>
+<li><p>Use an execution role that includes S3 read only access</p></li>
+<li><p>Add an environment variable <code class="docutils literal notranslate"><span class="pre">AWS_S3_GATEWAY</span></code>: <code class="docutils literal notranslate"><span class="pre">http://s3.us-west-2.amazonaws.com</span></code></p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Select the “Test” tab and click on the “Test” button. You should see a successful run with a <code class="docutils literal notranslate"><span class="pre">status_code</span></code> of 200 and an output like this:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;isBase64Encoded&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;statusCode&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+  <span class="s2">&quot;headers&quot;</span><span class="p">:</span> <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">Content-Type</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">application/json; charset=utf-8</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">Content-Length</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">323</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">Date</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">Tue, 23 Nov 2021 22:27:08 GMT</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">Server</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">Python/3.8 aiohttp/3.8.1</span><span class="se">\&quot;</span><span class="s2">}&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">start_time</span><span class="se">\&quot;</span><span class="s2">: 1637706428, </span><span class="se">\&quot;</span><span class="s2">state</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">READY</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">hsds_version</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">0.7.0beta</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">name</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">HSDS on AWS Lambda</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">greeting</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">Welcome to HSDS!</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">about</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">HSDS is a webservice for HDF data</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">node_count</span><span class="se">\&quot;</span><span class="s2">: 1, </span><span class="se">\&quot;</span><span class="s2">dn_urls</span><span class="se">\&quot;</span><span class="s2">: [</span><span class="se">\&quot;</span><span class="s2">http+unix://</span><span class="si">%2F</span><span class="s2">tmp</span><span class="si">%2F</span><span class="s2">hs1a1c917f</span><span class="si">%2F</span><span class="s2">dn_1.sock</span><span class="se">\&quot;</span><span class="s2">], </span><span class="se">\&quot;</span><span class="s2">dn_ids</span><span class="se">\&quot;</span><span class="s2">: [</span><span class="se">\&quot;</span><span class="s2">dn-001</span><span class="se">\&quot;</span><span class="s2">], </span><span class="se">\&quot;</span><span class="s2">username</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="s2">anonymous</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">isadmin</span><span class="se">\&quot;</span><span class="s2">: false}&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Now we need to create an API Gateway so that reV and h5pyd can interface with the lambda function. Go to the API Gateway page in the AWS console and do these things:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Create API -&gt; choose HTTP API (build)</p></li>
+<li><p>Add integration -&gt; Lambda -&gt; use <code class="docutils literal notranslate"><span class="pre">us-west-2</span></code>, select your lambda function, use some generic name like <code class="docutils literal notranslate"><span class="pre">hslambda-api</span></code></p></li>
+<li><p>Configure routes -&gt; Method is <code class="docutils literal notranslate"><span class="pre">ANY</span></code>, the Resource path is <code class="docutils literal notranslate"><span class="pre">$default</span></code>, the integration target is your lambda function</p></li>
+<li><p>Configure stages -&gt; Stage name is <code class="docutils literal notranslate"><span class="pre">$default</span></code> and auto-deploy must be enabled</p></li>
+<li><p>Create and get the API’s Invoke URL, something like <code class="docutils literal notranslate"><span class="pre">https://XXXXXXX.execute-api.us-west-2.amazonaws.com</span></code></p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Make a <code class="docutils literal notranslate"><span class="pre">.hscfg</span></code> file in the home dir (<code class="docutils literal notranslate"><span class="pre">/home/ec2-user/</span></code>) in your Cloud9 env. Make sure you also have this config in your pcluster filesystem. The config file should have these entries:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># HDFCloud configuration file</span>
+<span class="nv">hs_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>https://XXXXXXX.execute-api.us-west-2.amazonaws.com
+<span class="nv">hs_username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>hslambda
+<span class="nv">hs_password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>lambda
+<span class="nv">hs_api_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>None
+<span class="nv">hs_bucket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>nrel-pds-hsds
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>All done! You should now be able to run the <code class="docutils literal notranslate"><span class="pre">aws_pcluster</span></code> test sourcing data from <code class="docutils literal notranslate"><span class="pre">/nrel/nsrdb/v3/nsrdb_{}.h5</span></code> or the simple h5pyd test below.</p></li>
+<li><p>Here are some summary notes for posterity:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>We now have a lambda function <code class="docutils literal notranslate"><span class="pre">hslambda</span></code> that will retrieve data from the NSRDB or WTK using the HSDS service.</p></li>
+<li><p>We have an API Gateway that we can use as an endpoint for API requests</p></li>
+<li><p>We have configured h5pyd with the <code class="docutils literal notranslate"><span class="pre">.hscfg</span></code> file to hit that API endpoint with the proper username, password, and bucket target</p></li>
+<li><p>reV will now retrieve data from the NSRDB or WTK in parallel requests to the <code class="docutils literal notranslate"><span class="pre">hslambda</span></code> function via h5pyd.</p></li>
+<li><p>Woohoo! We did it!</p></li>
+</ol>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="simple-h5pyd-test">
+<h2>Simple H5PYD Test<a class="headerlink" href="#simple-h5pyd-test" title="Link to this heading"></a></h2>
+<p>Here’s a simple h5pyd test to make sure you can retrieve data from the NSRDB/WTK via HSDS. This python example should return a <code class="docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> object with shape <code class="docutils literal notranslate"><span class="pre">(17520,)</span></code>. Obviously you will need to install python and h5pyd before running this test.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">rex</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_logger</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5pyd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="n">init_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
+    <span class="n">fp</span> <span class="o">=</span> <span class="s1">&#39;/nrel/nsrdb/v3/nsrdb_2019.h5&#39;</span>
+    <span class="k">with</span> <span class="n">h5pyd</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="vm">__name__</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;ghi&#39;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="compute-cost-estimates">
+<h2>Compute Cost Estimates<a class="headerlink" href="#compute-cost-estimates" title="Link to this heading"></a></h2>
+<p>Here are some initial compute cost results and estimates for running reV generation (the largest compute module in reV). All estimates are only for EC2 compute costs based on c5.2xlarge instances at the on-demand price of $0.34 per hour. These numbers are <em>rough</em> estimates! Consider making your own estimates before developing a budget. The EC2 costs could be reduced significantly if running in the EC2 spot market (see how to configure pcluster spot pricing <a class="reference external" href="https://docs.aws.amazon.com/parallelcluster/latest/ug/compute-resource-section.html#compute-resource-spot-price">here</a>. The <code class="docutils literal notranslate"><span class="pre">sites_per_worker</span></code> input in the <code class="docutils literal notranslate"><span class="pre">config_gen.json</span></code> file will also influence the computational efficiency.</p>
+<table class="docutils align-default" id="id4">
+<caption><span class="caption-text">reV PCluster Compute Costs (Empirical)</span><a class="headerlink" href="#id4" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Compute Module</p></th>
+<th class="head"><p>Timesteps</p></th>
+<th class="head"><p>Sites</p></th>
+<th class="head"><p>Total Datum</p></th>
+<th class="head"><p>Total Compute Time (hr)</p></th>
+<th class="head"><p>Total EC2 Cost</p></th>
+<th class="head"><p>Cost per Datum</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PVWattsv7</p></td>
+<td><p>35088</p></td>
+<td><p>1850</p></td>
+<td><p>6.49e7</p></td>
+<td><p>3.4</p></td>
+<td><p>$1.15</p></td>
+<td><p>1.77e-8</p></td>
+</tr>
+<tr class="row-odd"><td><p>Windpower</p></td>
+<td><p>17544</p></td>
+<td><p>6268</p></td>
+<td><p>1.10e8</p></td>
+<td><p>1.2</p></td>
+<td><p>$0.42</p></td>
+<td><p>3.79e-09</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text">CONUS Compute Costs (Estimated)</span><a class="headerlink" href="#id5" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Compute Module</p></th>
+<th class="head"><p>Source Data</p></th>
+<th class="head"><p>Timesteps (one year)</p></th>
+<th class="head"><p>Sites</p></th>
+<th class="head"><p>Total Datum</p></th>
+<th class="head"><p>Total Compute Time (hr)</p></th>
+<th class="head"><p>Total EC2 Cost</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PVWattsv7</p></td>
+<td><p>NSRDB (4km, 30min)</p></td>
+<td><p>17520</p></td>
+<td><p>~5e05</p></td>
+<td><p>8.76e9</p></td>
+<td><p>457.12</p></td>
+<td><p>$155.42</p></td>
+</tr>
+<tr class="row-odd"><td><p>Windpower</p></td>
+<td><p>WTK (2km, 1hr)</p></td>
+<td><p>8760</p></td>
+<td><p>~2e6</p></td>
+<td><p>1.75e10</p></td>
+<td><p>195.21</p></td>
+<td><p>$66.37</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="examples.running_locally.html" class="btn btn-neutral float-left" title="Run reV locally" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.running_with_hsds.html" class="btn btn-neutral float-right" title="Running with HSDS" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Alliance for Sustainable Energy, LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

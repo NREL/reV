@@ -1,0 +1,31 @@
+reV.losses.power\_curve.PowerCurve
+==================================
+
+.. currentmodule:: reV.losses.power_curve
+
+.. autoclass:: PowerCurve
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PowerCurve.cutin_wind_speed
+      ~PowerCurve.cutoff_wind_speed
+      ~PowerCurve.rated_power
+   
+   

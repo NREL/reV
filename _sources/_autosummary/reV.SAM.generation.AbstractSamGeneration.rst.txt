@@ -1,0 +1,63 @@
+reV.SAM.generation.AbstractSamGeneration
+========================================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: AbstractSamGeneration
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AbstractSamGeneration.add_scheduled_losses
+      ~AbstractSamGeneration.annual_energy
+      ~AbstractSamGeneration.assign_inputs
+      ~AbstractSamGeneration.cf_mean
+      ~AbstractSamGeneration.cf_profile
+      ~AbstractSamGeneration.check_resource_data
+      ~AbstractSamGeneration.collect_outputs
+      ~AbstractSamGeneration.default
+      ~AbstractSamGeneration.drop_leap
+      ~AbstractSamGeneration.energy_yield
+      ~AbstractSamGeneration.ensure_res_len
+      ~AbstractSamGeneration.execute
+      ~AbstractSamGeneration.gen_profile
+      ~AbstractSamGeneration.get_sam_res
+      ~AbstractSamGeneration.get_time_interval
+      ~AbstractSamGeneration.make_datetime
+      ~AbstractSamGeneration.outputs_to_utc_arr
+      ~AbstractSamGeneration.reV_run
+      ~AbstractSamGeneration.run
+      ~AbstractSamGeneration.run_gen_and_econ
+      ~AbstractSamGeneration.set_resource_data
+      ~AbstractSamGeneration.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbstractSamGeneration.DIR
+      ~AbstractSamGeneration.IGNORE_ATTRS
+      ~AbstractSamGeneration.MODULE
+      ~AbstractSamGeneration.OUTAGE_CONFIG_KEY
+      ~AbstractSamGeneration.OUTAGE_SEED_CONFIG_KEY
+      ~AbstractSamGeneration.attr_dict
+      ~AbstractSamGeneration.has_timezone
+      ~AbstractSamGeneration.input_list
+      ~AbstractSamGeneration.meta
+      ~AbstractSamGeneration.module
+      ~AbstractSamGeneration.outage_seed
+      ~AbstractSamGeneration.pysam
+      ~AbstractSamGeneration.site
+   
+   

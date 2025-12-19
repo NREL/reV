@@ -1,0 +1,24 @@
+reV.utilities.DocEnum
+=====================
+
+.. currentmodule:: reV.utilities
+
+.. autoclass:: DocEnum
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DocEnum.description
+   
+   

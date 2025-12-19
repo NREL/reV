@@ -1,0 +1,6 @@
+reV.econ.utilities.lcoe\_fcr
+============================
+
+.. currentmodule:: reV.econ.utilities
+
+.. autofunction:: lcoe_fcr

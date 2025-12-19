@@ -1,0 +1,6 @@
+reV.utilities.exceptions.CollectionWarning
+==========================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: CollectionWarning

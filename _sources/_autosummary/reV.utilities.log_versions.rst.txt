@@ -1,0 +1,6 @@
+reV.utilities.log\_versions
+===========================
+
+.. currentmodule:: reV.utilities
+
+.. autofunction:: log_versions

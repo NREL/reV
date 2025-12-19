@@ -1,0 +1,6 @@
+reV.losses.utils.convert\_to\_full\_month\_names
+================================================
+
+.. currentmodule:: reV.losses.utils
+
+.. autofunction:: convert_to_full_month_names

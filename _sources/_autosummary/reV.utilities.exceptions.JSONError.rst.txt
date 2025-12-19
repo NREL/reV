@@ -1,0 +1,6 @@
+reV.utilities.exceptions.JSONError
+==================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: JSONError

@@ -1,0 +1,31 @@
+reV.SAM.defaults.AbstractDefaultFromConfigFile
+==============================================
+
+.. currentmodule:: reV.SAM.defaults
+
+.. autoclass:: AbstractDefaultFromConfigFile
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AbstractDefaultFromConfigFile.init_default_pysam_obj
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbstractDefaultFromConfigFile.CONFIG_FILE_NAME
+      ~AbstractDefaultFromConfigFile.PYSAM_MODULE
+   
+   

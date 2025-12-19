@@ -1,0 +1,6 @@
+reV.hybrids.hybrid\_methods.aggregate\_solar\_capacity
+======================================================
+
+.. currentmodule:: reV.hybrids.hybrid_methods
+
+.. autofunction:: aggregate_solar_capacity

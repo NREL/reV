@@ -1,0 +1,31 @@
+reV.supply\_curve.aggregation.AbstractAggFileHandler
+====================================================
+
+.. currentmodule:: reV.supply_curve.aggregation
+
+.. autoclass:: AbstractAggFileHandler
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AbstractAggFileHandler.close
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbstractAggFileHandler.exclusions
+      ~AbstractAggFileHandler.h5
+   
+   

@@ -1,0 +1,31 @@
+reV.config.base\_config
+=======================
+
+.. automodule:: reV.config.base_config
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      BaseConfig
+   
+   
+
+   
+   
+   
+
+
+

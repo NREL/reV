@@ -1,0 +1,71 @@
+reV.utilities.exceptions
+========================
+
+.. automodule:: reV.utilities.exceptions
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+      :toctree:
+   
+      CollectionRuntimeError
+      CollectionValueError
+      CollectionWarning
+      ConfigError
+      ConfigWarning
+      DataShapeError
+      EmptySupplyCurvePointError
+      ExclusionLayerError
+      ExecutionError
+      ExtrapolationWarning
+      FileInputError
+      FileInputWarning
+      HandlerKeyError
+      HandlerRuntimeError
+      HandlerValueError
+      HandlerWarning
+      InputError
+      InputWarning
+      JSONError
+      MultiFileExclusionError
+      NearestNeighborError
+      OffshoreWindInputError
+      OffshoreWindInputWarning
+      OutputWarning
+      ParallelExecutionWarning
+      PipelineError
+      ProjectPointsValueError
+      PySAMVersionError
+      PySAMVersionWarning
+      ResourceError
+      SAMExecutionError
+      SAMExecutionWarning
+      SAMInputError
+      SAMInputWarning
+      SlurmWarning
+      SupplyCurveError
+      SupplyCurveInputError
+      WhileLoopPackingError
+      reVDeprecationWarning
+      reVError
+      reVLossesValueError
+      reVLossesWarning
+   
+   
+
+
+

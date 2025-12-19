@@ -1,0 +1,39 @@
+reV.bespoke.bespoke.BespokeWindPlants
+=====================================
+
+.. currentmodule:: reV.bespoke.bespoke
+
+.. autoclass:: BespokeWindPlants
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BespokeWindPlants.run
+      ~BespokeWindPlants.run_parallel
+      ~BespokeWindPlants.run_serial
+      ~BespokeWindPlants.sam_sys_inputs_with_site_data
+      ~BespokeWindPlants.save_outputs
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BespokeWindPlants.completed_gids
+      ~BespokeWindPlants.gids
+      ~BespokeWindPlants.meta
+      ~BespokeWindPlants.outputs
+      ~BespokeWindPlants.shape
+      ~BespokeWindPlants.slice_lookup
+   
+   

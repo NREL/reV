@@ -1,0 +1,6 @@
+reV.utilities.exceptions.SAMExecutionError
+==========================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: SAMExecutionError

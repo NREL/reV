@@ -1,0 +1,67 @@
+reV.SAM.generation.WindPowerPD
+==============================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: WindPowerPD
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WindPowerPD.add_power_curve_losses
+      ~WindPowerPD.add_scheduled_losses
+      ~WindPowerPD.annual_energy
+      ~WindPowerPD.assign_inputs
+      ~WindPowerPD.cf_mean
+      ~WindPowerPD.cf_profile
+      ~WindPowerPD.check_resource_data
+      ~WindPowerPD.collect_outputs
+      ~WindPowerPD.default
+      ~WindPowerPD.drop_leap
+      ~WindPowerPD.energy_yield
+      ~WindPowerPD.ensure_res_len
+      ~WindPowerPD.execute
+      ~WindPowerPD.gen_profile
+      ~WindPowerPD.get_sam_res
+      ~WindPowerPD.get_time_interval
+      ~WindPowerPD.make_datetime
+      ~WindPowerPD.outputs_to_utc_arr
+      ~WindPowerPD.reV_run
+      ~WindPowerPD.run
+      ~WindPowerPD.run_gen_and_econ
+      ~WindPowerPD.set_resource_data
+      ~WindPowerPD.tz_elev_check
+      ~WindPowerPD.wind_resource_from_input
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WindPowerPD.DIR
+      ~WindPowerPD.IGNORE_ATTRS
+      ~WindPowerPD.MODULE
+      ~WindPowerPD.OUTAGE_CONFIG_KEY
+      ~WindPowerPD.OUTAGE_SEED_CONFIG_KEY
+      ~WindPowerPD.POWER_CURVE_CONFIG_KEY
+      ~WindPowerPD.attr_dict
+      ~WindPowerPD.has_timezone
+      ~WindPowerPD.input_list
+      ~WindPowerPD.input_power_curve
+      ~WindPowerPD.meta
+      ~WindPowerPD.module
+      ~WindPowerPD.outage_seed
+      ~WindPowerPD.pysam
+      ~WindPowerPD.site
+   
+   

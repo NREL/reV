@@ -1,0 +1,65 @@
+reV.SAM.generation.Geothermal
+=============================
+
+.. currentmodule:: reV.SAM.generation
+
+.. autoclass:: Geothermal
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Geothermal.add_scheduled_losses
+      ~Geothermal.annual_energy
+      ~Geothermal.assign_inputs
+      ~Geothermal.cf_mean
+      ~Geothermal.cf_profile
+      ~Geothermal.check_resource_data
+      ~Geothermal.collect_outputs
+      ~Geothermal.default
+      ~Geothermal.drop_leap
+      ~Geothermal.energy_yield
+      ~Geothermal.ensure_res_len
+      ~Geothermal.execute
+      ~Geothermal.gen_profile
+      ~Geothermal.get_sam_res
+      ~Geothermal.get_time_interval
+      ~Geothermal.make_datetime
+      ~Geothermal.outputs_to_utc_arr
+      ~Geothermal.reV_run
+      ~Geothermal.run
+      ~Geothermal.run_gen_and_econ
+      ~Geothermal.set_resource_data
+      ~Geothermal.tz_elev_check
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Geothermal.DIR
+      ~Geothermal.IGNORE_ATTRS
+      ~Geothermal.MODULE
+      ~Geothermal.OUTAGE_CONFIG_KEY
+      ~Geothermal.OUTAGE_SEED_CONFIG_KEY
+      ~Geothermal.PYSAM_WEATHER_TAG
+      ~Geothermal.WF_META_DROP_COLS
+      ~Geothermal.attr_dict
+      ~Geothermal.has_timezone
+      ~Geothermal.input_list
+      ~Geothermal.meta
+      ~Geothermal.module
+      ~Geothermal.outage_seed
+      ~Geothermal.pysam
+      ~Geothermal.site
+   
+   

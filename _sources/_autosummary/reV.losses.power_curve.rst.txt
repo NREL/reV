@@ -1,0 +1,53 @@
+reV.losses.power\_curve
+=======================
+
+.. automodule:: reV.losses.power_curve
+
+   
+   
+   .. rubric:: Module attributes
+
+   .. autosummary::
+      :toctree:
+   
+      TRANSFORMATIONS
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      adjust_power_curve
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      AbstractPowerCurveTransformation
+      ExponentialStretching
+      HorizontalTranslation
+      LinearStretching
+      PowerCurve
+      PowerCurveLosses
+      PowerCurveLossesInput
+      PowerCurveLossesMixin
+      PowerCurveWindResource
+   
+   
+
+   
+   
+   
+
+
+

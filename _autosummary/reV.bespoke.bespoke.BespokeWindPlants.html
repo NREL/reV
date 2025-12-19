@@ -1,0 +1,1307 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>reV.bespoke.bespoke.BespokeWindPlants &mdash; reV 0.14.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c64b94d8"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.bespoke.cli_bespoke" href="reV.bespoke.cli_bespoke.html" />
+    <link rel="prev" title="reV.bespoke.bespoke.BespokeSinglePlantData" href="reV.bespoke.bespoke.BespokeSinglePlantData.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/installation_usage.html">Installation and Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-1-install-from-pip-recommended-for-analysts">Option 1: Install from PIP (recommended for analysts):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#option-2-clone-repo-recommended-for-developers">Option 2: Clone repo (recommended for developers)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#rev-ecosystem">reV Ecosystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#rev-command-line-tools">reV command line tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#launching-a-run">Launching a run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/installation.html#general-run-times-and-node-configuration-on-eagle">General Run times and Node configuration on Eagle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#recommended-citation">Recommended Citation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/installation.html#command-line-tools">Command Line Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../misc/examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.project_points.html">reV Project Points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.project_points.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html">SAM Single Owner Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.advanced_econ_modeling.html#workflow-description">Workflow Description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.marine_energy.html">reV Marine Energy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.marine_energy.html#plots-of-the-example-marine-energy-output">Plots of the Example Marine Energy Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.offshore_wind.html">Offshore Wind Modeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#rev-offshore-module-description">reV Offshore Module Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#treatment-of-offshore-points-in-supply-curve">Treatment of Offshore Points in Supply Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.offshore_wind.html#plots-of-the-example-offshore-output">Plots of the Example Offshore Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.rev_losses.html">reV Losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.rev_losses.html#power-curve-losses-wind-only">Power Curve Losses (Wind only)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.rev_losses.html#power-curve-losses-for-a-single-site">Power Curve Losses for a single site</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.rev_losses.html#outage-losses-wind-and-solar">Outage Losses (Wind and Solar)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.single_module_execution.html">Single Module Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html">Full Pipeline Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#pipeline-input-requirements">Pipeline Input Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#failed-jobs">Failed Jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.full_pipeline_execution.html#file-inputs">File Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.batched_execution.html">Batched Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#batching-config-description">Batching Config Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.batched_execution.html#how-to-run">How to Run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.eagle_node_requests.html">Eagle Node Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_locally.html">Run reV locally</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#id1">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_locally.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_locally.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.aws_pcluster.html">Running reV on an AWS Parallel Cluster</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-an-aws-parallel-cluster">Setting up an AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#notes-on-running-rev-in-the-aws-parallel-cluster">Notes on Running reV in the AWS Parallel Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#using-rev-directly-with-s3-files">Using reV Directly with S3 Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-hsds-local-servers-on-your-compute-cluster">Setting up HSDS Local Servers on your Compute Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-an-hsds-kubernetes-service">Setting up an HSDS Kubernetes Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#setting-up-an-hsds-lambda-service">Setting up an HSDS Lambda Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#simple-h5pyd-test">Simple H5PYD Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.aws_pcluster.html#compute-cost-estimates">Compute Cost Estimates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../misc/examples.running_with_hsds.html">Running with HSDS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#setting-up-hsds">Setting up HSDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#using-hsds-with-rev">Using HSDS with reV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#rev-gen">reV Gen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#windpower">windpower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../misc/examples.running_with_hsds.html#pvwatts">pvwatts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../misc/examples.running_with_hsds.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reV.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="reV.SAM.html">reV.SAM</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.SAM.html">reV.SAM.SAM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.SAM.RevPySam.html">reV.SAM.SAM.RevPySam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.SAM.Sam.html">reV.SAM.SAM.Sam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.SAM.SamResourceRetriever.html">reV.SAM.SAM.SamResourceRetriever</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.defaults.html">reV.SAM.defaults</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.AbstractDefaultFromConfigFile.html">reV.SAM.defaults.AbstractDefaultFromConfigFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultGeothermal.html">reV.SAM.defaults.DefaultGeothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultLCOE.html">reV.SAM.defaults.DefaultLCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultLinearFresnelDsgIph.html">reV.SAM.defaults.DefaultLinearFresnelDsgIph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultMhkWave.html">reV.SAM.defaults.DefaultMhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultPvSamv1.html">reV.SAM.defaults.DefaultPvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultPvWattsv5.html">reV.SAM.defaults.DefaultPvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultPvWattsv8.html">reV.SAM.defaults.DefaultPvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultSingleOwner.html">reV.SAM.defaults.DefaultSingleOwner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultSwh.html">reV.SAM.defaults.DefaultSwh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultTcsMoltenSalt.html">reV.SAM.defaults.DefaultTcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.defaults.DefaultWindPower.html">reV.SAM.defaults.DefaultWindPower</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.econ.html">reV.SAM.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.econ.Economic.html">reV.SAM.econ.Economic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.econ.LCOE.html">reV.SAM.econ.LCOE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.econ.SingleOwner.html">reV.SAM.econ.SingleOwner</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.generation.html">reV.SAM.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamGeneration.html">reV.SAM.generation.AbstractSamGeneration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamGenerationFromWeatherFile.html">reV.SAM.generation.AbstractSamGenerationFromWeatherFile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamPv.html">reV.SAM.generation.AbstractSamPv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamSolar.html">reV.SAM.generation.AbstractSamSolar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.AbstractSamWind.html">reV.SAM.generation.AbstractSamWind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.Geothermal.html">reV.SAM.generation.Geothermal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.LinearDirectSteam.html">reV.SAM.generation.LinearDirectSteam</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.MhkWave.html">reV.SAM.generation.MhkWave</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvSamv1.html">reV.SAM.generation.PvSamv1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvWattsv5.html">reV.SAM.generation.PvWattsv5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvWattsv7.html">reV.SAM.generation.PvWattsv7</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.PvWattsv8.html">reV.SAM.generation.PvWattsv8</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.SolarWaterHeat.html">reV.SAM.generation.SolarWaterHeat</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.TcsMoltenSalt.html">reV.SAM.generation.TcsMoltenSalt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.WindPower.html">reV.SAM.generation.WindPower</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.generation.WindPowerPD.html">reV.SAM.generation.WindPowerPD</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.version_checker.html">reV.SAM.version_checker</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.version_checker.PySamVersionChecker.html">reV.SAM.version_checker.PySamVersionChecker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.SAM.windbos.html">reV.SAM.windbos</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.windbos.WindBos.html">reV.SAM.windbos.WindBos</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="reference internal" href="reV.bespoke.html">reV.bespoke</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="reV.bespoke.bespoke.html">reV.bespoke.bespoke</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeMultiPlantData.html">reV.bespoke.bespoke.BespokeMultiPlantData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeSinglePlant.html">reV.bespoke.bespoke.BespokeSinglePlant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.bespoke.BespokeSinglePlantData.html">reV.bespoke.bespoke.BespokeSinglePlantData</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">reV.bespoke.bespoke.BespokeWindPlants</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.cli_bespoke.html">reV.bespoke.cli_bespoke</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.gradient_free.html">reV.bespoke.gradient_free</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.gradient_free.GeneticAlgorithm.html">reV.bespoke.gradient_free.GeneticAlgorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.pack_turbs.html">reV.bespoke.pack_turbs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.pack_turbs.get_xy.html">reV.bespoke.pack_turbs.get_xy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.pack_turbs.PackTurbines.html">reV.bespoke.pack_turbs.PackTurbines</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.bespoke.place_turbines.html">reV.bespoke.place_turbines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.place_turbines.none_until_optimized.html">reV.bespoke.place_turbines.none_until_optimized</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.bespoke.place_turbines.PlaceTurbines.html">reV.bespoke.place_turbines.PlaceTurbines</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.cli.html">reV.cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reV.config.html">reV.config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.base_analysis_config.html">reV.config.base_analysis_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.base_analysis_config.AnalysisConfig.html">reV.config.base_analysis_config.AnalysisConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.base_config.html">reV.config.base_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.base_config.BaseConfig.html">reV.config.base_config.BaseConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.cli_project_points.html">reV.config.cli_project_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.curtailment.html">reV.config.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.curtailment.Curtailment.html">reV.config.curtailment.Curtailment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.execution.html">reV.config.execution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.execution.BaseExecutionConfig.html">reV.config.execution.BaseExecutionConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.execution.HPCConfig.html">reV.config.execution.HPCConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.execution.SlurmConfig.html">reV.config.execution.SlurmConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.output_request.html">reV.config.output_request</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.output_request.OutputRequest.html">reV.config.output_request.OutputRequest</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.output_request.SAMOutputRequest.html">reV.config.output_request.SAMOutputRequest</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.project_points.html">reV.config.project_points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.project_points.PointsControl.html">reV.config.project_points.PointsControl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.project_points.ProjectPoints.html">reV.config.project_points.ProjectPoints</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.config.sam_config.html">reV.config.sam_config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.sam_config.SAMConfig.html">reV.config.sam_config.SAMConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.sam_config.SAMInputsChecker.html">reV.config.sam_config.SAMInputsChecker</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.econ.html">reV.econ</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.cli_econ.html">reV.econ.cli_econ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.econ.html">reV.econ.econ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.econ.Econ.html">reV.econ.econ.Econ</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.economies_of_scale.html">reV.econ.economies_of_scale</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.economies_of_scale.EconomiesOfScale.html">reV.econ.economies_of_scale.EconomiesOfScale</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.econ.utilities.html">reV.econ.utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.utilities.lcoe_fcr.html">reV.econ.utilities.lcoe_fcr</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.generation.html">reV.generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.base.html">reV.generation.base</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.base.LCOE_REQUIRED_OUTPUTS.html">reV.generation.base.LCOE_REQUIRED_OUTPUTS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.base.BaseGen.html">reV.generation.base.BaseGen</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.cli_gen.html">reV.generation.cli_gen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.generation.generation.html">reV.generation.generation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.generation.Gen.html">reV.generation.generation.Gen</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.handlers.html">reV.handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.cli_collect.html">reV.handlers.cli_collect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.cli_multi_year.html">reV.handlers.cli_multi_year</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.exclusions.html">reV.handlers.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.exclusions.ExclusionLayers.html">reV.handlers.exclusions.ExclusionLayers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.multi_year.html">reV.handlers.multi_year</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.multi_year.my_collect_groups.html">reV.handlers.multi_year.my_collect_groups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.multi_year.MultiYear.html">reV.handlers.multi_year.MultiYear</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.multi_year.MultiYearGroup.html">reV.handlers.multi_year.MultiYearGroup</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.outputs.html">reV.handlers.outputs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.outputs.Outputs.html">reV.handlers.outputs.Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.handlers.transmission.html">reV.handlers.transmission</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.transmission.POIFeatures.html">reV.handlers.transmission.POIFeatures</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.transmission.TransmissionCosts.html">reV.handlers.transmission.TransmissionCosts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.transmission.TransmissionFeatures.html">reV.handlers.transmission.TransmissionFeatures</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.hybrids.html">reV.hybrids</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.hybrids.cli_hybrids.html">reV.hybrids.cli_hybrids</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.hybrids.hybrid_methods.html">reV.hybrids.hybrid_methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_capacity.html">reV.hybrids.hybrid_methods.aggregate_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_capacity_factor.html">reV.hybrids.hybrid_methods.aggregate_capacity_factor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_solar_capacity.html">reV.hybrids.hybrid_methods.aggregate_solar_capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrid_methods.aggregate_wind_capacity.html">reV.hybrids.hybrid_methods.aggregate_wind_capacity</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.hybrids.hybrids.html">reV.hybrids.hybrids</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.ColNameFormatter.html">reV.hybrids.hybrids.ColNameFormatter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.Hybridization.html">reV.hybrids.hybrids.Hybridization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.HybridsData.html">reV.hybrids.hybrids.HybridsData</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.MetaHybridizer.html">reV.hybrids.hybrids.MetaHybridizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.hybrids.hybrids.RatioColumns.html">reV.hybrids.hybrids.RatioColumns</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.losses.html">reV.losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.losses.power_curve.html">reV.losses.power_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.TRANSFORMATIONS.html">reV.losses.power_curve.TRANSFORMATIONS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.adjust_power_curve.html">reV.losses.power_curve.adjust_power_curve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.AbstractPowerCurveTransformation.html">reV.losses.power_curve.AbstractPowerCurveTransformation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.ExponentialStretching.html">reV.losses.power_curve.ExponentialStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.HorizontalTranslation.html">reV.losses.power_curve.HorizontalTranslation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.LinearStretching.html">reV.losses.power_curve.LinearStretching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurve.html">reV.losses.power_curve.PowerCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveLosses.html">reV.losses.power_curve.PowerCurveLosses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveLossesInput.html">reV.losses.power_curve.PowerCurveLossesInput</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveLossesMixin.html">reV.losses.power_curve.PowerCurveLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.power_curve.PowerCurveWindResource.html">reV.losses.power_curve.PowerCurveWindResource</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.losses.scheduled.html">reV.losses.scheduled</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.Outage.html">reV.losses.scheduled.Outage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.OutageScheduler.html">reV.losses.scheduled.OutageScheduler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.ScheduledLossesMixin.html">reV.losses.scheduled.ScheduledLossesMixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.scheduled.SingleOutageScheduler.html">reV.losses.scheduled.SingleOutageScheduler</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.losses.utils.html">reV.losses.utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.convert_to_full_month_names.html">reV.losses.utils.convert_to_full_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.filter_unknown_month_names.html">reV.losses.utils.filter_unknown_month_names</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.format_month_name.html">reV.losses.utils.format_month_name</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.full_month_name_from_abbr.html">reV.losses.utils.full_month_name_from_abbr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.hourly_indices_for_months.html">reV.losses.utils.hourly_indices_for_months</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.month_index.html">reV.losses.utils.month_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.losses.utils.month_indices.html">reV.losses.utils.month_indices</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.nrwal.html">reV.nrwal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.nrwal.cli_nrwal.html">reV.nrwal.cli_nrwal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.nrwal.nrwal.html">reV.nrwal.nrwal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.nrwal.nrwal.RevNrwal.html">reV.nrwal.nrwal.RevNrwal</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.qa_qc.html">reV.qa_qc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.cli_qa_qc.cli_qa_qc.html">reV.qa_qc.cli_qa_qc.cli_qa_qc</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.qa_qc.html">reV.qa_qc.qa_qc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.qa_qc.QaQc.html">reV.qa_qc.qa_qc.QaQc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.qa_qc.QaQcModule.html">reV.qa_qc.qa_qc.QaQcModule</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.qa_qc.summary.html">reV.qa_qc.summary</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.ExclusionsMask.html">reV.qa_qc.summary.ExclusionsMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.PlotBase.html">reV.qa_qc.summary.PlotBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SummarizeH5.html">reV.qa_qc.summary.SummarizeH5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SummarizeSupplyCurve.html">reV.qa_qc.summary.SummarizeSupplyCurve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SummaryPlots.html">reV.qa_qc.summary.SummaryPlots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.qa_qc.summary.SupplyCurvePlot.html">reV.qa_qc.summary.SupplyCurvePlot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.rep_profiles.html">reV.rep_profiles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.cli_rep_profiles.html">reV.rep_profiles.cli_rep_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.rep_profiles.rep_profiles.html">reV.rep_profiles.rep_profiles</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RegionRepProfile.html">reV.rep_profiles.rep_profiles.RegionRepProfile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RepProfiles.html">reV.rep_profiles.rep_profiles.RepProfiles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RepProfilesBase.html">reV.rep_profiles.rep_profiles.RepProfilesBase</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.rep_profiles.rep_profiles.RepresentativeMethods.html">reV.rep_profiles.rep_profiles.RepresentativeMethods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.aggregation.html">reV.supply_curve.aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.AbstractAggFileHandler.html">reV.supply_curve.aggregation.AbstractAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.AggFileHandler.html">reV.supply_curve.aggregation.AggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.Aggregation.html">reV.supply_curve.aggregation.Aggregation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.aggregation.BaseAggregation.html">reV.supply_curve.aggregation.BaseAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.cli_sc_aggregation.html">reV.supply_curve.cli_sc_aggregation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.cli_supply_curve.html">reV.supply_curve.cli_supply_curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.cli_tech_mapping.html">reV.supply_curve.cli_tech_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.competitive_wind_farms.html">reV.supply_curve.competitive_wind_farms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms.html">reV.supply_curve.competitive_wind_farms.CompetitiveWindFarms</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.exclusions.html">reV.supply_curve.exclusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.ExclusionMask.html">reV.supply_curve.exclusions.ExclusionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.ExclusionMaskFromDict.html">reV.supply_curve.exclusions.ExclusionMaskFromDict</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.FrictionMask.html">reV.supply_curve.exclusions.FrictionMask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.exclusions.LayerMask.html">reV.supply_curve.exclusions.LayerMask</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.extent.html">reV.supply_curve.extent</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.extent.SupplyCurveExtent.html">reV.supply_curve.extent.SupplyCurveExtent</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.points.html">reV.supply_curve.points</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.AbstractSupplyCurvePoint.html">reV.supply_curve.points.AbstractSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.AggregationSupplyCurvePoint.html">reV.supply_curve.points.AggregationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.GenerationSupplyCurvePoint.html">reV.supply_curve.points.GenerationSupplyCurvePoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.points.SupplyCurvePoint.html">reV.supply_curve.points.SupplyCurvePoint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.sc_aggregation.html">reV.supply_curve.sc_aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler.html">reV.supply_curve.sc_aggregation.SupplyCurveAggFileHandler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.sc_aggregation.SupplyCurveAggregation.html">reV.supply_curve.sc_aggregation.SupplyCurveAggregation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.supply_curve.html">reV.supply_curve.supply_curve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.supply_curve.DEFAULT_COLUMNS.html">reV.supply_curve.supply_curve.DEFAULT_COLUMNS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi.html">reV.supply_curve.supply_curve.max_tcc_per_mw_for_poi</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.supply_curve.SupplyCurve.html">reV.supply_curve.supply_curve.SupplyCurve</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.supply_curve.tech_mapping.html">reV.supply_curve.tech_mapping</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.tech_mapping.TechMapping.html">reV.supply_curve.tech_mapping.TechMapping</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.utilities.html">reV.utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.log_versions.html">reV.utilities.log_versions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.log_versions.html#reV.utilities.log_versions"><code class="docutils literal notranslate"><span class="pre">log_versions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.DocEnum.html">reV.utilities.DocEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.DocEnum.html#reV.utilities.DocEnum"><code class="docutils literal notranslate"><span class="pre">DocEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.FieldEnum.html">reV.utilities.FieldEnum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.FieldEnum.html#reV.utilities.FieldEnum"><code class="docutils literal notranslate"><span class="pre">FieldEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.ModuleName.html">reV.utilities.ModuleName</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.ModuleName.html#reV.utilities.ModuleName"><code class="docutils literal notranslate"><span class="pre">ModuleName</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.ResourceMetaField.html">reV.utilities.ResourceMetaField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.ResourceMetaField.html#reV.utilities.ResourceMetaField"><code class="docutils literal notranslate"><span class="pre">ResourceMetaField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.SiteDataField.html">reV.utilities.SiteDataField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.SiteDataField.html#reV.utilities.SiteDataField"><code class="docutils literal notranslate"><span class="pre">SiteDataField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.SupplyCurveField.html">reV.utilities.SupplyCurveField</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.SupplyCurveField.html#reV.utilities.SupplyCurveField"><code class="docutils literal notranslate"><span class="pre">SupplyCurveField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.cli_functions.html">reV.utilities.cli_functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.add_to_run_attrs.html">reV.utilities.cli_functions.add_to_run_attrs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.compile_descriptions.html">reV.utilities.cli_functions.compile_descriptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.format_analysis_years.html">reV.utilities.cli_functions.format_analysis_years</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.init_cli_logging.html">reV.utilities.cli_functions.init_cli_logging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.cli_functions.parse_from_pipeline.html">reV.utilities.cli_functions.parse_from_pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.curtailment.html">reV.utilities.curtailment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.curtailment.curtail.html">reV.utilities.curtailment.curtail</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.exceptions.html">reV.utilities.exceptions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.CollectionRuntimeError.html">reV.utilities.exceptions.CollectionRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.CollectionValueError.html">reV.utilities.exceptions.CollectionValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.CollectionWarning.html">reV.utilities.exceptions.CollectionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ConfigError.html">reV.utilities.exceptions.ConfigError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ConfigWarning.html">reV.utilities.exceptions.ConfigWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.DataShapeError.html">reV.utilities.exceptions.DataShapeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.EmptySupplyCurvePointError.html">reV.utilities.exceptions.EmptySupplyCurvePointError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ExclusionLayerError.html">reV.utilities.exceptions.ExclusionLayerError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ExecutionError.html">reV.utilities.exceptions.ExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ExtrapolationWarning.html">reV.utilities.exceptions.ExtrapolationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.FileInputError.html">reV.utilities.exceptions.FileInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.FileInputWarning.html">reV.utilities.exceptions.FileInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerKeyError.html">reV.utilities.exceptions.HandlerKeyError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerRuntimeError.html">reV.utilities.exceptions.HandlerRuntimeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerValueError.html">reV.utilities.exceptions.HandlerValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.HandlerWarning.html">reV.utilities.exceptions.HandlerWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.InputError.html">reV.utilities.exceptions.InputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.InputWarning.html">reV.utilities.exceptions.InputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.JSONError.html">reV.utilities.exceptions.JSONError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.MultiFileExclusionError.html">reV.utilities.exceptions.MultiFileExclusionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.NearestNeighborError.html">reV.utilities.exceptions.NearestNeighborError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.OffshoreWindInputError.html">reV.utilities.exceptions.OffshoreWindInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.OffshoreWindInputWarning.html">reV.utilities.exceptions.OffshoreWindInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.OutputWarning.html">reV.utilities.exceptions.OutputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ParallelExecutionWarning.html">reV.utilities.exceptions.ParallelExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.PipelineError.html">reV.utilities.exceptions.PipelineError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ProjectPointsValueError.html">reV.utilities.exceptions.ProjectPointsValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.PySAMVersionError.html">reV.utilities.exceptions.PySAMVersionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.PySAMVersionWarning.html">reV.utilities.exceptions.PySAMVersionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.ResourceError.html">reV.utilities.exceptions.ResourceError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMExecutionError.html">reV.utilities.exceptions.SAMExecutionError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMExecutionWarning.html">reV.utilities.exceptions.SAMExecutionWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMInputError.html">reV.utilities.exceptions.SAMInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SAMInputWarning.html">reV.utilities.exceptions.SAMInputWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SlurmWarning.html">reV.utilities.exceptions.SlurmWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SupplyCurveError.html">reV.utilities.exceptions.SupplyCurveError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.SupplyCurveInputError.html">reV.utilities.exceptions.SupplyCurveInputError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.WhileLoopPackingError.html">reV.utilities.exceptions.WhileLoopPackingError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVDeprecationWarning.html">reV.utilities.exceptions.reVDeprecationWarning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVError.html">reV.utilities.exceptions.reVError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVLossesValueError.html">reV.utilities.exceptions.reVLossesValueError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.exceptions.reVLossesWarning.html">reV.utilities.exceptions.reVLossesWarning</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.pytest_utils.html">reV.utilities.pytest_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.pytest_utils.make_fake_h5_chunks.html">reV.utilities.pytest_utils.make_fake_h5_chunks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.pytest_utils.pd_date_range.html">reV.utilities.pytest_utils.pd_date_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.pytest_utils.write_chunk.html">reV.utilities.pytest_utils.write_chunk</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.utilities.slots.html">reV.utilities.slots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.slots.SlottedDict.html">reV.utilities.slots.SlottedDict</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reV.version.html">reV.version</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_cli/cli.html">CLI reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV.html">reV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20template-configs.html">reV template-configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20batch.html">reV batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20pipeline.html">reV pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20project-points.html">reV project-points</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_cli/reV%20project-points.html#rev-project-points-from-lat-lons">from-lat-lons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../_cli/reV%20project-points.html#rev-project-points-from-regions">from-regions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20bespoke.html">reV bespoke</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20generation.html">reV generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20econ.html">reV econ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20collect.html">reV collect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20multi-year.html">reV multi-year</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20supply-curve-aggregation.html">reV supply-curve-aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20supply-curve.html">reV supply-curve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20poi-sort.html">reV poi-sort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20rep-profiles.html">reV rep-profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20hybrids.html">reV hybrids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20nrwal.html">reV nrwal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20qa-qc.html">reV qa-qc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20script.html">reV script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20status.html">reV status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_cli/reV%20reset-status.html">reV reset-status</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="reV.html">reV</a></li>
+          <li class="breadcrumb-item"><a href="reV.bespoke.html">reV.bespoke</a></li>
+          <li class="breadcrumb-item"><a href="reV.bespoke.bespoke.html">reV.bespoke.bespoke</a></li>
+      <li class="breadcrumb-item active">reV.bespoke.bespoke.BespokeWindPlants</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/nrel/reV/blob/main/docs/source/_autosummary/reV.bespoke.bespoke.BespokeWindPlants.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rev-bespoke-bespoke-bespokewindplants">
+<h1>reV.bespoke.bespoke.BespokeWindPlants<a class="headerlink" href="#rev-bespoke-bespoke-bespokewindplants" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BespokeWindPlants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">excl_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tm_dset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objective_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capital_cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_operating_cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_operating_cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">balance_of_system_cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sam_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'5x'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ga_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_request</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('system_capacity',</span> <span class="pre">'cf_mean')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">20.0,</span> <span class="pre">5.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wd_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">360.0,</span> <span class="pre">45.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excl_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_filter_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'queen'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excl_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_extract_inclusions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eos_mult_baseline_cap_mw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convex_hull_buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gid_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_correct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_load_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/bespoke/bespoke.html#BespokeWindPlants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="reV.supply_curve.aggregation.BaseAggregation.html#reV.supply_curve.aggregation.BaseAggregation" title="reV.supply_curve.aggregation.BaseAggregation"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseAggregation</span></code></a></p>
+<p>reV bespoke analysis class.</p>
+<p>Much like generation, <code class="docutils literal notranslate"><span class="pre">reV</span></code> bespoke analysis runs SAM
+simulations by piping in renewable energy resource data (usually
+from the WTK), loading the SAM config, and then executing the
+<a class="reference external" href="https://nrel-pysam.readthedocs.io/en/latest/modules/Windpower.html#PySAM.Windpower.Windpower" title="(in NREL-PySAM)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PySAM.Windpower.Windpower</span></code></a> compute module.
+However, unlike <code class="docutils literal notranslate"><span class="pre">reV</span></code> generation, bespoke analysis is
+performed on the supply-curve grid resolution, and the plant
+layout is optimized for every supply-curve point based on an
+optimization objective specified by the user. See the NLR
+publication on the bespoke methodology for more information.</p>
+<p>See the documentation for the <code class="docutils literal notranslate"><span class="pre">reV</span></code> SAM class (e.g.
+<a class="reference internal" href="reV.SAM.generation.WindPower.html#reV.SAM.generation.WindPower" title="reV.SAM.generation.WindPower"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.WindPower</span></code></a>,
+<a class="reference internal" href="reV.SAM.generation.PvWattsv8.html#reV.SAM.generation.PvWattsv8" title="reV.SAM.generation.PvWattsv8"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.PvWattsv8</span></code></a>,
+<a class="reference internal" href="reV.SAM.generation.Geothermal.html#reV.SAM.generation.Geothermal" title="reV.SAM.generation.Geothermal"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.Geothermal</span></code></a>, etc.) for info on the
+allowed and/or required SAM config file inputs.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul>
+<li><p><strong>excl_fpath</strong> (<em>str | list | tuple</em>) – Filepath to exclusions data HDF5 file. The exclusions HDF5
+file should contain the layers specified in <cite>excl_dict</cite>
+and <cite>data_layers</cite>. These layers may also be spread out
+across multiple HDF5 files, in which case this input should
+be a list or tuple of filepaths pointing to the files
+containing the layers. Note that each data layer must be
+uniquely defined (i.e.only appear once and in a single
+input file).</p></li>
+<li><p><strong>res_fpath</strong> (<em>str</em>) – Unix shell style path to wind resource HDF5 file in NLR WTK
+format. Can also be a path including a wildcard input like
+<code class="docutils literal notranslate"><span class="pre">/h5_dir/prefix*suffix</span></code> to run bespoke on multiple years
+of resource data. Can also be an explicit list of resource
+HDF5 file paths, which themselves can contain wildcards. If
+multiple files are specified in this way, they must have the
+same coordinates but can have different time indices (i.e.
+different years). This input must be readable by
+<a class="reference external" href="https://nrel.github.io/rex/_autosummary/rex.multi_year_resource.MultiYearWindResource.html#rex.multi_year_resource.MultiYearWindResource" title="(in rex v0.4.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rex.multi_year_resource.MultiYearWindResource</span></code></a>
+(i.e. the resource data conform to the
+<a class="reference external" href="https://tinyurl.com/3fy7v5kx">rex data format</a>). This
+means the data file(s) must contain a 1D <code class="docutils literal notranslate"><span class="pre">time_index</span></code>
+dataset indicating the UTC time of observation, a 1D
+<code class="docutils literal notranslate"><span class="pre">meta</span></code> dataset represented by a DataFrame with
+site-specific columns, and 2D resource datasets that match
+the dimensions of (time_index, meta). The time index must
+start at 00:00 of January 1st of the year under
+consideration, and its shape must be a multiple of 8760.</p></li>
+<li><p><strong>tm_dset</strong> (<em>str</em>) – Dataset name in the <cite>excl_fpath</cite> file containing the
+techmap (exclusions-to-resource mapping data). This data
+layer links the supply curve GID’s to the generation GID’s
+that are used to evaluate the performance metrics of each
+wind plant. By default, the generation GID’s are assumed to
+match the resource GID’s, but this mapping can be customized
+via the <cite>gid_map</cite> input (see the documentation for <cite>gid_map</cite>
+for more details).</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This dataset uniquely couples the (typically
+high-resolution) exclusion layers to the (typically
+lower-resolution) resource data. Therefore, a separate
+techmap must be used for every unique combination of
+resource and exclusion coordinates.</p>
+</div>
+</li>
+<li><p><strong>objective_function</strong> (<em>str</em>) – The objective function of the optimization written out as a
+string. This expression should compute the objective to be
+minimized during layout optimization. Variables available
+for computation are:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_turbines</span></code>: the number of turbines</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">system_capacity</span></code>: wind plant capacity (kW)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aep</span></code>: annual energy production (kWh)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">avg_sl_dist_to_center_m</span></code>: Average straight-line
+distance to the supply curve point center from all
+turbine locations (in m). Useful for computing plant
+BOS costs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">avg_sl_dist_to_medoid_m</span></code>: Average straight-line
+distance to the medoid of all turbine locations
+(in m). Useful for computing plant BOS costs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nn_conn_dist_m</span></code>: Total BOS connection distance
+using nearest-neighbor connections (in m). This
+variable is only available for the
+<code class="docutils literal notranslate"><span class="pre">balance_of_system_cost_function</span></code> equation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fixed_charge_rate</span></code>: user input fixed_charge_rate if
+included as part of the sam system config.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">capital_cost</span></code>: plant capital cost ($) as evaluated
+by <cite>capital_cost_function</cite></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fixed_operating_cost</span></code>: plant fixed annual operating
+cost ($/year) as evaluated by
+<cite>fixed_operating_cost_function</cite></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variable_operating_cost</span></code>: plant variable annual
+operating cost ($/kWh) as evaluated by
+<cite>variable_operating_cost_function</cite></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">balance_of_system_cost</span></code>: plant balance of system
+cost ($) as evaluated by
+<cite>balance_of_system_cost_function</cite></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">self.wind_plant</span></code>: the SAM wind plant object,
+through which all SAM variables can be accessed.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>When using the <cite>self.wind_plant</cite> variable,
+DO NOT include quotes around variable names (keys).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>❌ Wrong: <code class="docutils literal notranslate"><span class="pre">self.wind_plant[&quot;annual_energy&quot;]</span></code></p></li>
+<li><p>✅ Correct: <code class="docutils literal notranslate"><span class="pre">self.wind_plant[annual_energy]</span></code></p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>It’s possible for SAM wind plant variables to be
+<code class="docutils literal notranslate"><span class="pre">None</span></code>, especially if something went wrong while
+optimizing the wind plant layout. In this case,
+your objective function may fail to evaluate and
+terminate the program entirely. To avoid this, add
+a default value for the variable in your objective
+function, like so:
+<code class="docutils literal notranslate"><span class="pre">(self.wind_plant[annual_energy]</span> <span class="pre">or</span> <span class="pre">0)</span></code></p>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>capital_cost_function</strong> (<em>str</em>) – The plant capital cost function written out as a string.
+This expression must return the total plant capital cost in
+$. This expression has access to the same variables as the
+<cite>objective_function</cite> argument above.</p></li>
+<li><p><strong>fixed_operating_cost_function</strong> (<em>str</em>) – The plant annual fixed operating cost function written out
+as a string. This expression must return the fixed operating
+cost in $/year. This expression has access to the same
+variables as the <cite>objective_function</cite> argument above.</p></li>
+<li><p><strong>variable_operating_cost_function</strong> (<em>str</em>) – The plant annual variable operating cost function written
+out as a string. This expression must return the variable
+operating cost in $/kWh. This expression has access to the
+same variables as the <cite>objective_function</cite> argument above.
+You can set this to “0” to effectively ignore variable
+operating costs.</p></li>
+<li><p><strong>balance_of_system_cost_function</strong> (<em>str</em>) – The plant balance-of-system cost function as a string, must
+return the variable operating cost in $. Has access to the
+same variables as the objective_function. You can set this
+to “0” to effectively ignore balance-of-system costs.</p></li>
+<li><p><strong>project_points</strong> (<em>int | list | tuple | str | dict | pd.DataFrame | slice</em>) – Input specifying which sites to process. A single integer
+representing the supply curve GID of a site may be specified
+to evaluate <code class="docutils literal notranslate"><span class="pre">reV</span></code> at a supply curve point. A list or tuple
+of integers (or slice) representing the supply curve GIDs of
+multiple sites can be specified to evaluate <code class="docutils literal notranslate"><span class="pre">reV</span></code> at
+multiple specific locations. A string pointing to a project
+points CSV file may also be specified. Typically, the CSV
+contains the following columns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gid</span></code>: Integer specifying the supply curve GID of
+each site.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code>: Key in the <cite>sam_files</cite> input dictionary
+(see below) corresponding to the SAM configuration to
+use for each particular site. This value can also be
+<code class="docutils literal notranslate"><span class="pre">None</span></code> (or left out completely) if you specify only
+a single SAM configuration file as the <cite>sam_files</cite>
+input.</p></li>
+</ul>
+</div></blockquote>
+<p>The CSV file may also contain site-specific inputs by
+including a column named after a config keyword (e.g. a
+column called <code class="docutils literal notranslate"><span class="pre">capital_cost</span></code> may be included to specify a
+site-specific capital cost value for each location). Columns
+that do not correspond to a config key may also be included,
+but they will be ignored. The CSV file input can also have
+these extra, optional columns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">capital_cost_multiplier</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fixed_operating_cost_multiplier</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variable_operating_cost_multiplier</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">balance_of_system_cost_multiplier</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>These particular inputs are treated as multipliers to be
+applied to the respective cost curves
+(<cite>capital_cost_function</cite>, <cite>fixed_operating_cost_function</cite>,
+<cite>variable_operating_cost_function</cite>, and
+<cite>balance_of_system_cost_function</cite>) both during and
+after the optimization. A DataFrame following the same
+guidelines as the CSV input (or a dictionary that can be
+used to initialize such a DataFrame) may be used for this
+input as well. If you would like to obtain all available
+<code class="docutils literal notranslate"><span class="pre">reV</span></code> supply curve points to run, you can use the
+<a class="reference internal" href="reV.supply_curve.extent.SupplyCurveExtent.html#reV.supply_curve.extent.SupplyCurveExtent" title="reV.supply_curve.extent.SupplyCurveExtent"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.supply_curve.extent.SupplyCurveExtent</span></code></a> class
+like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">reV.supply_curve.extent</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupplyCurveExtent</span>
+
+<span class="n">excl_fpath</span> <span class="o">=</span> <span class="s2">&quot;...&quot;</span>
+<span class="n">resolution</span> <span class="o">=</span> <span class="o">...</span>
+<span class="k">with</span> <span class="n">SupplyCurveExtent</span><span class="p">(</span><span class="n">excl_fpath</span><span class="p">,</span> <span class="n">resolution</span><span class="p">)</span> <span class="k">as</span> <span class="n">sc</span><span class="p">:</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">valid_sc_points</span><span class="p">(</span><span class="n">tm_dset</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;gid&quot;</span><span class="p">:</span> <span class="n">points</span><span class="p">})</span>
+    <span class="n">points</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>  <span class="c1"># or a list of config choices</span>
+
+<span class="c1"># Use the points directly or save them to csv for CLI usage</span>
+<span class="n">points</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;project_points.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>sam_files</strong> (<em>dict | str</em>) – A dictionary mapping SAM input configuration ID(s) to SAM
+configuration(s). Keys are the SAM config ID(s) which
+correspond to the <code class="docutils literal notranslate"><span class="pre">config</span></code> column in the project points
+CSV. Values for each key are either a path to a
+corresponding SAM config file or a full dictionary
+of SAM config inputs. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sam_files</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/default/sam.json&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;onshore&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/onshore/sam_config.yaml&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;offshore&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;sam_key_1&quot;</span><span class="p">:</span> <span class="s2">&quot;sam_value_1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;sam_key_2&quot;</span><span class="p">:</span> <span class="s2">&quot;sam_value_2&quot;</span><span class="p">,</span>
+        <span class="o">...</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This input can also be a string pointing to a single SAM
+config file. In this case, the <code class="docutils literal notranslate"><span class="pre">config</span></code> column of the
+CSV points input should be set to <code class="docutils literal notranslate"><span class="pre">None</span></code> or left out
+completely. See the documentation for the <code class="docutils literal notranslate"><span class="pre">reV</span></code> SAM class
+(e.g. <a class="reference internal" href="reV.SAM.generation.WindPower.html#reV.SAM.generation.WindPower" title="reV.SAM.generation.WindPower"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.WindPower</span></code></a>,
+<a class="reference internal" href="reV.SAM.generation.PvWattsv8.html#reV.SAM.generation.PvWattsv8" title="reV.SAM.generation.PvWattsv8"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.PvWattsv8</span></code></a>,
+<a class="reference internal" href="reV.SAM.generation.Geothermal.html#reV.SAM.generation.Geothermal" title="reV.SAM.generation.Geothermal"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.SAM.generation.Geothermal</span></code></a>, etc.) for
+info on the allowed and/or required SAM config file inputs.</p>
+</li>
+<li><p><strong>min_spacing</strong> (<em>float | int | str, optional</em>) – Minimum spacing between turbines (in meters). This input can
+also be a string like “5x”, which is interpreted as 5 times
+the turbine rotor diameter. By default, <code class="docutils literal notranslate"><span class="pre">&quot;5x&quot;</span></code>.</p></li>
+<li><p><strong>ga_kwargs</strong> (<em>dict, optional</em>) – Dictionary of keyword arguments to pass to GA
+initialization. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, default initialization values
+are used. See
+<a class="reference internal" href="reV.bespoke.gradient_free.GeneticAlgorithm.html#reV.bespoke.gradient_free.GeneticAlgorithm" title="reV.bespoke.gradient_free.GeneticAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneticAlgorithm</span></code></a> for
+a description of the allowed keyword arguments.
+By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>output_request</strong> (<em>list | tuple, optional</em>) – Outputs requested from the SAM windpower simulation after
+the bespoke plant layout optimization. Can be any of the
+parameters in the “Outputs” group of the PySAM module
+<a class="reference external" href="https://nrel-pysam.readthedocs.io/en/latest/modules/Windpower.html#PySAM.Windpower.Windpower.Outputs" title="(in NREL-PySAM)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PySAM.Windpower.Windpower.Outputs</span></code></a>, PySAM module.
+This list can also include a select number of SAM
+config/resource parameters to include in the output:
+any key in any of the
+<a class="reference external" href="https://tinyurl.com/4bmrpe3j/">output attribute JSON files</a>
+may be requested. Time-series profiles requested via this
+input are output in UTC. This input can also be used to
+request resource means like <code class="docutils literal notranslate"><span class="pre">&quot;ws_mean&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;windspeed_mean&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;temperature_mean&quot;</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">&quot;pressure_mean&quot;</span></code>. By default,
+<code class="docutils literal notranslate"><span class="pre">('system_capacity',</span> <span class="pre">'cf_mean')</span></code>.</p></li>
+<li><p><strong>ws_bins</strong> (<em>tuple, optional</em>) – A 3-entry tuple with <code class="docutils literal notranslate"><span class="pre">(start,</span> <span class="pre">stop,</span> <span class="pre">step)</span></code> for the
+windspeed binning of the wind joint probability
+distribution. The stop value is inclusive, so
+<code class="docutils literal notranslate"><span class="pre">ws_bins=(0,</span> <span class="pre">20,</span> <span class="pre">5)</span></code> would result in four bins with bin
+edges (0, 5, 10, 15, 20). By default, <code class="docutils literal notranslate"><span class="pre">(0.0,</span> <span class="pre">20.0,</span> <span class="pre">5.0)</span></code>.</p></li>
+<li><p><strong>wd_bins</strong> (<em>tuple, optional</em>) – A 3-entry tuple with <code class="docutils literal notranslate"><span class="pre">(start,</span> <span class="pre">stop,</span> <span class="pre">step)</span></code> for the wind
+direction binning of the wind joint probability
+distribution. The stop value is inclusive, so
+<code class="docutils literal notranslate"><span class="pre">wd_bins=(0,</span> <span class="pre">360,</span> <span class="pre">90)</span></code> would result in four bins with bin
+edges (0, 90, 180, 270, 360).
+By default, <code class="docutils literal notranslate"><span class="pre">(0.0,</span> <span class="pre">360.0,</span> <span class="pre">45.0)</span></code>.</p></li>
+<li><p><strong>excl_dict</strong> (<em>dict, optional</em>) – Dictionary of exclusion keyword arguments of the format
+<code class="docutils literal notranslate"><span class="pre">{layer_dset_name:</span> <span class="pre">{kwarg:</span> <span class="pre">value}}</span></code>, where
+<code class="docutils literal notranslate"><span class="pre">layer_dset_name</span></code> is a dataset in the exclusion h5 file
+and the <code class="docutils literal notranslate"><span class="pre">kwarg:</span> <span class="pre">value</span></code> pair is a keyword argument to
+the <a class="reference internal" href="reV.supply_curve.exclusions.LayerMask.html#reV.supply_curve.exclusions.LayerMask" title="reV.supply_curve.exclusions.LayerMask"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.supply_curve.exclusions.LayerMask</span></code></a> class.
+For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">excl_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;typical_exclusion&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;exclude_values&quot;</span><span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;another_exclusion&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;exclude_values&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+        <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="mf">0.5</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;exclusion_with_nodata&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;exclude_range&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span>
+        <span class="s2">&quot;exclude_nodata&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;nodata_value&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;partial_setback&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;use_as_weights&quot;</span><span class="p">:</span> <span class="kc">True</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;height_limit&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;exclude_range&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;slope&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;include_range&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;developable_land&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;force_include_values&quot;</span><span class="p">:</span> <span class="mi">42</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;more_developable_land&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;force_include_range&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that all the keys given in this dictionary should be
+datasets of the <cite>excl_fpath</cite> file. If <code class="docutils literal notranslate"><span class="pre">None</span></code> or empty
+dictionary, no exclusions are applied. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</li>
+<li><p><strong>area_filter_kernel</strong> (<em>{“queen”, “rook”}, optional</em>) – Contiguous area filter method to use on final exclusions
+mask. The filters are defined as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Queen:     # Rook:</span>
+<span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>    <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+ <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>     <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+ <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span>     <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>These filters define how neighboring pixels are “connected”.
+Once pixels in the final exclusion layer are connected, the
+area of each resulting cluster is computed and compared
+against the <cite>min_area</cite> input. Any cluster with an area
+less than <cite>min_area</cite> is excluded from the final mask.
+This argument has no effect if <cite>min_area</cite> is <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+By default, <code class="docutils literal notranslate"><span class="pre">&quot;queen&quot;</span></code>.</p>
+</li>
+<li><p><strong>min_area</strong> (<em>float, optional</em>) – Minimum area (in km<sup>2</sup>) required to keep an isolated
+cluster of (included) land within the resulting exclusions
+mask. Any clusters of land with areas less than this value
+will be marked as exclusions. See the documentation for
+<cite>area_filter_kernel</cite> for an explanation of how the area of
+each land cluster is computed. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, no area
+filtering is performed. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>resolution</strong> (<em>int, optional</em>) – Supply Curve resolution. This value defines how many pixels
+are in a single side of a supply curve cell. For example,
+a value of <code class="docutils literal notranslate"><span class="pre">64</span></code> would generate a supply curve where the
+side of each supply curve cell is <code class="docutils literal notranslate"><span class="pre">64x64</span></code> exclusion
+pixels. By default, <code class="docutils literal notranslate"><span class="pre">64</span></code>.</p></li>
+<li><p><strong>excl_area</strong> (<em>float, optional</em>) – Area of a single exclusion mask pixel (in km<sup>2</sup>).
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, this value will be inferred from the profile
+transform attribute in <cite>excl_fpath</cite>. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>data_layers</strong> (<em>dict, optional</em>) –</p>
+<p>Dictionary of aggregation data layers of the format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data_layers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;output_layer_name&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;dset&quot;</span><span class="p">:</span> <span class="s2">&quot;layer_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fpath&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/data.h5&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;another_output_layer_name&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;dset&quot;</span><span class="p">:</span> <span class="s2">&quot;input_layer_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;mode&quot;</span><span class="p">,</span>
+        <span class="c1"># optional &quot;fpath&quot; key omitted</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&quot;output_layer_name&quot;</span></code> is the column name under which
+the aggregated data will appear in the meta DataFrame of the
+output file. The <code class="docutils literal notranslate"><span class="pre">&quot;output_layer_name&quot;</span></code> does not have to
+match the <code class="docutils literal notranslate"><span class="pre">dset</span></code> input value. The latter should match
+the layer name in the HDF5 from which the data to aggregate
+should be pulled. The <code class="docutils literal notranslate"><span class="pre">method</span></code> should be one of
+<code class="docutils literal notranslate"><span class="pre">{&quot;mode&quot;,</span> <span class="pre">&quot;mean&quot;,</span> <span class="pre">&quot;min&quot;,</span> <span class="pre">&quot;max&quot;,</span> <span class="pre">&quot;sum&quot;,</span> <span class="pre">&quot;category&quot;}</span></code>,
+describing how the high-resolution data should be aggregated
+for each supply curve point. <code class="docutils literal notranslate"><span class="pre">fpath</span></code> is an optional key
+that can point to an HDF5 file containing the layer data. If
+left out, the data is assumed to exist in the file(s)
+specified by the <cite>excl_fpath</cite> input. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, no data
+layer aggregation is performed. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</li>
+<li><p><strong>pre_extract_inclusions</strong> (<em>bool, optional</em>) – Optional flag to pre-extract/compute the inclusion mask from
+the <cite>excl_dict</cite> input. It is typically faster to compute
+the inclusion mask on the fly with parallel workers.
+By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>eos_mult_baseline_cap_mw</strong> (<em>int | float, optional</em>) – Baseline plant capacity (MW) used to calculate economies of
+scale (EOS) multiplier from the <cite>capital_cost_function</cite>. EOS
+multiplier is calculated as the $-per-kW of the wind plant
+divided by the $-per-kW of a plant with this baseline
+capacity. By default, <cite>200</cite> (MW), which aligns the baseline
+with ATB assumptions. See here: <a class="reference external" href="https://tinyurl.com/y85hnu6h">https://tinyurl.com/y85hnu6h</a>.</p></li>
+<li><p><strong>convex_hull_buffer</strong> (<em>float, default=0</em>) – Buffer (in m) to apply to turbine location convex hull
+before computing the convex hull area and capacity density.
+By default, <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p><strong>prior_run</strong> (<em>str, optional</em>) – Optional filepath to a bespoke output HDF5 file belonging to
+a prior run. If specified, this module will only run the
+timeseries power generation step and assume that all of the
+wind plant layouts are fixed from the prior run. The meta
+data of this file must contain the following columns
+(automatically satisfied if the HDF5 file was generated by
+<code class="docutils literal notranslate"><span class="pre">reV</span></code> bespoke):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">capacity</span></code> : Capacity of the plant, in MW.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">turbine_x_coords</span></code>: A string representation of a
+python list containing the X coordinates (in m; origin
+of cell at bottom left) of the turbines within the
+plant (supply curve cell).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">turbine_y_coords</span></code> : A string representation of a
+python list containing the Y coordinates (in m; origin
+of cell at bottom left) of the turbines within the
+plant (supply curve cell).</p></li>
+</ul>
+</div></blockquote>
+<p>If <code class="docutils literal notranslate"><span class="pre">None</span></code>, no previous run data is considered.
+By default, <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</li>
+<li><p><strong>gid_map</strong> (<em>str | dict, optional</em>) – Mapping of unique integer generation gids (keys) to single
+integer resource gids (values). This enables unique
+generation gids in the project points to map to non-unique
+resource gids, which can be useful when evaluating multiple
+resource datasets in <code class="docutils literal notranslate"><span class="pre">reV</span></code> (e.g., forecasted ECMWF
+resource data to complement historical WTK meteorology).
+This input can be a pre-extracted dictionary or a path to a
+JSON or CSV file. If this input points to a CSV file, the
+file must have the columns <code class="docutils literal notranslate"><span class="pre">gid</span></code> (which matches the
+project points) and <code class="docutils literal notranslate"><span class="pre">gid_map</span></code> (gids to extract from the
+resource input). If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the GID values in the project
+points are assumed to match the resource GID values.
+By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>bias_correct</strong> (<em>str | pd.DataFrame, optional</em>) – Optional DataFrame or CSV filepath to a wind or solar
+resource bias correction table. This has columns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gid</span></code>: GID of site (can be index name of dataframe)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code>: function name from <code class="docutils literal notranslate"><span class="pre">rex.bias_correction</span></code> module</p></li>
+</ul>
+</div></blockquote>
+<p>The <code class="docutils literal notranslate"><span class="pre">gid</span></code> field should match the true resource <code class="docutils literal notranslate"><span class="pre">gid</span></code> regardless
+of the optional <code class="docutils literal notranslate"><span class="pre">gid_map</span></code> input. Only <code class="docutils literal notranslate"><span class="pre">windspeed</span></code> <strong>or</strong>
+<code class="docutils literal notranslate"><span class="pre">GHI</span></code> + <code class="docutils literal notranslate"><span class="pre">DNI</span></code> + <code class="docutils literal notranslate"><span class="pre">DHI</span></code> are corrected, depending on the
+technology (wind for the former, PV or CSP for the latter). See the
+functions in the <code class="docutils literal notranslate"><span class="pre">rex.bias_correction</span></code> module for available
+inputs for <code class="docutils literal notranslate"><span class="pre">method</span></code>. Any additional kwargs required for the
+requested <code class="docutils literal notranslate"><span class="pre">method</span></code> can be input as additional columns in the
+<code class="docutils literal notranslate"><span class="pre">bias_correct</span></code> table e.g., for linear bias correction functions
+you can include <code class="docutils literal notranslate"><span class="pre">scalar</span></code> and <code class="docutils literal notranslate"><span class="pre">adder</span></code> inputs as columns in the
+<code class="docutils literal notranslate"><span class="pre">bias_correct</span></code> table on a site-by-site basis. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, no
+corrections are applied. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</li>
+<li><p><strong>pre_load_data</strong> (<em>bool, optional</em>) – Option to pre-load resource data. This step can be
+time-consuming up front, but it drastically reduces the
+number of parallel reads to the <cite>res_fpath</cite> HDF5 file(s),
+and can have a significant overall speedup on systems with
+slow parallel I/O capabilities. Pre-loaded data can use a
+significant amount of RAM, so be sure to split execution
+across many nodes (e.g. 100 nodes, 36 workers each for
+CONUS) or request large amounts of memory for a smaller
+number of nodes. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.run" title="reV.bespoke.bespoke.BespokeWindPlants.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>([out_fpath, max_workers, config_file])</p></td>
+<td><p>Run the bespoke wind plant optimization in serial or parallel.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.run_parallel" title="reV.bespoke.bespoke.BespokeWindPlants.run_parallel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_parallel</span></code></a>([max_workers])</p></td>
+<td><p>Run the bespoke optimization for many supply curve points in parallel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.run_serial" title="reV.bespoke.bespoke.BespokeWindPlants.run_serial"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_serial</span></code></a>(excl_fpath, res_fpath, tm_dset, ...)</p></td>
+<td><p>Standalone serial method to run bespoke optimization.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.sam_sys_inputs_with_site_data" title="reV.bespoke.bespoke.BespokeWindPlants.sam_sys_inputs_with_site_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sam_sys_inputs_with_site_data</span></code></a>(gid)</p></td>
+<td><p>Update the sam_sys_inputs with site data for the given GID.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.save_outputs" title="reV.bespoke.bespoke.BespokeWindPlants.save_outputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_outputs</span></code></a>(out_fpath[, config_file])</p></td>
+<td><p>Save Bespoke Wind Plant optimization outputs to disk.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.completed_gids" title="reV.bespoke.bespoke.BespokeWindPlants.completed_gids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">completed_gids</span></code></a></p></td>
+<td><p>Get a sorted list of completed BespokeSinglePlant gids</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.gids" title="reV.bespoke.bespoke.BespokeWindPlants.gids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gids</span></code></a></p></td>
+<td><p>1D array of supply curve point gids to aggregate</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.meta" title="reV.bespoke.bespoke.BespokeWindPlants.meta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">meta</span></code></a></p></td>
+<td><p>Meta data for all completed BespokeSinglePlant objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.outputs" title="reV.bespoke.bespoke.BespokeWindPlants.outputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">outputs</span></code></a></p></td>
+<td><p>Saved outputs for the multi wind plant bespoke optimization.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.shape" title="reV.bespoke.bespoke.BespokeWindPlants.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></p></td>
+<td><p>Get the shape of the full exclusions raster.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reV.bespoke.bespoke.BespokeWindPlants.slice_lookup" title="reV.bespoke.bespoke.BespokeWindPlants.slice_lookup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slice_lookup</span></code></a></p></td>
+<td><p>Lookup mapping sc_point_gid to exclusion slice.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.outputs">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">outputs</span></span><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.outputs" title="Link to this definition"></a></dt>
+<dd><p>Saved outputs for the multi wind plant bespoke optimization. Keys
+are reV supply curve gids and values are BespokeSinglePlant.outputs
+dictionaries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>dict</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.completed_gids">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">completed_gids</span></span><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.completed_gids" title="Link to this definition"></a></dt>
+<dd><p>Get a sorted list of completed BespokeSinglePlant gids</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>list</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.meta">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">meta</span></span><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.meta" title="Link to this definition"></a></dt>
+<dd><p>Meta data for all completed BespokeSinglePlant objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>pd.DataFrame</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.slice_lookup">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">slice_lookup</span></span><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.slice_lookup" title="Link to this definition"></a></dt>
+<dd><p>Lookup mapping sc_point_gid to exclusion slice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.sam_sys_inputs_with_site_data">
+<span class="sig-name descname"><span class="pre">sam_sys_inputs_with_site_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/bespoke/bespoke.html#BespokeWindPlants.sam_sys_inputs_with_site_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.sam_sys_inputs_with_site_data" title="Link to this definition"></a></dt>
+<dd><p>Update the sam_sys_inputs with site data for the given GID.</p>
+<p>Site data is extracted from the project points DataFrame. Every
+column in the project DataFrame becomes a key in the site_data
+output dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gid</strong> (<em>int</em>) – SC point gid for site to pull site data for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>dictionary</strong> (<em>dict</em>) – SAM system config with extra keys from the project points
+DataFrame.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.save_outputs">
+<span class="sig-name descname"><span class="pre">save_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/bespoke/bespoke.html#BespokeWindPlants.save_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.save_outputs" title="Link to this definition"></a></dt>
+<dd><p>Save Bespoke Wind Plant optimization outputs to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_fpath</strong> (<em>str</em>) – Full filepath to an output .h5 file to save Bespoke data to. The
+parent directories will be created if they do not already exist.</p></li>
+<li><p><strong>config_file</strong> (<em>str, optional</em>) – Path to config file used for this bespoke run (if
+applicable). This is used to store information about the run
+in the output file attrs. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out_fpath</strong> (<em>str</em>) – Full filepath to desired .h5 output file, the .h5 extension has
+been added if it was not already present.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.run_serial">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_serial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">excl_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tm_dset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sam_sys_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objective_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capital_cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_operating_cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_operating_cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">balance_of_system_cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'5x'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ga_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_request</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('system_capacity',</span> <span class="pre">'cf_mean')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">20.0,</span> <span class="pre">5.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wd_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">360.0,</span> <span class="pre">45.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excl_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inclusion_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_filter_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'queen'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excl_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0081</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclusion_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slice_lookup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eos_mult_baseline_cap_mw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convex_hull_buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gid_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_correct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_loaded_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/bespoke/bespoke.html#BespokeWindPlants.run_serial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.run_serial" title="Link to this definition"></a></dt>
+<dd><p>Standalone serial method to run bespoke optimization.
+See BespokeWindPlants docstring for parameter description.</p>
+<p>This method can only take a single sam_sys_inputs… For a spatially
+variant gid-to-config mapping, see the BespokeWindPlants class methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>out</strong> (<em>dict</em>) – Bespoke outputs keyed by sc point gid</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.run_parallel">
+<span class="sig-name descname"><span class="pre">run_parallel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/bespoke/bespoke.html#BespokeWindPlants.run_parallel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.run_parallel" title="Link to this definition"></a></dt>
+<dd><p>Run the bespoke optimization for many supply curve points in
+parallel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>max_workers</strong> (<em>int | None, optional</em>) – Number of cores to run summary on. None is all
+available cpus, by default None</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out</strong> (<em>dict</em>) – Bespoke outputs keyed by sc point gid</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_fpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/bespoke/bespoke.html#BespokeWindPlants.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.run" title="Link to this definition"></a></dt>
+<dd><p>Run the bespoke wind plant optimization in serial or parallel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_fpath</strong> (<em>str, optional</em>) – Path to output file. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, no output file will
+be written. If the filepath is specified but the module name
+(bespoke) is not included, the module name will get added to
+the output file name. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>max_workers</strong> (<em>int, optional</em>) – Number of local workers to run on. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, uses all
+available cores (typically 36). By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>config_file</strong> (<em>str, optional</em>) – Path to config file used for this bespoke run (if
+applicable). This is used to store information about the run
+in the output file attrs. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>str | None</em> – Path to output HDF5 file, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if results were not
+written to disk.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.gids">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gids</span></span><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.gids" title="Link to this definition"></a></dt>
+<dd><p>1D array of supply curve point gids to aggregate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reV.bespoke.bespoke.BespokeWindPlants.shape">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#reV.bespoke.bespoke.BespokeWindPlants.shape" title="Link to this definition"></a></dt>
+<dd><p>Get the shape of the full exclusions raster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>tuple</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="reV.bespoke.bespoke.BespokeSinglePlantData.html" class="btn btn-neutral float-left" title="reV.bespoke.bespoke.BespokeSinglePlantData" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reV.bespoke.cli_bespoke.html" class="btn btn-neutral float-right" title="reV.bespoke.cli_bespoke" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Alliance for Sustainable Energy, LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

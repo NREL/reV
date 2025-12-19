@@ -1,0 +1,6 @@
+reV.utilities.exceptions.EmptySupplyCurvePointError
+===================================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: EmptySupplyCurvePointError

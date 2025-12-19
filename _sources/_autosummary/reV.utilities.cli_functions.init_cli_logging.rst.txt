@@ -1,0 +1,6 @@
+reV.utilities.cli\_functions.init\_cli\_logging
+===============================================
+
+.. currentmodule:: reV.utilities.cli_functions
+
+.. autofunction:: init_cli_logging

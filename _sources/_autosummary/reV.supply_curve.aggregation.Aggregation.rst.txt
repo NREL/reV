@@ -1,0 +1,35 @@
+reV.supply\_curve.aggregation.Aggregation
+=========================================
+
+.. currentmodule:: reV.supply_curve.aggregation
+
+.. autoclass:: Aggregation
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Aggregation.aggregate
+      ~Aggregation.run
+      ~Aggregation.run_parallel
+      ~Aggregation.run_serial
+      ~Aggregation.save_agg_to_h5
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Aggregation.gids
+      ~Aggregation.shape
+   
+   

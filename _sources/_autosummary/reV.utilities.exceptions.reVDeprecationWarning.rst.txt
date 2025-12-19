@@ -1,0 +1,6 @@
+reV.utilities.exceptions.reVDeprecationWarning
+==============================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: reVDeprecationWarning

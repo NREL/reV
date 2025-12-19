@@ -1,0 +1,38 @@
+reV.bespoke.place\_turbines
+===========================
+
+.. automodule:: reV.bespoke.place_turbines
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      none_until_optimized
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      PlaceTurbines
+   
+   
+
+   
+   
+   
+
+
+

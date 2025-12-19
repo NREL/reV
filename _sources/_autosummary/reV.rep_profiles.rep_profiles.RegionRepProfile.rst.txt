@@ -1,0 +1,37 @@
+reV.rep\_profiles.rep\_profiles.RegionRepProfile
+================================================
+
+.. currentmodule:: reV.rep_profiles.rep_profiles
+
+.. autoclass:: RegionRepProfile
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RegionRepProfile.get_region_rep_profile
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RegionRepProfile.GEN_GID_COL
+      ~RegionRepProfile.RES_GID_COL
+      ~RegionRepProfile.i_reps
+      ~RegionRepProfile.rep_gen_gids
+      ~RegionRepProfile.rep_profiles
+      ~RegionRepProfile.rep_res_gids
+      ~RegionRepProfile.source_profiles
+      ~RegionRepProfile.weights
+   
+   

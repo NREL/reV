@@ -1,0 +1,33 @@
+reV.hybrids.hybrid\_methods
+===========================
+
+.. automodule:: reV.hybrids.hybrid_methods
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      aggregate_capacity
+      aggregate_capacity_factor
+      aggregate_solar_capacity
+      aggregate_wind_capacity
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

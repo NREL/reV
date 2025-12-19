@@ -1,0 +1,58 @@
+reV.econ.econ.Econ
+==================
+
+.. currentmodule:: reV.econ.econ
+
+.. autoclass:: Econ
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Econ.add_site_data_to_pp
+      ~Econ.flush
+      ~Econ.get_pc
+      ~Econ.get_sites_per_worker
+      ~Econ.handle_leap_ti
+      ~Econ.run
+      ~Econ.site_index
+      ~Econ.unpack_futures
+      ~Econ.unpack_output
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Econ.ECON_ATTRS
+      ~Econ.LCOE_ARGS
+      ~Econ.OPTIONS
+      ~Econ.OUT_ATTRS
+      ~Econ.cf_file
+      ~Econ.meta
+      ~Econ.out
+      ~Econ.out_chunk
+      ~Econ.output_request
+      ~Econ.points_control
+      ~Econ.project_points
+      ~Econ.run_attrs
+      ~Econ.sam_configs
+      ~Econ.sam_metas
+      ~Econ.sam_module
+      ~Econ.site_data
+      ~Econ.site_limit
+      ~Econ.site_mem
+      ~Econ.tech
+      ~Econ.time_index
+      ~Econ.year
+   
+   

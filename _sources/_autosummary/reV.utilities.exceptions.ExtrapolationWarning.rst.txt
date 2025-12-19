@@ -1,0 +1,6 @@
+reV.utilities.exceptions.ExtrapolationWarning
+=============================================
+
+.. currentmodule:: reV.utilities.exceptions
+
+.. autoexception:: ExtrapolationWarning

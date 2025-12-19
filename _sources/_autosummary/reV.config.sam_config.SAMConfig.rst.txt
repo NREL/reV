@@ -1,0 +1,56 @@
+reV.config.sam\_config.SAMConfig
+================================
+
+.. currentmodule:: reV.config.sam_config
+
+.. autoclass:: SAMConfig
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SAMConfig.check_files
+      ~SAMConfig.check_overwrite_keys
+      ~SAMConfig.clear
+      ~SAMConfig.copy
+      ~SAMConfig.fromkeys
+      ~SAMConfig.get
+      ~SAMConfig.items
+      ~SAMConfig.keys
+      ~SAMConfig.pop
+      ~SAMConfig.popitem
+      ~SAMConfig.resolve_path
+      ~SAMConfig.set_self_dict
+      ~SAMConfig.setdefault
+      ~SAMConfig.str_replace_and_resolve
+      ~SAMConfig.update
+      ~SAMConfig.values
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SAMConfig.REQUIREMENTS
+      ~SAMConfig.STR_REP
+      ~SAMConfig.bifacial
+      ~SAMConfig.clearsky
+      ~SAMConfig.config_dir
+      ~SAMConfig.config_keys
+      ~SAMConfig.downscale
+      ~SAMConfig.icing
+      ~SAMConfig.inputs
+      ~SAMConfig.log_level
+      ~SAMConfig.name
+      ~SAMConfig.time_index_step
+   
+   

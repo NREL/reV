@@ -1,0 +1,30 @@
+reV.supply\_curve.supply\_curve.SupplyCurve
+===========================================
+
+.. currentmodule:: reV.supply_curve.supply_curve
+
+.. autoclass:: SupplyCurve
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SupplyCurve.add_sum_cols
+      ~SupplyCurve.compute_total_lcoe
+      ~SupplyCurve.full_sort
+      ~SupplyCurve.poi_sort
+      ~SupplyCurve.run
+      ~SupplyCurve.run_poi
+      ~SupplyCurve.simple_sort
+   
+   
+
+   
+   
+   

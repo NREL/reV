@@ -1,0 +1,39 @@
+reV.handlers.multi\_year
+========================
+
+.. automodule:: reV.handlers.multi_year
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      my_collect_groups
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      MultiYear
+      MultiYearGroup
+   
+   
+
+   
+   
+   
+
+
+
