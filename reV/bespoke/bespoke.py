@@ -1562,7 +1562,7 @@ class BespokeWindPlants(BaseAggregation):
         However, unlike ``reV`` generation, bespoke analysis is
         performed on the supply-curve grid resolution, and the plant
         layout is optimized for every supply-curve point based on an
-        optimization objective specified by the user. See the NREL
+        optimization objective specified by the user. See the NLR
         publication on the bespoke methodology for more information.
 
         See the documentation for the ``reV`` SAM class (e.g.
@@ -1583,7 +1583,7 @@ class BespokeWindPlants(BaseAggregation):
             uniquely defined (i.e.only appear once and in a single
             input file).
         res_fpath : str
-            Unix shell style path to wind resource HDF5 file in NREL WTK
+            Unix shell style path to wind resource HDF5 file in NLR WTK
             format. Can also be a path including a wildcard input like
             ``/h5_dir/prefix*suffix`` to run bespoke on multiple years
             of resource data. Can also be an explicit list of resource

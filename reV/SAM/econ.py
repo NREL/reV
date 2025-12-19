@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """reV-to-SAM econ interface module.
 
-Wraps the NREL-PySAM lcoefcr and singleowner modules with
+Wraps the NLR-PySAM lcoefcr and singleowner modules with
 additional reV features.
 """
 import logging

@@ -38,9 +38,8 @@
 
 .. inclusion-intro
 
-**reV** (the Renewable Energy Potential model)
-is an open-source geospatial techno-economic tool that
-estimates renewable energy technical potential (capacity and generation),
+**reV** is an open-source geospatial techno-economic tool that
+estimates energy technical potential (capacity and generation),
 system cost, and supply curves for a variety of technologies, including
 but not limited to, geothermal (GT), pumped storage hydropower (PSH),
 solar photovoltaics (PV), concentrating solar power (CSP), wind energy, etc.
@@ -58,7 +57,7 @@ equally well-suited for regional infrastructure and deployment planning and anal
 
 
 For a detailed description of reV capabilities and functionality, see the
-`NREL reV technical report <https://www.nrel.gov/docs/fy19osti/73067.pdf>`_.
+`NLR reV technical report <https://www.nrel.gov/docs/fy19osti/73067.pdf>`_.
 
 How does reV work?
 ==================
@@ -69,7 +68,7 @@ A full reV execution consists of one or more compute modules
 strung together using a `pipeline framework <https://nrel.github.io/reV/_cli/reV%20pipeline.html>`_,
 or configured using `batch <https://nrel.github.io/reV/_cli/reV%20batch.html>`_.
 
-A typical reV workflow begins with input wind/solar/geothermal resource data
+A typical reV workflow begins with input resource data
 (following the `rex data format <https://nrel.github.io/rex/misc/examples.nsrdb.html#data-format>`_)
 that is passed through the generation module. This output is then collected across space and time
 (if executed on the HPC), before being sent off to be aggregated under user-specified land exclusion scenarios.

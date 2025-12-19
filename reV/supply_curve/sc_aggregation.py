@@ -684,7 +684,7 @@ class SupplyCurveAggregation(BaseAggregation):
             Total included area for each supply curve point in km2. This
             is based on the nominal area of each exclusion pixel which
             by default is calculated from the exclusion profile
-            attributes. The NREL reV default is 0.0081 km2 pixels
+            attributes. The NLR reV default is 0.0081 km2 pixels
             (90m x 90m). The area sum considers partial inclusions.
         latitude : float
             Supply curve point centroid latitude coordinate, in degrees

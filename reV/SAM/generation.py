@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """reV-to-SAM generation interface module.
 
-Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
+Wraps the NLR-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
 additional reV features.
 """
 
